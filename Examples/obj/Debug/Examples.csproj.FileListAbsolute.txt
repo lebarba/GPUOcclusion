@@ -28,3 +28,13 @@ D:\Leandro\Desktop\demo occlusion culling\Examples\obj\Debug\Examples.pdb
 D:\Leandro\Desktop\demo occlusion culling\Examples\TgcViewer.exe
 D:\Leandro\Desktop\demo occlusion culling\Examples\Examples.pdb
 D:\Leandro\Desktop\demo occlusion culling\Examples\TgcViewer.pdb
+D:\Leandro\Desktop\demo occlusion culling\guithub\Examples\obj\Debug\ResolveAssemblyReference.cache
+D:\Leandro\Desktop\demo occlusion culling\guithub\Examples\obj\Debug\Examples.Properties.Resources.resources
+D:\Leandro\Desktop\demo occlusion culling\guithub\Examples\obj\Debug\Examples.csproj.GenerateResource.Cache
+D:\Leandro\Desktop\demo occlusion culling\guithub\Examples\obj\Debug\Examples.dll
+D:\Leandro\Desktop\demo occlusion culling\guithub\Examples\obj\Debug\Examples.pdb
+D:\Leandro\Desktop\demo occlusion culling\guithub\Examples\Examples.dll
+D:\Leandro\Desktop\demo occlusion culling\guithub\Examples\Examples.pdb
+D:\Leandro\Desktop\demo occlusion culling\guithub\Examples\Ionic.Zip.dll
+D:\Leandro\Desktop\demo occlusion culling\guithub\Examples\TgcViewer.exe
+D:\Leandro\Desktop\demo occlusion culling\guithub\Examples\TgcViewer.pdb

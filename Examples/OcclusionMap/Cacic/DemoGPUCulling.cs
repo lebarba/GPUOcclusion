@@ -47,7 +47,9 @@ namespace Examples.OcclusionMap.Cacic
         //The vertices that form the quad needed to execute the occlusion test pixel shaders.
         //CustomVertex.PositionTextured[] screenQuad;
 
-        VertexBuffer quadVertexBuffer;
+        CustomVertex.TransformedTextured[] ScreenQuadVertices;
+        
+
 
         //The index buffer of the screen quad.
         //short[] PSQuadIndexBuffer;
@@ -213,9 +215,8 @@ namespace Examples.OcclusionMap.Cacic
             d3dDevice.SetTexture(0, OccludeeDataTextureAABB);
             d3dDevice.SetTexture(1, OccludeeDataTextureDepth);
 
-            
 
-            d3dDevice.DrawUserPrimitives(PrimitiveType.TriangleList, 2, quadVertexBuffer);
+            d3dDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, 2, ScreenQuadVertices);
 
             
 
@@ -231,29 +232,34 @@ namespace Examples.OcclusionMap.Cacic
         private void QuadVertexDeclaration()
         {
              
-            quadVertexBuffer = new VertexBuffer(typeof(CustomVertex.TransformedTextured), 4, d3dDevice, Usage.Dynamic | Usage.WriteOnly, CustomVertex.TransformedTextured.Format, Pool.Default);
-
-            CustomVertex.TransformedTextured[] vertices = new CustomVertex.TransformedTextured[4];
-
-            vertices[0].Position = new Vector4(0f, 0f, 0f, 1f);
-            vertices[0].Tu = 0;
-            vertices[0].Tv = 0;
-
-            vertices[1].Position = new Vector4(1f, 0f, 0f, 1f);
-            vertices[1].Tu = 1;
-            vertices[1].Tv = 0;
+            //quadVertexBuffer = new VertexBuffer(typeof(CustomVertex.TransformedTextured), 4, d3dDevice, Usage.Dynamic | Usage.WriteOnly, CustomVertex.TransformedTextured.Format, Pool.Default);
 
 
-            vertices[2].Position = new Vector4(1f, 1f, 0f, 1f);
-            vertices[2].Tu = 1;
-            vertices[2].Tv = 1;
+            ScreenQuadVertices = new CustomVertex.TransformedTextured[4];
 
-            vertices[3].Position = new Vector4(0f, 1f, 0f, 1f);
-            vertices[3].Tu = 0;
-            vertices[3].Tv = 1;
+            ScreenQuadVertices[0].Position = new Vector4(0f, 0f, 0f, 1f);
+            ScreenQuadVertices[0].Rhw = 1.0f;
+            ScreenQuadVertices[0].Tu = 0;
+            ScreenQuadVertices[0].Tv = 0;
+
+            ScreenQuadVertices[1].Position = new Vector4(1f, 0f, 0f, 1f);
+            ScreenQuadVertices[1].Rhw = 1.0f;
+            ScreenQuadVertices[1].Tu = 1;
+            ScreenQuadVertices[1].Tv = 0;
 
 
-            quadVertexBuffer.SetData(vertices, 0, LockFlags.None);
+            ScreenQuadVertices[2].Position = new Vector4(1f, 1f, 0f, 1f);
+            ScreenQuadVertices[2].Rhw = 1.0f;
+            ScreenQuadVertices[2].Tu = 1;
+            ScreenQuadVertices[2].Tv = 1;
+
+            ScreenQuadVertices[3].Position = new Vector4(0f, 1f, 0f, 1f);
+            ScreenQuadVertices[3].Rhw = 1.0f;
+            ScreenQuadVertices[3].Tu = 0;
+            ScreenQuadVertices[3].Tv = 1;
+
+
+            //quadVertexBuffer.SetData(vertices, 0, LockFlags.None);
 
         }
 
