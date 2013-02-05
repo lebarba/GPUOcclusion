@@ -10,10 +10,10 @@ int maxOccludees;
 //The texture side size. 64 x 64.
 uniform int DefaultTextureSize = 64;
 
-texture OccludeeDataTextureAABB;
-texture OccludeeDataTextureDepth;
-texture HiZBufferTex;
-texture OcclusionResult;
+texture OccludeeDataTextureAABB : register(s0);
+texture OccludeeDataTextureDepth: register(s1);
+texture HiZBufferTex;//			: register(s2);
+texture OcclusionResult			: register(s2);
 
 sampler OccludeeDataAABBSampler = sampler_state
 {
@@ -122,7 +122,7 @@ VS_OUTPUT VertHiZ( VS_INPUT Input )
 float4 PixHiZ( float2 depth: TEXCOORD0) : COLOR0
 {
 	//Return the depth as z / w.
-	return  depth.x / depth.y;
+	return  1 -(depth.x / depth.y);
 }
 
 
@@ -157,7 +157,7 @@ VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT_WITH_OCCLUSION Input )
    visibleResult = tex2Dlod(OcclusionResultSampler, float4(posInTexture.xy, 0.0f, 0.0f));
    
    //If the value is 0 then project the vertex and let it continue through out the pipeline. 
-   if ( visibleResult.r == 0 )
+   if ( visibleResult.r == 0.0f )
    {
      	
 	   //Project position
@@ -210,23 +210,20 @@ float4 PixOcclusionTest( float2 pos: TEXCOORD0) : COLOR0
 	float occludeeDepth;
 	float s, t;
 	
-					
-				
+	
+		
+	/*if( occludeeY2 == 3)
+		return 1.0f;
+	else
+		discard;*/
+		
+		
 	//If the index is greater than the max number of occludees discard and leave original values.
 	if( index > maxOccludees)
 		discard;
 		
-
 	//Get the occludee depth value from texture.
 	occludeeDepth = tex2Dlod(OccludeeDataDepthSampler, float4(pos, 0.0f, 0.0f)).r;
-	
-	/*
-	occludeeY1 = 1;
-	occludeeY2 = 2;
-	
-	occludeeY1 = 1;
-	occludeeY2 = 2;
-	*/
 	
 	for( y = occludeeY1 ; y < occludeeY2 ; y++ )
 	{
@@ -239,13 +236,13 @@ float4 PixOcclusionTest( float2 pos: TEXCOORD0) : COLOR0
 			
 			//Check the depth value of the occludee and the one stored in the depth buffer.
 			if( occludeeDepth <= hiZDepth )
-				discard;                 //Occludee visible. Stop searching and discard pixel shader. keep 255 original value.
+				discard;       //Occludee visible. Stop searching and discard pixel shader. keep 255 original value.
 			
 		}
 	}
 	
 	//The occludee is not visible.
-	return 255;
+	return 1;
 }
 
 

@@ -47,7 +47,6 @@ D:\Leandro\Desktop\demo occlusion culling\guithub\TgcViewer\obj\Debug\TgcViewer.
 D:\Leandro\Desktop\demo occlusion culling\guithub\TgcViewer\obj\Debug\TgcViewer.pdb
 D:\Leandro\Desktop\demo occlusion culling\guithub\TgcViewer\obj\Debug\ResolveAssemblyReference.cache
 D:\Leandro\Desktop\demo occlusion culling\guithub\TgcViewer\obj\Debug\TgcViewer.MainForm.resources
-D:\Leandro\Desktop\demo occlusion culling\guithub\TgcViewer\obj\Debug\TgcViewer.Properties.Resources.resources
 D:\Leandro\Desktop\demo occlusion culling\guithub\TgcViewer\obj\Debug\TgcViewer.Utils.Modifiers.TgcMeshBrowser.resources
 D:\Leandro\Desktop\demo occlusion culling\guithub\TgcViewer\obj\Debug\TgcViewer.Utils.Modifiers.TgcTextureBrowser.resources
 D:\Leandro\Desktop\demo occlusion culling\guithub\TgcViewer\obj\Debug\TgcViewer.Utils.Networking.TgcNetworkingModifierClientsDialog.resources
@@ -58,3 +57,4 @@ D:\Leandro\Desktop\demo occlusion culling\guithub\TgcViewer\obj\Debug\TgcViewer.
 D:\Leandro\Desktop\demo occlusion culling\guithub\TgcViewer\obj\Debug\TgcViewer.csproj.GenerateResource.Cache
 D:\Leandro\Desktop\demo occlusion culling\guithub\TgcViewer.exe
 D:\Leandro\Desktop\demo occlusion culling\guithub\TgcViewer.pdb
+D:\Leandro\Desktop\demo occlusion culling\guithub\TgcViewer\obj\Debug\TgcViewer.Resources.Resources.resources
