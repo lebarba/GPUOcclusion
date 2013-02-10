@@ -1,6 +1,8 @@
 float4x4 matWorldView;
 float4x4 matWorldViewProj;
 
+float HiZBufferWidth, HiZBufferHeight;
+
 //The current occludee number in the array of occludees.
 int ocludeeIndexInTexture;
 
@@ -10,10 +12,10 @@ int maxOccludees;
 //The texture side size. 64 x 64.
 uniform int DefaultTextureSize = 64;
 
-texture OccludeeDataTextureAABB : register(s0);
-texture OccludeeDataTextureDepth: register(s1);
-texture HiZBufferTex;//			: register(s2);
-texture OcclusionResult			: register(s2);
+texture2D OccludeeDataTextureAABB;
+texture2D OccludeeDataTextureDepth;
+texture2D HiZBufferTex;
+texture2D OcclusionResult;
 
 sampler OccludeeDataAABBSampler = sampler_state
 {
@@ -83,23 +85,23 @@ struct VS_INPUT_QUAD
 //Quad Vertex Shader Output
 struct VS_OUTPUT_QUAD
 {
-   float4 Position :     POSITION0;
-   float2 TexCoords : TEXCOORD0;
+   float4 Position  :	POSITION0;
+   float2 TexCoords :	TEXCOORD0;
 
 };
 
 //Input for vertices with Occlusion culling enabled
 struct VS_INPUT_WITH_OCCLUSION
 {
-   float4 Position : POSITION0;
-   float2 TexCoords : TEXCOORD0;
+   float4 Position  :	POSITION0;
+   float2 TexCoords :	TEXCOORD0;
 };
 
 //Output for vertices with Occlusion culling enabled
 struct VS_OUTPUT_WITH_OCCLUSION
 {
-   float4 Position :     POSITION0;
-   float2 TexCoords : TEXCOORD0;
+   float4 Position  :	POSITION0;
+   float2 TexCoords :	TEXCOORD0;
 };
 
 
@@ -122,7 +124,7 @@ VS_OUTPUT VertHiZ( VS_INPUT Input )
 float4 PixHiZ( float2 depth: TEXCOORD0) : COLOR0
 {
 	//Return the depth as z / w.
-	return  1 -(depth.x / depth.y);
+	return  (depth.x / depth.y);
 }
 
 
@@ -175,11 +177,9 @@ VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT_WITH_OCCLUSION Input )
 		return( Output );
 
 	}
-   
+	
+	
 }
-
-
-
 
 //Pixel shader to execute Occlusion Test (overlap + depth).
 float4 PixOcclusionTest( float2 pos: TEXCOORD0) : COLOR0
@@ -190,7 +190,11 @@ float4 PixOcclusionTest( float2 pos: TEXCOORD0) : COLOR0
 	int posY = pos.y * (float) DefaultTextureSize;
 	
 	//Get the element number inside the array.
-	int index = posY * 64 + posX;
+	int index = posY * DefaultTextureSize + posX;
+	
+	//If the index is greater than the max number of occludees discard and leave original values.
+	if( index > maxOccludees)
+		discard;
 	
 	int occludeeX1, occludeeX2, occludeeY1, occludeeY2;
 	
@@ -203,41 +207,47 @@ float4 PixOcclusionTest( float2 pos: TEXCOORD0) : COLOR0
 	occludeeX2 = texValue.b;
 	occludeeY2 = texValue.a;
 	
-	int x;
-	int y;
+	float i;
+	float j;
 	
 	float hiZDepth;
 	float occludeeDepth;
-	float s, t;
-	
-	
-		
-	/*if( occludeeY2 == 3)
-		return 1.0f;
-	else
-		discard;*/
-		
-		
-	//If the index is greater than the max number of occludees discard and leave original values.
-	if( index > maxOccludees)
-		discard;
-		
+			
 	//Get the occludee depth value from texture.
 	occludeeDepth = tex2Dlod(OccludeeDataDepthSampler, float4(pos, 0.0f, 0.0f)).r;
 	
-	for( y = occludeeY1 ; y < occludeeY2 ; y++ )
+	float2 hiZTexPos;
+	
+	
+	//Get Hierarchical Z Buffer depth for the given position.
+	hiZDepth =  tex2Dlod(HiZBufferSampler, float4(0.5f,0.5f, 0.0f, 0.0f)).r;
+	
+	
+/*
+	if( hiZDepth >  1.0f)
+		discard;
+	else
+		return 1;
+	*/
+			
+			
+	for( j = occludeeY1 ; j < occludeeY2 ; j += 1.0f )
 	{
-		for( x = occludeeX1 ; x < occludeeX2 ; x++ )
+		for( i = occludeeX1 ; i < occludeeX2 ; i += 1.0f )
 		{
 		
+			//Get the uv texture position from i and j positions.
+			hiZTexPos.x  = i / HiZBufferWidth;
+			hiZTexPos.y  = j / HiZBufferHeight;
+			
+
 			//Get Hierarchical Z Buffer depth for the given position.
-			hiZDepth = tex2Dlod(HiZBufferSampler, float4(pos, 0.0f, 0.0f)).r;
-			
-			
+			hiZDepth = tex2Dlod(HiZBufferSampler, float4(hiZTexPos, 0.0f, 0.0f)).r;			
+
 			//Check the depth value of the occludee and the one stored in the depth buffer.
-			if( occludeeDepth <= hiZDepth )
+			if( occludeeDepth > hiZDepth )
 				discard;       //Occludee visible. Stop searching and discard pixel shader. keep 255 original value.
-			
+
 		}
 	}
 	
@@ -251,8 +261,6 @@ float4 SimplestPixelShader( ) : COLOR0
 {
 	return  255;
 }
-
-
 
 technique HiZBuffer
 {

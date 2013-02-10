@@ -26,6 +26,7 @@ namespace Examples.OcclusionMap.Cacic
         #region Members
 
         //The maximum number of total occludees in scene.
+        //TODO: Mati, mete codigo aca.
         const int MAX_OCCLUDEES = 4096;
         const float TextureSize = 64;
 
@@ -98,7 +99,7 @@ namespace Examples.OcclusionMap.Cacic
             //Format.R32F
             HiZBufferTex = new Texture(d3dDevice, GuiController.Instance.D3dDevice.Viewport.Width,
                 GuiController.Instance.D3dDevice.Viewport.Height, 1, Usage.RenderTarget,
-                Format.X8R8G8B8, Pool.Default);
+                Format.R32F, Pool.Default);
 
             //Get the surface.
             HiZSurface = HiZBufferTex.GetSurfaceLevel(0);
@@ -109,7 +110,6 @@ namespace Examples.OcclusionMap.Cacic
 
             //Get the surface.
             OcclusionResultSurface = OcclusionResultTex.GetSurfaceLevel(0);
-
 
 
             string MyShaderDir = GuiController.Instance.ExamplesDir + "media\\Shaders\\";
@@ -124,8 +124,6 @@ namespace Examples.OcclusionMap.Cacic
 
             teapot = Mesh.Teapot(d3dDevice);
 
-            //Create a quad big enough to force the occlusion testpixel shader execution
-            //CreatePSExecutionQuad(MAX_OCCLUDEES);
 
             //Create the vertex buffer with occludees.
             createOccludees();
@@ -158,22 +156,20 @@ namespace Examples.OcclusionMap.Cacic
 
             //Draw the low detail occluders. Generate the Hi Z buffer
             DrawOccluders();
-
-
            
             //Perform the occlusion culling test. Obtain the visible set.
             PerformOcclussionCulling();
 
-
             //Draw the visible set.
             DrawGeometryWithOcclusionEnabled();
 
+            //Show the occlusion related textures for debugging.
+            DebugTexturesToScreen();
+             
+        }
 
-            
-            #region DEBUG_TO_SCREEN
-
-
-            
+        private void DebugTexturesToScreen()
+        {
             d3dDevice.BeginScene();
 
             d3dDevice.SetRenderState(RenderStates.ZEnable, true);
@@ -183,8 +179,6 @@ namespace Examples.OcclusionMap.Cacic
             d3dDevice.SetRenderTarget(0, pOldRT);
 
 
-            //d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
-
             d3dDevice.VertexFormat = oldVertexFormat;
 
             d3dDevice.SetTexture(0, OccludeeDataTextureAABB);
@@ -192,26 +186,13 @@ namespace Examples.OcclusionMap.Cacic
             d3dDevice.SetTexture(2, HiZBufferTex);
             d3dDevice.SetTexture(3, OcclusionResultTex);
 
-
-            //DrawTeapots(false, "HiZBuffer");
-
             //Draw the debug texture.
             DrawSprite(HiZBufferTex, new Point(20, 20), 0.25f);
-
-            DrawSprite(OcclusionResultTex, new Point(10, 350), 1.0f);
-
+            DrawSprite(OcclusionResultTex, new Point(20, 250), 2.0f);
             DrawSprite(OccludeeDataTextureAABB, new Point(20, 100), 2.0f);
-            DrawSprite(OccludeeDataTextureDepth, new Point(20, 200), 2.0f);
-            
-            
-
+            DrawSprite(OccludeeDataTextureDepth, new Point(20, 175), 2.0f);
 
             d3dDevice.EndScene();
-             
-            #endregion
-            
-            
-
         }
 
         private void DrawOccluders()
@@ -227,15 +208,11 @@ namespace Examples.OcclusionMap.Cacic
             //Set the render target.
             d3dDevice.SetRenderTarget(0, pHiZBufferSurface);
 
-
             d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
 
             //Enable Z test and Z write.
             d3dDevice.SetRenderState(RenderStates.ZEnable, true);
             d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, true);
-
-
-
 
             //Draw the objects being occluded
             DrawTeapots(true, "HiZBuffer");
@@ -260,10 +237,10 @@ namespace Examples.OcclusionMap.Cacic
 
 
 
-            //d3dDevice.SetTexture(0, OccludeeDataTextureAABB);
-            //d3dDevice.SetTexture(1, OccludeeDataTextureDepth);
-            //d3dDevice.SetTexture(2, HiZBufferTex);
-            d3dDevice.SetTexture(2, OcclusionResultTex);
+            d3dDevice.SetTexture(0, OccludeeDataTextureAABB);
+            d3dDevice.SetTexture(1, OccludeeDataTextureDepth);
+            d3dDevice.SetTexture(2, HiZBufferTex);
+            d3dDevice.SetTexture(3, OcclusionResultTex);
 
 
             DrawTeapots(true, "RenderWithOcclusionEnabled");
@@ -295,7 +272,7 @@ namespace Examples.OcclusionMap.Cacic
             d3dDevice.SetRenderState(RenderStates.ZEnable, false);
             d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, false);
 
-
+            //Clear the result surface with 0 values, which mean they are "visible".
             d3dDevice.Clear(ClearFlags.Target, Color.FromArgb(0, 0, 0, 0), 1, 0);
 
 
@@ -308,7 +285,11 @@ namespace Examples.OcclusionMap.Cacic
             OcclusionEffect.SetValue("OccludeeDataTextureAABB", OccludeeDataTextureAABB);
             OcclusionEffect.SetValue("OccludeeDataTextureDepth", OccludeeDataTextureDepth);
             OcclusionEffect.SetValue("HiZBufferTex", HiZBufferTex);
+            OcclusionEffect.SetValue("maxOccludees", 100);
             //OcclusionEffect.SetValue("OcclusionResult", OcclusionResultTex);
+
+            OcclusionEffect.SetValue("HiZBufferWidth", GuiController.Instance.D3dDevice.Viewport.Width);
+            OcclusionEffect.SetValue("HiZBufferHeight", GuiController.Instance.D3dDevice.Viewport.Height);
 
             OcclusionEffect.Technique = "OcclusionTest";
 
@@ -318,7 +299,6 @@ namespace Examples.OcclusionMap.Cacic
             {
 
                 OcclusionEffect.BeginPass(n);
-                //Clear the target ( Result surface) to 255 so all occludees are visible by default unless proven occludeed.
 
                 //Draw the quad making the pixel shaders inside of it execute.
                 d3dDevice.DrawUserPrimitives(PrimitiveType.TriangleFan, 2, ScreenQuadVertices);
@@ -380,11 +360,7 @@ namespace Examples.OcclusionMap.Cacic
                         OcclusionEffect.SetValue("matWorldView", matWorldView);
 
                         OcclusionEffect.SetValue("ocludeeIndexInTexture", index);
-                        OcclusionEffect.SetValue("maxOccludees", 100);
-                        OcclusionEffect.SetValue("OcclusionResult", OcclusionResultTex);
-                        //OcclusionEffect.SetValue("OccludeeDataTextureAABB", OccludeeDataTextureAABB);
-                        //OcclusionEffect.SetValue("OccludeeDataTextureDepth", OccludeeDataTextureDepth);
-                        //OcclusionEffect.SetValue("HiZBufferTex", HiZBufferTex);                        
+                        OcclusionEffect.SetValue("OcclusionResult", OcclusionResultTex);                  
 
                         OcclusionEffect.Technique = technique;
                         int numPasses = OcclusionEffect.Begin(0);
@@ -434,18 +410,29 @@ namespace Examples.OcclusionMap.Cacic
                 //occludeeAABBdata[i + 2] = (UInt16)(occludeeAABBdata[i] + 200);
                 //occludeeAABBdata[i + 3] = (UInt16)(occludeeAABBdata[i + 1] + 200);
 
-                occludeeAABBdata[i] = 300; //r
-                occludeeAABBdata[i + 1] = 400; //g
-                occludeeAABBdata[i + 2] = 800; //b
-                occludeeAABBdata[i + 3] = 800; //a
+                //occludeeAABBdata[i] = GuiController.Instance.Panel3d.Width / 2; //r
+                //occludeeAABBdata[i + 1] = GuiController.Instance.Panel3d.Height / 2; //g
+                //occludeeAABBdata[i + 2] = occludeeAABBdata[i] + 5; //b
+                //occludeeAABBdata[i + 3] = occludeeAABBdata[i+1] + 5; //a
+
+                //TODO: Mati, mete codigo aca.
+                occludeeAABBdata[i] = 10; //r
+                occludeeAABBdata[i + 1] = 10; //g
+                occludeeAABBdata[i + 2] = 20; //b
+                occludeeAABBdata[i + 3] = 20; //a
+
             }
 
             //Populate Occludees depth with random depth.
+            //Here 0 means far and 1 is closest to the near plane.
             for (int i = 0; i < MAX_OCCLUDEES; i++)
             {
                 //occludeeDepthData[i] = (float)rnd.NextDouble();
-                occludeeDepthData[i] = 0.5f;
+                //TODO: Mati, mete codigo aca.
+                occludeeDepthData[i] = 0.125f;
             }
+
+            //TODO: Ver que hace esto por atras, a ver s se puede poner Usage.WriteOnly.
 
             //Stores the AABB in the texure as float32 x1,y1, x2, y2 
             OccludeeDataTextureAABB = new Texture(d3dDevice, textureSize, textureSize, 0, Usage.None, Format.A32B32G32R32F, Pool.Managed);
