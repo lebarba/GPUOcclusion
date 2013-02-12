@@ -29,9 +29,18 @@ namespace Examples.OcclusionMap.Cacic
         //TODO: Mati, mete codigo aca.
         const int MAX_OCCLUDEES = 4096;
         const float TextureSize = 64;
+        const bool enableZPyramid = true;
 
         //The hierarchical Z-Buffer (HiZ) texture.
         Texture HiZBufferTex;
+
+        //The hierarchical Z-Buffer mipmap chains.
+        //Sepparated as even and odd mip levels. See Nick Darnells' blog.
+        Surface[] HiZBufferMipMapEvens;
+        Surface[] HiZBufferMipMapOdds;
+
+        //The number of mip levels for the Hi Z texture;
+        int mipLevels;
 
         //The results of the occlusion test texture;
         Texture OcclusionResultTex;
@@ -95,11 +104,21 @@ namespace Examples.OcclusionMap.Cacic
             GuiController.Instance.FpsCamera.Enable = true;
             GuiController.Instance.FpsCamera.setCamera(new Vector3(0, 0, -10), new Vector3(0, 0, 0));
 
+            int mipValue;
+
+            if (enableZPyramid)
+                mipValue = 0;
+            else
+                mipValue = 1;
+            
             //Create the Occlusion map (Hierarchical Z Buffer).
             //Format.R32F
             HiZBufferTex = new Texture(d3dDevice, GuiController.Instance.D3dDevice.Viewport.Width,
-                GuiController.Instance.D3dDevice.Viewport.Height, 1, Usage.RenderTarget,
+                GuiController.Instance.D3dDevice.Viewport.Height, mipValue, Usage.RenderTarget,
                 Format.R32F, Pool.Default);
+
+            //Get the number of mipmap levels.
+            mipLevels = HiZBufferTex.LevelCount;
 
             //Get the surface.
             HiZSurface = HiZBufferTex.GetSurfaceLevel(0);
@@ -139,17 +158,19 @@ namespace Examples.OcclusionMap.Cacic
 
         private void DrawSprite(Texture tex, Point pos, float scale)
         {
-
-            using (Sprite spriteobject = new Sprite(d3dDevice))
-            {
-                spriteobject.Begin(SpriteFlags.DoNotModifyRenderState);
-                spriteobject.Transform = Matrix.Scaling(scale, scale, scale);
-                spriteobject.Draw(tex, new Rectangle(0, 0, tex.GetSurfaceLevel(0).Description.Width, tex.GetSurfaceLevel(0).Description.Height), new Vector3(0, 0, 0), new Vector3(pos.X, pos.Y, 0), Color.White);
-                spriteobject.End();
-            }
-
+            DrawSprite(tex, pos, scale, 0);
         }
 
+        private void DrawSprite(Texture tex, Point pos, float scale, int mipMapLevel)
+        {
+            using (Sprite spriteobject = new Sprite(d3dDevice))
+            {
+                spriteobject.Begin(SpriteFlags.DoNotModifyRenderState );
+                spriteobject.Transform = Matrix.Scaling(scale, scale, scale);
+                spriteobject.Draw(tex, new Rectangle(0, 0, tex.GetSurfaceLevel(mipMapLevel).Description.Width, tex.GetSurfaceLevel(mipMapLevel).Description.Height), new Vector3(0, 0, 0), new Vector3(pos.X, pos.Y, 0), Color.White);
+                spriteobject.End();
+            }
+        }
         private void DrawOcclusionBuffer()
         {
 
@@ -172,8 +193,8 @@ namespace Examples.OcclusionMap.Cacic
         {
             d3dDevice.BeginScene();
 
-            d3dDevice.SetRenderState(RenderStates.ZEnable, true);
-            d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, true);
+            d3dDevice.SetRenderState(RenderStates.ZEnable, false);
+            d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, false);
 
             //Set screen as render target.
             d3dDevice.SetRenderTarget(0, pOldRT);
@@ -187,7 +208,22 @@ namespace Examples.OcclusionMap.Cacic
             d3dDevice.SetTexture(3, OcclusionResultTex);
 
             //Draw the debug texture.
-            DrawSprite(HiZBufferTex, new Point(20, 20), 0.25f);
+
+            int posXMipMap = 20;
+            for (int i = 1; i < mipLevels; i++)
+            {
+                //DrawSprite(HiZBufferTex, new Point(posXMipMap, 10), 1.0f/ ((float) i + 1.0f), i);
+
+                DrawSprite(HiZBufferTex, new Point(posXMipMap, 10), 1.0f / ((float)i + 1.0f), i);
+                posXMipMap += HiZBufferTex.GetLevelDescription(i).Width*(i);
+            }
+
+            //DrawSprite(HiZBufferTex, new Point(20, 10), 1.0f, 2);
+
+
+            //DrawSprite(HiZBufferTex, new Point(60, 20), 0.25f, 0);
+           // DrawSprite(HiZBufferTex, new Point(20, 20), 0.25f, 1);
+            
             DrawSprite(OcclusionResultTex, new Point(20, 250), 2.0f);
             DrawSprite(OccludeeDataTextureAABB, new Point(20, 100), 2.0f);
             DrawSprite(OccludeeDataTextureDepth, new Point(20, 175), 2.0f);
@@ -218,6 +254,85 @@ namespace Examples.OcclusionMap.Cacic
             DrawTeapots(true, "HiZBuffer");
 
             d3dDevice.EndScene();
+
+            BuildMipMapChain();
+
+            d3dDevice.SetRenderTarget(0, pOldRT);
+        }
+
+        private void BuildMipMapChain()
+        {
+
+            int originalWidth = HiZBufferTex.GetSurfaceLevel(0).Description.Width;
+            int originalHeight = HiZBufferTex.GetSurfaceLevel(0).Description.Height;
+
+            for (int i = 1; i < mipLevels; i++)
+            {
+                d3dDevice.BeginScene();
+
+                //Get the Hierarchical zBuffer surface.
+                Surface pHiZBufferSurface = HiZBufferTex.GetSurfaceLevel(i);
+
+                //Set the render target.
+                d3dDevice.SetRenderTarget(0, pHiZBufferSurface);
+
+                d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
+
+                //Enable Z test and Z write.
+                d3dDevice.SetRenderState(RenderStates.ZEnable, true);
+                d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, true);
+
+
+                Viewport viewport = new Microsoft.DirectX.Direct3D.Viewport();
+                viewport.Width = pHiZBufferSurface.Description.Width;
+                viewport.Height = pHiZBufferSurface.Description.Height;
+                viewport.MaxZ = 1.0f;
+                viewport.MinZ = 0.0f;
+                viewport.X = 0;
+                viewport.Y = 0;
+
+                d3dDevice.Viewport = viewport;
+
+                //Draw the objects being occluded
+                //DrawTeapots(true, "HiZBuffer");
+                //Set the vertex format for the quad.
+                //d3dDevice.VertexFormat = CustomVertex.TransformedTextured.Format;
+                //d3dDevice.DrawUserPrimitives(PrimitiveType.TriangleFan, 2, ScreenQuadVertices);
+
+                Matrix matWorldViewProj = d3dDevice.Transform.World * d3dDevice.Transform.View * d3dDevice.Transform.Projection;
+                Matrix matWorldView = d3dDevice.Transform.World * d3dDevice.Transform.View;
+
+                OcclusionEffect.SetValue("matWorldViewProj", matWorldViewProj);
+                OcclusionEffect.SetValue("matWorldView", matWorldView);
+
+                //Send the PS the previous size and mip level values.
+                Vector4 LastMipInfo;
+                LastMipInfo.X = originalWidth >> (i - 1); //The previous mipmap width.
+                LastMipInfo.Y = originalWidth >> (i - 1);
+                LastMipInfo.Z = i - 1;
+
+                if (LastMipInfo.X  == 0) LastMipInfo.X  = 1;
+                if (LastMipInfo.Y  == 0) LastMipInfo.Y  = 1;
+
+
+                OcclusionEffect.SetValue("LastMipInfo", new float{ );
+                
+                OcclusionEffect.Technique = "HiZBufferDownSampling";
+                int numPasses = OcclusionEffect.Begin(0);
+
+                for (int n = 0; n < numPasses; n++)
+                {
+
+                    OcclusionEffect.BeginPass(n);
+                    teapot.DrawSubset(0);
+                    OcclusionEffect.EndPass();
+                }
+                OcclusionEffect.End();
+
+
+                d3dDevice.EndScene();
+            }
+
         }
 
         private void DrawGeometryWithOcclusionEnabled()
@@ -405,16 +520,6 @@ namespace Examples.OcclusionMap.Cacic
             for (int i = 0; i < MAX_OCCLUDEES*4; i += 4)
             {
                 //x1, y1, x2, y2
-                //occludeeAABBdata[i] = (UInt16)rnd.Next(50);
-                //occludeeAABBdata[i + 1] = (UInt16)rnd.Next(100);
-                //occludeeAABBdata[i + 2] = (UInt16)(occludeeAABBdata[i] + 200);
-                //occludeeAABBdata[i + 3] = (UInt16)(occludeeAABBdata[i + 1] + 200);
-
-                //occludeeAABBdata[i] = GuiController.Instance.Panel3d.Width / 2; //r
-                //occludeeAABBdata[i + 1] = GuiController.Instance.Panel3d.Height / 2; //g
-                //occludeeAABBdata[i + 2] = occludeeAABBdata[i] + 5; //b
-                //occludeeAABBdata[i + 3] = occludeeAABBdata[i+1] + 5; //a
-
                 //TODO: Mati, mete codigo aca.
                 occludeeAABBdata[i] = 10; //r
                 occludeeAABBdata[i + 1] = 10; //g
