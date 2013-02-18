@@ -32,22 +32,19 @@ namespace Examples.OcclusionMap.Cacic
         const bool enableZPyramid = true;
 
         //The hierarchical Z-Buffer (HiZ) texture.
-        Texture HiZBufferTex;
+        //Sepparated as even and odd mip levels. See Nick Darnells' blog.
+        // 0 is even 1 is odd.
+        Texture[] HiZBufferTex;
 
         //The hierarchical Z-Buffer mipmap chains.
-        //Sepparated as even and odd mip levels. See Nick Darnells' blog.
-        Surface[] HiZBufferMipMapEvens;
-        Surface[] HiZBufferMipMapOdds;
-
-        //The number of mip levels for the Hi Z texture;
+       
+         //The number of mip levels for the Hi Z texture;
         int mipLevels;
 
         //The results of the occlusion test texture;
         Texture OcclusionResultTex;
 
-        //The surface to store the Hi Z
-        Surface HiZSurface;
-
+ 
         //The surface to store the results of the occlusion test.
         Surface OcclusionResultSurface;
 
@@ -110,18 +107,23 @@ namespace Examples.OcclusionMap.Cacic
                 mipValue = 0;
             else
                 mipValue = 1;
-            
+
+
+            HiZBufferTex = new Texture[2];
             //Create the Occlusion map (Hierarchical Z Buffer).
             //Format.R32F
-            HiZBufferTex = new Texture(d3dDevice, GuiController.Instance.D3dDevice.Viewport.Width,
-                GuiController.Instance.D3dDevice.Viewport.Height, mipValue, Usage.RenderTarget,
-                Format.R32F, Pool.Default);
+
+            for (int i = 0; i < 2; i++)
+            {
+                HiZBufferTex[i] = new Texture(d3dDevice, GuiController.Instance.D3dDevice.Viewport.Width,
+                                             GuiController.Instance.D3dDevice.Viewport.Height, mipValue, Usage.RenderTarget,
+                                             Format.R32F, Pool.Default);
+            }
+ 
 
             //Get the number of mipmap levels.
-            mipLevels = HiZBufferTex.LevelCount;
+            mipLevels = HiZBufferTex[0].LevelCount;
 
-            //Get the surface.
-            HiZSurface = HiZBufferTex.GetSurfaceLevel(0);
 
 
             //Create the texture that will hold the results of the occlusion test.
@@ -148,7 +150,7 @@ namespace Examples.OcclusionMap.Cacic
             createOccludees();
         }
 
-  
+
         public override void render(float elapsedTime)
         {
             DrawOcclusionBuffer();
@@ -165,7 +167,7 @@ namespace Examples.OcclusionMap.Cacic
         {
             using (Sprite spriteobject = new Sprite(d3dDevice))
             {
-                spriteobject.Begin(SpriteFlags.DoNotModifyRenderState );
+                spriteobject.Begin(SpriteFlags.DoNotModifyRenderState);
                 spriteobject.Transform = Matrix.Scaling(scale, scale, scale);
                 spriteobject.Draw(tex, new Rectangle(0, 0, tex.GetSurfaceLevel(mipMapLevel).Description.Width, tex.GetSurfaceLevel(mipMapLevel).Description.Height), new Vector3(0, 0, 0), new Vector3(pos.X, pos.Y, 0), Color.White);
                 spriteobject.End();
@@ -177,7 +179,7 @@ namespace Examples.OcclusionMap.Cacic
 
             //Draw the low detail occluders. Generate the Hi Z buffer
             DrawOccluders();
-           
+
             //Perform the occlusion culling test. Obtain the visible set.
             PerformOcclussionCulling();
 
@@ -186,9 +188,10 @@ namespace Examples.OcclusionMap.Cacic
 
             //Show the occlusion related textures for debugging.
             DebugTexturesToScreen();
-             
+
         }
 
+        //Renders the debug textures.
         private void DebugTexturesToScreen()
         {
             d3dDevice.BeginScene();
@@ -202,33 +205,83 @@ namespace Examples.OcclusionMap.Cacic
 
             d3dDevice.VertexFormat = oldVertexFormat;
 
-            d3dDevice.SetTexture(0, OccludeeDataTextureAABB);
-            d3dDevice.SetTexture(1, OccludeeDataTextureDepth);
-            d3dDevice.SetTexture(2, HiZBufferTex);
-            d3dDevice.SetTexture(3, OcclusionResultTex);
 
-            //Draw the debug texture.
+            //Transformed vertices don't need vertex shader execution.
+            CustomVertex.TransformedTextured[] MipMapQuadVertices = new CustomVertex.TransformedTextured[4];
 
-            int posXMipMap = 20;
+           
+            //DrawSprite(HiZBufferTex[0], new Point(0, 0), 1);
+
+
+            int originalMipWidth = HiZBufferTex[0].GetSurfaceLevel(0).Description.Width;
+            int originalMipHeight = HiZBufferTex[0].GetSurfaceLevel(0).Description.Height;
+
+            int posXMipMap = 0;
+
             for (int i = 1; i < mipLevels; i++)
             {
-                //DrawSprite(HiZBufferTex, new Point(posXMipMap, 10), 1.0f/ ((float) i + 1.0f), i);
 
-                DrawSprite(HiZBufferTex, new Point(posXMipMap, 10), 1.0f / ((float)i + 1.0f), i);
-                posXMipMap += HiZBufferTex.GetLevelDescription(i).Width*(i);
+                OcclusionEffect.SetValue("mipLevel", i); 
+                OcclusionEffect.Technique = "DebugSpritesMipLevel";
+
+                if ( i > 0 )
+                    OcclusionEffect.SetValue("LastMip", HiZBufferTex[(i) % 2]);
+                else
+                    OcclusionEffect.SetValue("LastMip", HiZBufferTex[0]); //CHANGE THIS with 0
+                
+
+                d3dDevice.VertexFormat = CustomVertex.TransformedTextured.Format;
+
+                //Get the mip map level dimensions.
+                int mipWidth = originalMipWidth >> (i);
+                int mipHeight = originalMipHeight >> (i);
+                
+                //Create a screenspace quad for the position and size of the mip map.
+                UpdateMipMapVertices(ref MipMapQuadVertices, posXMipMap, 0, mipWidth, mipHeight);
+                
+                int numPasses = OcclusionEffect.Begin(0);
+                for (int n = 0; n < numPasses; n++)
+                {
+                    OcclusionEffect.BeginPass(n);
+
+                    d3dDevice.DrawUserPrimitives(PrimitiveType.TriangleFan, 2, MipMapQuadVertices);
+                    OcclusionEffect.EndPass();
+                }
+                OcclusionEffect.End();
+                posXMipMap += mipWidth + 10;
+
             }
 
-            //DrawSprite(HiZBufferTex, new Point(20, 10), 1.0f, 2);
-
-
-            //DrawSprite(HiZBufferTex, new Point(60, 20), 0.25f, 0);
-           // DrawSprite(HiZBufferTex, new Point(20, 20), 0.25f, 1);
-            
             DrawSprite(OcclusionResultTex, new Point(20, 250), 2.0f);
             DrawSprite(OccludeeDataTextureAABB, new Point(20, 100), 2.0f);
             DrawSprite(OccludeeDataTextureDepth, new Point(20, 175), 2.0f);
 
             d3dDevice.EndScene();
+        }
+
+        private void UpdateMipMapVertices(ref CustomVertex.TransformedTextured[] MipMapQuadVertices, int x, int y, int mipWidth, int mipHeight)
+        {
+            MipMapQuadVertices[0].Position = new Vector4(x, y, 0f, 1f);
+            MipMapQuadVertices[0].Rhw = 1.0f;
+            MipMapQuadVertices[0].Tu = 0.0f;
+            MipMapQuadVertices[0].Tv = 0.0f;
+
+            MipMapQuadVertices[1].Position = new Vector4(x + mipWidth, y, 0f, 1f);
+            MipMapQuadVertices[1].Rhw = 1.0f;
+            MipMapQuadVertices[1].Tu = 1.0f;
+            MipMapQuadVertices[1].Tv = 0.0f;
+
+
+            MipMapQuadVertices[2].Position = new Vector4(x + mipWidth, y + mipHeight, 0f, 1f);
+            MipMapQuadVertices[2].Rhw = 1.0f;
+            MipMapQuadVertices[2].Tu = 1.0f;
+            MipMapQuadVertices[2].Tv = 1.0f;
+
+            MipMapQuadVertices[3].Position = new Vector4(x, y + mipHeight, 0f, 1f);
+            MipMapQuadVertices[3].Rhw = 1.0f;
+            MipMapQuadVertices[3].Tu = 0.0f;
+            MipMapQuadVertices[3].Tv = 1.0f;
+
         }
 
         private void DrawOccluders()
@@ -238,8 +291,8 @@ namespace Examples.OcclusionMap.Cacic
             //Store the original render target.
             pOldRT = d3dDevice.GetRenderTarget(0);
 
-            //Get the Hierarchical zBuffer surface.
-            Surface pHiZBufferSurface = HiZBufferTex.GetSurfaceLevel(0);
+            //Get the Hierarchical zBuffer surface at mip level 0.
+            Surface pHiZBufferSurface = HiZBufferTex[0].GetSurfaceLevel(0);
 
             //Set the render target.
             d3dDevice.SetRenderTarget(0, pHiZBufferSurface);
@@ -263,25 +316,36 @@ namespace Examples.OcclusionMap.Cacic
         private void BuildMipMapChain()
         {
 
-            int originalWidth = HiZBufferTex.GetSurfaceLevel(0).Description.Width;
-            int originalHeight = HiZBufferTex.GetSurfaceLevel(0).Description.Height;
+            int originalWidth = HiZBufferTex[0].GetSurfaceLevel(0).Description.Width;
+            int originalHeight = HiZBufferTex[0].GetSurfaceLevel(0).Description.Height;
+
+            //Transformed vertices don't need vertex shader execution.
+            CustomVertex.TransformedTextured[] MipMapQuadVertices = new CustomVertex.TransformedTextured[4];
+
+            d3dDevice.SetRenderState(RenderStates.ZEnable, false);
+            d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, false);
+
+            
+
+            d3dDevice.BeginScene();
+
+            OcclusionEffect.Technique = "HiZBufferDownSampling";
+
+            //Set the vertex format for the quad.
+            d3dDevice.VertexFormat = CustomVertex.TransformedTextured.Format;
+
 
             for (int i = 1; i < mipLevels; i++)
             {
-                d3dDevice.BeginScene();
 
                 //Get the Hierarchical zBuffer surface.
-                Surface pHiZBufferSurface = HiZBufferTex.GetSurfaceLevel(i);
+                //If it is even set 0 in the tex array otherwise if it is odd use the 1 in the array.
+                Surface pHiZBufferSurface = HiZBufferTex[i % 2].GetSurfaceLevel(i);
 
                 //Set the render target.
                 d3dDevice.SetRenderTarget(0, pHiZBufferSurface);
 
-                d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
-
-                //Enable Z test and Z write.
-                d3dDevice.SetRenderState(RenderStates.ZEnable, true);
-                d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, true);
-
+                //d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
 
                 Viewport viewport = new Microsoft.DirectX.Direct3D.Viewport();
                 viewport.Width = pHiZBufferSurface.Description.Width;
@@ -290,49 +354,45 @@ namespace Examples.OcclusionMap.Cacic
                 viewport.MinZ = 0.0f;
                 viewport.X = 0;
                 viewport.Y = 0;
-
                 d3dDevice.Viewport = viewport;
 
-                //Draw the objects being occluded
-                //DrawTeapots(true, "HiZBuffer");
-                //Set the vertex format for the quad.
-                //d3dDevice.VertexFormat = CustomVertex.TransformedTextured.Format;
-                //d3dDevice.DrawUserPrimitives(PrimitiveType.TriangleFan, 2, ScreenQuadVertices);
 
-                Matrix matWorldViewProj = d3dDevice.Transform.World * d3dDevice.Transform.View * d3dDevice.Transform.Projection;
-                Matrix matWorldView = d3dDevice.Transform.World * d3dDevice.Transform.View;
 
-                OcclusionEffect.SetValue("matWorldViewProj", matWorldViewProj);
-                OcclusionEffect.SetValue("matWorldView", matWorldView);
 
                 //Send the PS the previous size and mip level values.
                 Vector4 LastMipInfo;
                 LastMipInfo.X = originalWidth >> (i - 1); //The previous mipmap width.
-                LastMipInfo.Y = originalWidth >> (i - 1);
-                LastMipInfo.Z = i - 1;
+                LastMipInfo.Y = originalHeight >> (i - 1);
+                LastMipInfo.Z = i - 1; // previous mip level.
+                LastMipInfo.W = 0;
 
-                if (LastMipInfo.X  == 0) LastMipInfo.X  = 1;
-                if (LastMipInfo.Y  == 0) LastMipInfo.Y  = 1;
+                if (LastMipInfo.X == 0) LastMipInfo.X = 1;
+                if (LastMipInfo.Y == 0) LastMipInfo.Y = 1;
 
 
-                OcclusionEffect.SetValue("LastMipInfo", new float{ );
-                
-                OcclusionEffect.Technique = "HiZBufferDownSampling";
+                 
+                //Set the texture of the previous mip level.
+                OcclusionEffect.SetValue("LastMipInfo", LastMipInfo);
+                OcclusionEffect.SetValue("LastMip", HiZBufferTex[(i - 1) % 2]);
+
+                //Update the mipmap vertices.
+                UpdateMipMapVertices( ref MipMapQuadVertices, 0, 0, pHiZBufferSurface.Description.Width, pHiZBufferSurface.Description.Height);
+
+
                 int numPasses = OcclusionEffect.Begin(0);
 
                 for (int n = 0; n < numPasses; n++)
                 {
 
                     OcclusionEffect.BeginPass(n);
-                    teapot.DrawSubset(0);
+                    d3dDevice.DrawUserPrimitives(PrimitiveType.TriangleFan, 2, MipMapQuadVertices);
                     OcclusionEffect.EndPass();
                 }
                 OcclusionEffect.End();
 
 
-                d3dDevice.EndScene();
             }
-
+            d3dDevice.EndScene();
         }
 
         private void DrawGeometryWithOcclusionEnabled()
@@ -354,13 +414,13 @@ namespace Examples.OcclusionMap.Cacic
 
             d3dDevice.SetTexture(0, OccludeeDataTextureAABB);
             d3dDevice.SetTexture(1, OccludeeDataTextureDepth);
-            d3dDevice.SetTexture(2, HiZBufferTex);
+            d3dDevice.SetTexture(2, HiZBufferTex[0]);
             d3dDevice.SetTexture(3, OcclusionResultTex);
 
 
             DrawTeapots(true, "RenderWithOcclusionEnabled");
 
-            
+
             d3dDevice.EndScene();
         }
 
@@ -379,7 +439,7 @@ namespace Examples.OcclusionMap.Cacic
 
             d3dDevice.SetTexture(0, OccludeeDataTextureAABB);
             d3dDevice.SetTexture(1, OccludeeDataTextureDepth);
-            d3dDevice.SetTexture(2, HiZBufferTex);
+            d3dDevice.SetTexture(2, HiZBufferTex[0]);
             d3dDevice.SetTexture(3, OcclusionResultTex);
 
             d3dDevice.SetRenderTarget(0, OcclusionResultSurface);
@@ -396,15 +456,22 @@ namespace Examples.OcclusionMap.Cacic
 
             OcclusionEffect.SetValue("matWorldViewProj", matWorldViewProj);
             OcclusionEffect.SetValue("matWorldView", matWorldView);
-            
+
             OcclusionEffect.SetValue("OccludeeDataTextureAABB", OccludeeDataTextureAABB);
             OcclusionEffect.SetValue("OccludeeDataTextureDepth", OccludeeDataTextureDepth);
-            OcclusionEffect.SetValue("HiZBufferTex", HiZBufferTex);
+            OcclusionEffect.SetValue("HiZBufferTex", HiZBufferTex[0]);
             OcclusionEffect.SetValue("maxOccludees", 100);
             //OcclusionEffect.SetValue("OcclusionResult", OcclusionResultTex);
 
             OcclusionEffect.SetValue("HiZBufferWidth", GuiController.Instance.D3dDevice.Viewport.Width);
             OcclusionEffect.SetValue("HiZBufferHeight", GuiController.Instance.D3dDevice.Viewport.Height);
+
+            OcclusionEffect.SetValue("maxMipLevels", HiZBufferTex[0].LevelCount); //Send number of mipmaps.
+
+
+            OcclusionEffect.SetValue("HiZBufferEvenTex", HiZBufferTex[0]);
+            OcclusionEffect.SetValue("HiZBufferOddTex", HiZBufferTex[1]);
+
 
             OcclusionEffect.Technique = "OcclusionTest";
 
@@ -475,7 +542,7 @@ namespace Examples.OcclusionMap.Cacic
                         OcclusionEffect.SetValue("matWorldView", matWorldView);
 
                         OcclusionEffect.SetValue("ocludeeIndexInTexture", index);
-                        OcclusionEffect.SetValue("OcclusionResult", OcclusionResultTex);                  
+                        OcclusionEffect.SetValue("OcclusionResult", OcclusionResultTex);
 
                         OcclusionEffect.Technique = technique;
                         int numPasses = OcclusionEffect.Begin(0);
@@ -488,7 +555,7 @@ namespace Examples.OcclusionMap.Cacic
                             OcclusionEffect.EndPass();
                         }
                         OcclusionEffect.End();
-                        
+
                         index++;
                     }
                     else
@@ -517,7 +584,7 @@ namespace Examples.OcclusionMap.Cacic
 
 
             //Populate Occludees AABB with random position and sizes.
-            for (int i = 0; i < MAX_OCCLUDEES*4; i += 4)
+            for (int i = 0; i < MAX_OCCLUDEES * 4; i += 4)
             {
                 //x1, y1, x2, y2
                 //TODO: Mati, mete codigo aca.
