@@ -1,0 +1,38 @@
+
+
+Present a simple but powerful solution to GPU Stalls
+Avoid latency when obtaining result of occlusion.
+Discard is done at geometry stage discarding vertices.
+
+Proposed this in GPU and accessible by shaders.
+
+Assumptions:
+	Geometry simple / hard on pixel shaders
+	Occluders can be generated
+	Per object occlusion culling
+
+REsearch
+	How long it takes to bake the HiZ chain.
+	How to calculate the screenspace AABB in vertex shader.
+	Spheres instead of AABB
+	Predicate rendering no es lo mismo? O hay que esperar el resutlado del query. 
+	Parece que el visibility result del predicate rendering no esta disponible en shaders.
+
+Prevents:
+	LEss gpu stalling, No results need to be get from GPU.
+
+Good for:
+	Pixel shader bound geometry. Intensive pixel shader
+	Relatively low geometry.
+	Can be implemented without compute shaders
+	LOD?
+	
+Drawbacks
+	Instancing?
+	Calculation of occluders
+	
+	
+Thanks
+	Daniel Es journal
+	Daniel Rákos - Rastergrid
+	Nick Darnell

@@ -18,7 +18,6 @@ texture2D HiZBufferTex;
 texture2D OcclusionResult;
 texture2D LastMip;
 
-
 texture2D HiZBufferEvenTex;
 texture2D HiZBufferOddTex;
 
@@ -35,8 +34,8 @@ float maxMipLevels;
 sampler OccludeeDataAABBSampler = sampler_state
 {
     Texture = <OccludeeDataTextureAABB>;
-    MagFilter = LINEAR;
-    MinFilter = LINEAR;
+    MagFilter = POINT;
+    MinFilter = POINT;
     MipFilter = NONE;
     AddressU = CLAMP;
     AddressV = CLAMP;
@@ -45,8 +44,8 @@ sampler OccludeeDataAABBSampler = sampler_state
 sampler OccludeeDataDepthSampler = sampler_state
 {
     Texture = <OccludeeDataTextureDepth>;
-    MagFilter = LINEAR;
-    MinFilter = LINEAR;
+    MagFilter = POINT;
+    MinFilter = POINT;
     MipFilter = NONE;
     AddressU = CLAMP;
     AddressV = CLAMP;
@@ -55,8 +54,8 @@ sampler OccludeeDataDepthSampler = sampler_state
 sampler HiZBufferSampler = sampler_state
 {
     Texture = <HiZBufferTex>;
-    MagFilter = LINEAR;
-    MinFilter = LINEAR;
+    MagFilter = POINT;
+    MinFilter = POINT;
     MipFilter = NONE;
     AddressU = CLAMP;
     AddressV = CLAMP;
@@ -65,8 +64,8 @@ sampler HiZBufferSampler = sampler_state
 sampler OcclusionResultSampler = sampler_state
 {
     Texture = <OcclusionResult>;
-    MagFilter = LINEAR;
-    MinFilter = LINEAR;
+    MagFilter = POINT;
+    MinFilter = POINT;
     MipFilter = NONE;
     AddressU = CLAMP;
     AddressV = CLAMP;
@@ -76,17 +75,18 @@ sampler OcclusionResultSampler = sampler_state
 sampler LastMipSampler = sampler_state
 {
     Texture = <LastMip>;
-    MinFilter = Point;
-    MagFilter = Point;
-    MipFilter = Point;
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = POINT;
+	
 };
 
 
 sampler HiZBufferEvenSampler = sampler_state
 {
     Texture = <HiZBufferEvenTex>;
-    MagFilter = LINEAR;
-    MinFilter = LINEAR;
+    MagFilter = POINT;
+    MinFilter = POINT;
     MipFilter = NONE;
     AddressU = CLAMP;
     AddressV = CLAMP;
@@ -96,8 +96,8 @@ sampler HiZBufferEvenSampler = sampler_state
 sampler HiZBufferOddSampler = sampler_state
 {
     Texture = <HiZBufferOddTex>;
-    MagFilter = LINEAR;
-    MinFilter = LINEAR;
+    MagFilter = POINT;
+    MinFilter = POINT;
     MipFilter = NONE;
     AddressU = CLAMP;
     AddressV = CLAMP;
@@ -118,8 +118,6 @@ struct VS_OUTPUT
    float4 Position :     POSITION0;
    float2 Depth    :     TEXCOORD0;
 };
-
-
 
 //Quad Vertex Shader Input
 struct VS_INPUT_QUAD
@@ -172,7 +170,7 @@ float4 PixHiZ( float2 depth: TEXCOORD0) : COLOR0
 {
 	//Return the depth as z / w.
 
-	return  (depth.x / depth.y);
+	return  1 - (depth.x / depth.y);
 }
 
 
@@ -181,7 +179,8 @@ float4 PixHiZ( float2 depth: TEXCOORD0) : COLOR0
 float4 DownSamplePS( in float4 Position   : POSITION0,
            in float2 PositionSS : TEXCOORD0 ) : Color0
 {
-    float width = LastMipInfo.x;
+    
+	float width = LastMipInfo.x;
     float height = LastMipInfo.y;
     float mip = LastMipInfo.z;
 
@@ -191,16 +190,15 @@ float4 DownSamplePS( in float4 Position   : POSITION0,
     // the previous mip, so the maximum x/y values will be half as much of the mip we're
     // rendering to.
     float2 nCoords0 = float2(PositionSS.x, PositionSS.y);
+
 	
-	//Find out why this doesnt seem to work.
+	//TODO: Find out why this doesnt seem to work.
 	//float2 nCoords0 = float2((PositionSS.x * 2) / width, (PositionSS.y * 2) / height); 
-	
-    
+	    
     float2 nCoords1 = float2(nCoords0.x + (1 / width), nCoords0.y);
     float2 nCoords2 = float2(nCoords0.x, nCoords0.y + (1 / height));
     float2 nCoords3 = float2(nCoords1.x, nCoords2.y);
     
-	
 		
     // fetch a 2x2 neighborhood and compute the min (1 close to camera, 0 far)
     float4 vTexels;
@@ -267,12 +265,13 @@ VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT_WITH_OCCLUSION Input )
 	
 	
 }
+
+//Used to render a textured quad at particular mipmap level.
+//Used to debug the mipmap chain.
 float4 SelectedMipMapLevel( in float4 Position   : POSITION0,
 							in float2 texCoord : TEXCOORD0 ) : Color0
 {
   
- 
- //return tex2Dlod( LastMipSampler, float4(texCoord, 0,3) );
 	return tex2Dlod( LastMipSampler, float4(texCoord, 0, mipLevel) );
 	
 }
@@ -315,83 +314,35 @@ float4 PixOcclusionTest( float2 pos: TEXCOORD0) : COLOR0
 	
 	float2 hiZTexPos;
 	
-	
-	//Get Hierarchical Z Buffer depth for the given position.
-	hiZDepth =  tex2Dlod(HiZBufferSampler, float4(0.5f,0.5f, 0.0f, 0.0f)).r;
-	
 		
-	for( j = occludeeY1 ; j < occludeeY2 ; j += 1.0f )
+	for( j = occludeeY1 ; j <= occludeeY2 ; j += 1.0f )
 	{
-		for( i = occludeeX1 ; i < occludeeX2 ; i += 1.0f )
+		for( i = occludeeX1 ; i <= occludeeX2 ; i += 1.0f )
 		{
 		
 			//Get the uv texture position from i and j positions.
 			hiZTexPos.x  = i / HiZBufferWidth;
 			hiZTexPos.y  = j / HiZBufferHeight;
 			
-
-			//Get Hierarchical Z Buffer depth for the given position.
-			hiZDepth = tex2Dlod(HiZBufferSampler, float4(hiZTexPos, 0.0f, 0.0f)).r;			
+			//Get Hierarchical Z Buffer depth for the given position at level 0.
+			hiZDepth = tex2Dlod(HiZBufferSampler, float4(hiZTexPos, 0.0f, 0.0f)).r;		
 
 			//Check the depth value of the occludee and the one stored in the depth buffer.
-			if( occludeeDepth > hiZDepth )
-				discard;       //Occludee visible. Stop searching and discard pixel shader. keep 255 original value.
+			if( occludeeDepth >= hiZDepth )
+				discard;  //Occludee visible. Stop searching and discard pixel shader. keep 255 original value.
+
+				
 
 		}
 	}
-	
+
+		
 	//The occludee is not visible.
 	return 1;
 }
 
 
-
-float OcclusionTestMipPyramid(float4 AABB, float OccludeeDepth, float2 mipSize, float mipLevel)
-{
-
-
-	
-	int occludeeX1, occludeeX2, occludeeY1, occludeeY2;
-		
-	//Get the AABB extremes
-	occludeeX1 = AABB.r;
-	occludeeY1 = AABB.g;
-	occludeeX2 = AABB.b;
-	occludeeY2 = AABB.a;
-
-	float i, j;
-	float2 hiZTexPos;
-	float hiZDepth;
-	
-	int mipLevelInt = (int) mipLevel;
-	
-
-	
-	for( j = occludeeY1 ; j < occludeeY2 ; j += 1.0f )
-	{
-		for( i = occludeeX1 ; i < occludeeX2 ; i += 1.0f )
-		{
-		
-			//Get the uv texture position from i and j positions.
-			hiZTexPos.x  = i / mipSize.x;
-			hiZTexPos.y  = j / mipSize.y;
-			
-			//Get Hierarchical Z Buffer depth for the given position.
-			if( mipLevelInt % 2 ==  0)
-				hiZDepth = tex2Dlod(HiZBufferEvenSampler, float4(hiZTexPos, 0.0f, mipLevel)).r;
-			else				
-				hiZDepth = tex2Dlod(HiZBufferOddSampler, float4(hiZTexPos, 0.0f, mipLevel)).r;
-			
-			//Check the depth value of the occludee and the one stored in the depth buffer.
-			if( OccludeeDepth > hiZDepth )
-				discard;       //Occludee visible. Stop searching and discard pixel shader. keep 255 original value.
-
-		}
-	}
-	
-	return 0.0f;
-}
-
+//Uses the precalculated Hierachical Depth Buffer to optimize the Occlusion Test.
 float4 PixOcclusionTestPyramid( float2 pos: TEXCOORD0) : COLOR0
 {
 	//Get the 2D position inside the texture array
@@ -405,33 +356,70 @@ float4 PixOcclusionTestPyramid( float2 pos: TEXCOORD0) : COLOR0
 	if( index > maxOccludees)
 		discard;
 
-	//Get the AABB from the texture at mip level 0.
-	float4 texValue = tex2Dlod(OccludeeDataAABBSampler, float4(pos, 0.0f, 0.0f));
-	
-	float mipLevel = maxMipLevels - 1;
-	
-	
+
+	float4 texValue; 
 	float occludeeDepth;
+	int n;
+	float i, j;
+	float2 hiZTexPos;
+	float hiZDepth;
+	int mipSizeX,mipSizeY;
+	int occludeeX1, occludeeX2, occludeeY1, occludeeY2;
+	float2 mipSize;
+		
+	//Get the AABB from the texture at mip level 0.
+	texValue = tex2Dlod(OccludeeDataAABBSampler, float4(pos, 0.0f, 0.0f));
 			
 	//Get the occludee depth value from texture.
 	occludeeDepth = tex2Dlod(OccludeeDataDepthSampler, float4(pos, 0.0f, 0.0f)).r;
 	
-	float i;
 	
-	int mipSizeX,mipSizeY;
+	//Set the interval to 0 to a max of 20 levels to let compiler know how to unroll the loop.
+	int mipLevel = clamp(maxMipLevels - 1 , 0, 15);
+				
+	if( mipLevel > 15)
+		mipLevel = 15;
 	
-	mipSizeX = (int) (HiZBufferWidth / pow(2, mipLevel));
-	mipSizeY = (int) (HiZBufferHeight / pow(2, mipLevel));
-	
-	//Optimize this!
-	float2 mipSize = float2( mipSizeX, mipSizeY);
 
-	i = 1;
-	
-	while ( i >= 0)
+	for( n = 1 ; n >= 0 ; n--)
 	{
-		OcclusionTestMipPyramid( texValue, occludeeDepth, mipSize, i);
-		i--;
+
+		//Get the mipmap size
+		mipSize.x = (int) (HiZBufferWidth / pow(2, n));
+		mipSize.y = (int) (HiZBufferHeight / pow(2, n));
+	
+		//Get the AABB extremes in that mipmap level.
+		occludeeX1 = ((float)( texValue.r) / HiZBufferWidth) * mipSize.x;
+		occludeeY1 = ((float)( texValue.g) / HiZBufferHeight) * mipSize.y;
+		occludeeX2 = ((float)( texValue.b) / HiZBufferWidth) * mipSize.x;
+		occludeeY2 = ((float)( texValue.a) / HiZBufferHeight) * mipSize.y;
+
+		
+		int mipLevelInt = (int) mipLevel;
+
+
+		for( j = occludeeY1 ; j < occludeeY2 ; j += 1.0f )
+		{
+			for( i = occludeeX1 ; i < occludeeX2 ; i += 1.0f )
+			{
+			
+				//Get the uv texture position from i and j positions.
+				hiZTexPos.x  = i / mipSize.x;
+				hiZTexPos.y  = j / mipSize.y;
+				
+				//Get Hierarchical Z Buffer depth for the given position.
+				if( mipLevelInt % 2 ==  0)
+					hiZDepth = tex2Dlod(HiZBufferEvenSampler, float4(hiZTexPos, 0.0f, mipLevel)).r;
+				else				
+					hiZDepth = tex2Dlod(HiZBufferOddSampler, float4(hiZTexPos, 0.0f, mipLevel)).r;
+				
+				//Check the depth value of the occludee and the one stored in the depth buffer.
+				if( occludeeDepth >= hiZDepth )
+					discard;       //Occludee visible. Stop searching and discard pixel shader. keep 255 original value.
+
+			}
+		}
+		
 	}
 
 	return 1; //Occludee not visible.
@@ -452,15 +440,25 @@ technique HiZBuffer
     }
 }
 
-technique OcclusionTest
+technique OcclusionTestPyramid
 {
     pass p0
     {
         VertexShader = compile vs_3_0 VertPassThru();
-        //PixelShader = compile ps_3_0 PixOcclusionTest(); //Without Z Pyramid
-		PixelShader = compile ps_3_0 PixOcclusionTestPyramid(); //Using Z Pyramid.
+		PixelShader = compile ps_3_0 PixOcclusionTest(); //PixOcclusionTestPyramid(); //Using Z Pyramid.
     }
 }
+
+technique OcclusionTestSimple
+{
+    pass p0
+    {
+        VertexShader = compile vs_3_0 VertPassThru();
+        PixelShader = compile ps_3_0 PixOcclusionTest(); //Without Z Pyramid
+    }
+}
+
+
 
 technique RenderWithOcclusionEnabled
 {
