@@ -38,3 +38,13 @@ D:\Leandro\Desktop\demo occlusion culling\guithub\Examples\Examples.pdb
 D:\Leandro\Desktop\demo occlusion culling\guithub\Examples\Ionic.Zip.dll
 D:\Leandro\Desktop\demo occlusion culling\guithub\Examples\TgcViewer.exe
 D:\Leandro\Desktop\demo occlusion culling\guithub\Examples\TgcViewer.pdb
+C:\GPU Occlusion git\GPUOcclusion\Examples\obj\Debug\ResolveAssemblyReference.cache
+C:\GPU Occlusion git\GPUOcclusion\Examples\obj\Debug\Examples.Properties.Resources.resources
+C:\GPU Occlusion git\GPUOcclusion\Examples\obj\Debug\Examples.csproj.GenerateResource.Cache
+C:\GPU Occlusion git\GPUOcclusion\Examples\obj\Debug\Examples.dll
+C:\GPU Occlusion git\GPUOcclusion\Examples\obj\Debug\Examples.pdb
+C:\GPU Occlusion git\GPUOcclusion\Examples\Examples.dll
+C:\GPU Occlusion git\GPUOcclusion\Examples\Examples.pdb
+C:\GPU Occlusion git\GPUOcclusion\Examples\Ionic.Zip.dll
+C:\GPU Occlusion git\GPUOcclusion\Examples\TgcViewer.exe
+C:\GPU Occlusion git\GPUOcclusion\Examples\TgcViewer.pdb
