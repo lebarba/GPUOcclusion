@@ -299,8 +299,7 @@ namespace TgcViewer.Utils.TgcSceneLoader
             /// </summary>
             public Texture createTexture(Device d3dDevice, string filePath)
             {
-                Texture d3dTexture = TextureLoader.FromFile(d3dDevice, filePath);
-                return createTexture(d3dDevice, filePath, d3dTexture);
+                return createTexture(d3dDevice, filePath, null);
             }
 
             /// <summary>
@@ -316,6 +315,10 @@ namespace TgcViewer.Utils.TgcSceneLoader
                 if (!texturesPool.ContainsKey(filePath))
                 {
                     PoolItem newItem = new PoolItem();
+                    if (d3dTexture == null)
+                    {
+                        d3dTexture = TextureLoader.FromFile(d3dDevice, filePath);
+                    }
                     newItem.Texture = d3dTexture;
                     newItem.FilePath = filePath;
                     newItem.References = 0;

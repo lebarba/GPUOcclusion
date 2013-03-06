@@ -1,3 +1,4 @@
+float4x4 matWorld;
 float4x4 matWorldView;
 float4x4 matWorldViewProj;
 

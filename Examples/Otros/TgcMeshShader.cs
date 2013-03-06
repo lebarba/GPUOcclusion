@@ -181,6 +181,65 @@ namespace Examples.Shaders
 
         }
 
+        /// <summary>
+        /// Crear un TgcMeshShader a partir de un TgcMesh
+        /// </summary>
+        public static TgcMeshShader fromTgcMesh(TgcMesh tgcMesh, Effect effect)
+        {
+            Device device = GuiController.Instance.D3dDevice;
+
+            //Clonar D3dMesh
+            Mesh d3dCloneMesh = tgcMesh.D3dMesh.Clone(MeshFlags.Managed, tgcMesh.D3dMesh.Declaration, device);
+
+            //Crear mesh de TGC y cargar atributos generales
+            TgcMeshShader cloneMesh = new TgcMeshShader(d3dCloneMesh, tgcMesh.Name, tgcMesh.RenderType);
+            cloneMesh.Materials = tgcMesh.Materials;
+            cloneMesh.layer = tgcMesh.Layer;
+            cloneMesh.boundingBox = tgcMesh.BoundingBox.clone();
+            cloneMesh.alphaBlendEnable = tgcMesh.AlphaBlendEnable;
+            cloneMesh.enabled = true;
+
+            //Transformaciones
+            cloneMesh.translation = tgcMesh.Position;
+            cloneMesh.rotation = tgcMesh.Rotation;
+            cloneMesh.scale = tgcMesh.Scale;
+            cloneMesh.transform = tgcMesh.Transform;
+            cloneMesh.autoTransformEnable = tgcMesh.AutoTransformEnable;
+
+            //Clonar userProperties
+            if (tgcMesh.UserProperties != null)
+            {
+                cloneMesh.UserProperties = new Dictionary<string, string>();
+                foreach (KeyValuePair<string, string> entry in tgcMesh.UserProperties)
+                {
+                    cloneMesh.UserProperties.Add(entry.Key, entry.Value);
+                }
+            }
+
+            //Clonar DiffuseMaps
+            if (tgcMesh.DiffuseMaps != null)
+            {
+                cloneMesh.diffuseMaps = new TgcTexture[tgcMesh.DiffuseMaps.Length];
+                for (int i = 0; i < tgcMesh.DiffuseMaps.Length; i++)
+                {
+                    cloneMesh.diffuseMaps[i] = tgcMesh.DiffuseMaps[i].clone();
+                }
+            }
+
+            //Clonar LightMap
+            if (tgcMesh.LightMap != null)
+            {
+                cloneMesh.lightMap = tgcMesh.LightMap.clone();
+            }
+
+
+            cloneMesh.effect = effect;
+
+            return cloneMesh;
+        }
+
+
+
     }
 
     /// <summary>

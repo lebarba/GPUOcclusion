@@ -68,8 +68,9 @@ C:\GPU Occlusion git\GPUOcclusion\TgcViewer\obj\Debug\TgcViewer.Utils.Networking
 C:\GPU Occlusion git\GPUOcclusion\TgcViewer\obj\Debug\TgcViewer.Utils.Networking.TgcNetworkingModifierServersDialog.resources
 C:\GPU Occlusion git\GPUOcclusion\TgcViewer\obj\Debug\TgcViewer.Utils.Ui.AboutWindow.resources
 C:\GPU Occlusion git\GPUOcclusion\TgcViewer\obj\Debug\TgcViewer.Utils.Ui.FullScreenPanel.resources
-C:\GPU Occlusion git\GPUOcclusion\TgcViewer\obj\Debug\TgcViewer.csproj.GenerateResource.Cache
 C:\GPU Occlusion git\GPUOcclusion\TgcViewer\obj\Debug\TgcViewer.exe
 C:\GPU Occlusion git\GPUOcclusion\TgcViewer\obj\Debug\TgcViewer.pdb
 C:\GPU Occlusion git\GPUOcclusion\TgcViewer.exe
 C:\GPU Occlusion git\GPUOcclusion\TgcViewer.pdb
+C:\GPU Occlusion git\GPUOcclusion\TgcViewer\obj\Debug\GenerateResource-ResGen.read.1.tlog
+C:\GPU Occlusion git\GPUOcclusion\TgcViewer\obj\Debug\GenerateResource-ResGen.write.1.tlog
