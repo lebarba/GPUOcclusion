@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.archivoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.verToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -235,7 +235,7 @@
             this.splitContainerConsole.Panel2.BackColor = System.Drawing.SystemColors.Control;
             this.splitContainerConsole.Panel2.Controls.Add(this.groupBoxConsole);
             this.splitContainerConsole.Size = new System.Drawing.Size(781, 504);
-            this.splitContainerConsole.SplitterDistance = 461;
+            this.splitContainerConsole.SplitterDistance = 409;
             this.splitContainerConsole.TabIndex = 3;
             // 
             // splitContainerExamples
@@ -252,7 +252,7 @@
             // splitContainerExamples.Panel2
             // 
             this.splitContainerExamples.Panel2.Controls.Add(this.splitContainerUserVars);
-            this.splitContainerExamples.Size = new System.Drawing.Size(781, 461);
+            this.splitContainerExamples.Size = new System.Drawing.Size(781, 409);
             this.splitContainerExamples.SplitterDistance = 70;
             this.splitContainerExamples.TabIndex = 0;
             // 
@@ -271,8 +271,8 @@
             // splitContainerDescripcionExample.Panel2
             // 
             this.splitContainerDescripcionExample.Panel2.Controls.Add(this.textBoxExampleDescription);
-            this.splitContainerDescripcionExample.Size = new System.Drawing.Size(70, 461);
-            this.splitContainerDescripcionExample.SplitterDistance = 351;
+            this.splitContainerDescripcionExample.Size = new System.Drawing.Size(70, 409);
+            this.splitContainerDescripcionExample.SplitterDistance = 311;
             this.splitContainerDescripcionExample.TabIndex = 1;
             // 
             // groupBoxExamples
@@ -282,7 +282,7 @@
             this.groupBoxExamples.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBoxExamples.Location = new System.Drawing.Point(0, 0);
             this.groupBoxExamples.Name = "groupBoxExamples";
-            this.groupBoxExamples.Size = new System.Drawing.Size(70, 351);
+            this.groupBoxExamples.Size = new System.Drawing.Size(70, 311);
             this.groupBoxExamples.TabIndex = 0;
             this.groupBoxExamples.TabStop = false;
             this.groupBoxExamples.Text = "Ejemplos";
@@ -292,10 +292,10 @@
             this.treeViewExamples.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeViewExamples.Location = new System.Drawing.Point(3, 16);
             this.treeViewExamples.Name = "treeViewExamples";
-            this.treeViewExamples.Size = new System.Drawing.Size(64, 332);
+            this.treeViewExamples.Size = new System.Drawing.Size(64, 292);
             this.treeViewExamples.TabIndex = 4;
-            this.treeViewExamples.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.treeViewExamples_MouseDoubleClick);
             this.treeViewExamples.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeViewExamples_AfterSelect);
+            this.treeViewExamples.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.treeViewExamples_MouseDoubleClick);
             // 
             // textBoxExampleDescription
             // 
@@ -304,7 +304,7 @@
             this.textBoxExampleDescription.Multiline = true;
             this.textBoxExampleDescription.Name = "textBoxExampleDescription";
             this.textBoxExampleDescription.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxExampleDescription.Size = new System.Drawing.Size(70, 106);
+            this.textBoxExampleDescription.Size = new System.Drawing.Size(70, 94);
             this.textBoxExampleDescription.TabIndex = 0;
             // 
             // splitContainerUserVars
@@ -321,7 +321,7 @@
             // splitContainerUserVars.Panel2
             // 
             this.splitContainerUserVars.Panel2.Controls.Add(this.splitContainerModifiers);
-            this.splitContainerUserVars.Size = new System.Drawing.Size(707, 461);
+            this.splitContainerUserVars.Size = new System.Drawing.Size(707, 409);
             this.splitContainerUserVars.SplitterDistance = 639;
             this.splitContainerUserVars.TabIndex = 0;
             // 
@@ -331,7 +331,7 @@
             this.panel3d.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel3d.Location = new System.Drawing.Point(0, 0);
             this.panel3d.Name = "panel3d";
-            this.panel3d.Size = new System.Drawing.Size(639, 461);
+            this.panel3d.Size = new System.Drawing.Size(639, 409);
             this.panel3d.TabIndex = 0;
             // 
             // splitContainerModifiers
@@ -349,8 +349,8 @@
             // splitContainerModifiers.Panel2
             // 
             this.splitContainerModifiers.Panel2.Controls.Add(this.groupBoxUserVars);
-            this.splitContainerModifiers.Size = new System.Drawing.Size(64, 461);
-            this.splitContainerModifiers.SplitterDistance = 352;
+            this.splitContainerModifiers.Size = new System.Drawing.Size(64, 409);
+            this.splitContainerModifiers.SplitterDistance = 312;
             this.splitContainerModifiers.TabIndex = 1;
             // 
             // groupBoxModifiers
@@ -360,7 +360,7 @@
             this.groupBoxModifiers.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBoxModifiers.Location = new System.Drawing.Point(0, 0);
             this.groupBoxModifiers.Name = "groupBoxModifiers";
-            this.groupBoxModifiers.Size = new System.Drawing.Size(64, 352);
+            this.groupBoxModifiers.Size = new System.Drawing.Size(64, 312);
             this.groupBoxModifiers.TabIndex = 0;
             this.groupBoxModifiers.TabStop = false;
             this.groupBoxModifiers.Text = "Modifiers";
@@ -373,7 +373,7 @@
             this.flowLayoutPanelModifiers.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanelModifiers.Location = new System.Drawing.Point(3, 16);
             this.flowLayoutPanelModifiers.Name = "flowLayoutPanelModifiers";
-            this.flowLayoutPanelModifiers.Size = new System.Drawing.Size(58, 333);
+            this.flowLayoutPanelModifiers.Size = new System.Drawing.Size(58, 293);
             this.flowLayoutPanelModifiers.TabIndex = 0;
             this.flowLayoutPanelModifiers.WrapContents = false;
             // 
@@ -384,7 +384,7 @@
             this.groupBoxUserVars.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBoxUserVars.Location = new System.Drawing.Point(0, 0);
             this.groupBoxUserVars.Name = "groupBoxUserVars";
-            this.groupBoxUserVars.Size = new System.Drawing.Size(64, 105);
+            this.groupBoxUserVars.Size = new System.Drawing.Size(64, 93);
             this.groupBoxUserVars.TabIndex = 0;
             this.groupBoxUserVars.TabStop = false;
             this.groupBoxUserVars.Text = "User variables";
@@ -405,7 +405,7 @@
             this.dataGridUserVars.ReadOnly = true;
             this.dataGridUserVars.RowHeadersWidth = 10;
             this.dataGridUserVars.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dataGridUserVars.Size = new System.Drawing.Size(58, 86);
+            this.dataGridUserVars.Size = new System.Drawing.Size(58, 74);
             this.dataGridUserVars.TabIndex = 0;
             // 
             // ColumnName
@@ -421,8 +421,8 @@
             // 
             this.ColumnValue.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
             this.ColumnValue.DataPropertyName = "Value";
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ColumnValue.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ColumnValue.DefaultCellStyle = dataGridViewCellStyle1;
             this.ColumnValue.HeaderText = "Value";
             this.ColumnValue.Name = "ColumnValue";
             this.ColumnValue.ReadOnly = true;
@@ -433,7 +433,7 @@
             this.groupBoxConsole.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBoxConsole.Location = new System.Drawing.Point(0, 0);
             this.groupBoxConsole.Name = "groupBoxConsole";
-            this.groupBoxConsole.Size = new System.Drawing.Size(781, 39);
+            this.groupBoxConsole.Size = new System.Drawing.Size(781, 91);
             this.groupBoxConsole.TabIndex = 0;
             this.groupBoxConsole.TabStop = false;
             this.groupBoxConsole.Text = "Console";
@@ -444,7 +444,7 @@
             this.logConsole.Dock = System.Windows.Forms.DockStyle.Fill;
             this.logConsole.Location = new System.Drawing.Point(3, 16);
             this.logConsole.Name = "logConsole";
-            this.logConsole.Size = new System.Drawing.Size(775, 20);
+            this.logConsole.Size = new System.Drawing.Size(775, 72);
             this.logConsole.TabIndex = 0;
             this.logConsole.Text = "";
             // 
@@ -464,8 +464,8 @@
             this.ShowIcon = false;
             this.Text = "TgcViewer - Técnicas de Gráficos por Computadora - UTN - FRBA";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
-            this.Load += new System.EventHandler(this.MainForm_Load);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Load += new System.EventHandler(this.MainForm_Load);
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();
             this.statusStrip.ResumeLayout(false);
