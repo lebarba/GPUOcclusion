@@ -89,41 +89,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GpuOcclusion\GpuOcclusionUtils.cs" />
     <Compile Include="GpuOcclusion\TestOneOccluder.cs" />
-    <Compile Include="Obb\TestRayObb.cs" />
-    <Compile Include="Obb\TestComputeObb.cs" />
-    <Compile Include="Obb\TestRenderObb.cs" />
-    <Compile Include="Obb\TgcObb.cs" />
-    <Compile Include="OcclusionMap\Cacic\DemoGPUCulling.cs" />
-    <Compile Include="OcclusionMap\Cacic\DemoCacicVoxelization.cs" />
-    <Compile Include="OcclusionMap\Cacic\DemoCacicThirdPersonFrustum.cs" />
-    <Compile Include="OcclusionMap\Cacic\DemoCacicFpsSplitScreen.cs" />
-    <Compile Include="OcclusionMap\Clipper.cs" />
-    <Compile Include="OcclusionMap\ExportOccluders.cs" />
-    <Compile Include="OcclusionMap\Demo\DemoThirdPersonFrustumFinal.cs" />
-    <Compile Include="OcclusionMap\Demo\DemoCarThirdPerson.cs" />
-    <Compile Include="OcclusionMap\Demo\DemoSplitScreen.cs" />
-    <Compile Include="OcclusionMap\Demo\DemoThirdPersonFrustum.cs" />
-    <Compile Include="OcclusionMap\Demo\DemoRemoteFrustum.cs" />
-    <Compile Include="OcclusionMap\Demo\DemoFreezeFrustum.cs" />
-    <Compile Include="OcclusionMap\Demo\DemoVoxelization.cs" />
-    <Compile Include="OcclusionMap\Demo\DemoFpsSplitScreen.cs" />
-    <Compile Include="OcclusionMap\DLL\TestDllCaso4.cs" />
-    <Compile Include="OcclusionMap\DLL\TestDllCaso3.cs" />
-    <Compile Include="OcclusionMap\DLL\TestDllDrawOccluder.cs" />
-    <Compile Include="OcclusionMap\Occludee.cs" />
-    <Compile Include="OcclusionMap\TestOcclusionPerformance.cs" />
-    <Compile Include="OcclusionMap\TestDrawOccludee.cs" />
-    <Compile Include="OcclusionMap\TestDrawOccluder.cs" />
-    <Compile Include="OcclusionMap\TestWneg.cs" />
-    <Compile Include="OcclusionMap\TestOccludee.cs" />
-    <Compile Include="OcclusionMap\TestOcclusionDll.cs" />
-    <Compile Include="OcclusionMap\Occluder.cs" />
-    <Compile Include="OcclusionMap\DLL\OcclusionDll.cs" />
-    <Compile Include="OcclusionMap\OcclusionViewport.cs" />
-    <Compile Include="OcclusionMap\TestOcclusionAABB.cs" />
-    <Compile Include="OcclusionMap\TestProjectAABB.cs" />
-    <Compile Include="OcclusionMap\Utils.cs" />
+    <Compile Include="GpuOcclusion\DemoGPUCulling.cs" />
     <Compile Include="Otros\EjemploDefault.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -133,15 +101,6 @@
     <Compile Include="EjemploEnBlanco.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Otros\TgcMeshShader.cs" />
-    <Compile Include="Voxelization2\TestTriangleCollision.cs" />
-    <Compile Include="Voxelization2\EjemploTriangleOctree.cs" />
-    <Compile Include="Voxelization2\EjemploVoxelization2.cs" />
-    <Compile Include="Voxelization2\OccluderVoxelizer.cs" />
-    <Compile Include="Voxelization2\TriangleBoxCollision.cs" />
-    <Compile Include="Voxelization2\TriangleOctreeNode.cs" />
-    <Compile Include="Voxelization2\VoxelMesh.cs" />
-    <Compile Include="Voxelization\EjemploVoxelization.cs" />
-    <Compile Include="Voxelization\OccluderVoxelizer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TgcViewer\TgcViewer.csproj">
