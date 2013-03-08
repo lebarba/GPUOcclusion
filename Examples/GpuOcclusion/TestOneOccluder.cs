@@ -104,7 +104,10 @@ namespace Examples.GpuOcclusion
             d3dDevice = GuiController.Instance.D3dDevice;
 
 
-
+            /*
+            Texture t = new Texture(d3dDevice, 256, 256, 0, Usage.RenderTarget, Format.R32F, Pool.Default);
+            Surface s = t.GetSurfaceLevel(2);
+            */
 
 
             GuiController.Instance.CustomRenderEnabled = true;
@@ -120,13 +123,19 @@ namespace Examples.GpuOcclusion
             //Create the Occlusion map (Hierarchical Z Buffer).
             //Format.R32F
 
+
+            int screenWidth = GpuOcclusionUtils.getNextHighestPowerOfTwo(screenViewport.Width);
+            int screenHeigth = GpuOcclusionUtils.getNextHighestPowerOfTwo(screenViewport.Height); 
+
             for (int i = 0; i < 2; i++)
             {
-                HiZBufferTex[i] = new Texture(d3dDevice, screenViewport.Width,
-                                             screenViewport.Height, /*0*/1, Usage.RenderTarget,
+                HiZBufferTex[i] = new Texture(d3dDevice, screenWidth,
+                                             screenHeigth, 0, Usage.RenderTarget,
                                              Format.R32F, Pool.Default);
             }
  
+
+
 
             //Get the number of mipmap levels.
             mipLevels = HiZBufferTex[0].LevelCount;
@@ -134,7 +143,7 @@ namespace Examples.GpuOcclusion
 
 
             //Create the texture that will hold the results of the occlusion test.
-            OcclusionResultTex = new Texture(d3dDevice, (int)TextureSize, (int)TextureSize, 1, Usage.RenderTarget, Format.R16F, Pool.Default);
+            OcclusionResultTex = new Texture(d3dDevice, (int)TextureSize, (int)TextureSize, 1, Usage.RenderTarget, /*Format.R16F*/Format.R32F, Pool.Default);
 
             //Get the surface.
             OcclusionResultSurface = OcclusionResultTex.GetSurfaceLevel(0);
@@ -190,7 +199,7 @@ namespace Examples.GpuOcclusion
 
 
             //Debug
-            OcclusionResultTexCopy = new Texture(d3dDevice, (int)TextureSize, (int)TextureSize, 1, Usage.Dynamic, Format.R16F, Pool.SystemMemory);
+            OcclusionResultTexCopy = new Texture(d3dDevice, (int)TextureSize, (int)TextureSize, 1, Usage.Dynamic, Format.R32F, Pool.SystemMemory);
             OcclusionResultSurfaceCopy = OcclusionResultTexCopy.GetSurfaceLevel(0);
 
 
@@ -199,6 +208,7 @@ namespace Examples.GpuOcclusion
 
 
             //UserVars
+            GuiController.Instance.UserVars.addVar("visible", false);
 
         }
 
@@ -234,6 +244,7 @@ namespace Examples.GpuOcclusion
             BinaryReader reader = new BinaryReader(debugStream);
             float debugValue = reader.ReadSingle();
             OcclusionResultSurfaceCopy.UnlockRectangle();
+            GuiController.Instance.UserVars["visible"] = debugValue == 0.0f ? "SI" : "NO";
 
         }
 
@@ -335,6 +346,8 @@ namespace Examples.GpuOcclusion
             
         }
         */
+
+
 
 
         private void UpdateMipMapVertices(ref CustomVertex.TransformedTextured[] MipMapQuadVertices, int x, int y, int mipWidth, int mipHeight)
@@ -648,19 +661,26 @@ namespace Examples.GpuOcclusion
                 GpuOcclusionUtils.BoundingBox2D meshBox2D;
                 if (GpuOcclusionUtils.projectBoundingBox(occludees[i].BoundingBox, screenViewport, out meshBox2D))
                 {
-                    //TODO: si no pudo proyectar, entonces directamente considerar visible el occludee (ver como evitar testear su visibilidad en el shader)
-                    throw new Exception("Error al proyectar occludee. Hay que trabajar todavia este caso");
+                    //si no pudo proyectar entonces se considera posible, skipear en shader poniendo -1 en depth
+                    occludeeDepthData[i] = -1f;
+                    occludeeAABBdata[i * 4] = 0;
+                    occludeeAABBdata[i * 4 + 1] = 0;
+                    occludeeAABBdata[i * 4 + 2] = 0;
+                    occludeeAABBdata[i * 4 + 3] = 0;
+
                 }
+                else
+                {
+                    //Cargar datos en array de textura (x1, y1, x2, y2)
+                    occludeeAABBdata[i * 4] = meshBox2D.min.X;
+                    occludeeAABBdata[i * 4 + 1] = meshBox2D.min.Y;
+                    occludeeAABBdata[i * 4 + 2] = meshBox2D.max.X;
+                    occludeeAABBdata[i * 4 + 3] = meshBox2D.max.Y;
 
-                //Cargar datos en array de textura (x1, y1, x2, y2)
-                occludeeAABBdata[i * 4] = meshBox2D.min.X;
-                occludeeAABBdata[i * 4 + 1] = meshBox2D.min.Y;
-                occludeeAABBdata[i * 4 + 2] = meshBox2D.max.X;
-                occludeeAABBdata[i * 4 + 3] = meshBox2D.max.Y;
-
-                //depth
-                //TODO: revisar que no haya que formatear bien el valor de depth
-                occludeeDepthData[i] = 1 - meshBox2D.depth;
+                    //depth
+                    occludeeDepthData[i] = 1.0f - meshBox2D.depth;
+                }
+                
             }
 
 

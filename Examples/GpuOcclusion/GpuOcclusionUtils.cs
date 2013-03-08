@@ -127,6 +127,28 @@ namespace Examples.GpuOcclusion
             }
         }
 
+        public static bool isPowerOfTwo(int x)
+        {
+            return (x & (x - 1)) == 0;
+        }
 
+        public static int nextHighestPowerOfTwo(int x)
+        {
+	        --x;
+            for (int i = 1; i < 32; i <<= 1) 
+            {
+                x = x | x >> i;
+            }
+            return x + 1;
+        }
+
+        public static int getNextHighestPowerOfTwo(int x)
+        {
+            if (!isPowerOfTwo(x))
+            {
+                return nextHighestPowerOfTwo(x);
+            }
+            return x;
+        }
     }
 }

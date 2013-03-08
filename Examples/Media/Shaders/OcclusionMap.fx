@@ -243,6 +243,7 @@ VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT_WITH_OCCLUSION Input )
 
    //Get the Occlusion Result texture value to see if occludee is visible. Use mipmap level 0.
    visibleResult = tex2Dlod(OcclusionResultSampler, float4(posInTexture.xy, 0.0f, 0.0f));
+  
    
    //If the value is 0 then project the vertex and let it continue through out the pipeline. 
    if ( visibleResult.r == 0.0f )
@@ -278,75 +279,12 @@ float4 SelectedMipMapLevel( in float4 Position   : POSITION0,
 }
 
 
-//Pixel shader to execute Occlusion Test (overlap + depth).
-float4 PixOcclusionTest( float2 pos: TEXCOORD0) : COLOR0
-{
-
-	//Get the 2D position inside the texture array
-	int posX = pos.x * (float) DefaultTextureSize;
-	int posY = pos.y * (float) DefaultTextureSize;
-	
-	//Get the element number inside the array.
-	int index = posY * DefaultTextureSize + posX;
-	
-	//If the index is greater than the max number of occludees discard and leave original values.
-	if( index > maxOccludees)
-		discard;
-	
-	int occludeeX1, occludeeX2, occludeeY1, occludeeY2;
-	
-	//Get the AABB from the texture at mip level 0.
-	float4 texValue = tex2Dlod(OccludeeDataAABBSampler, float4(pos, 0.0f, 0.0f));
-	
-	//Get the AABB extremes
-	occludeeX1 = texValue.r;
-	occludeeY1 = texValue.g;
-	occludeeX2 = texValue.b;
-	occludeeY2 = texValue.a;
-	
-	float i;
-	float j;
-	
-	float hiZDepth;
-	float occludeeDepth;
-			
-	//Get the occludee depth value from texture.
-	occludeeDepth = tex2Dlod(OccludeeDataDepthSampler, float4(pos, 0.0f, 0.0f)).r;
-	
-	float2 hiZTexPos;
-	
-		
-	for( j = occludeeY1 ; j <= occludeeY2 ; j += 1.0f )
-	{
-		for( i = occludeeX1 ; i <= occludeeX2 ; i += 1.0f )
-		{
-		
-			//Get the uv texture position from i and j positions.
-			hiZTexPos.x  = i / HiZBufferWidth;
-			hiZTexPos.y  = j / HiZBufferHeight;
-			
-			//Get Hierarchical Z Buffer depth for the given position at level 0.
-			hiZDepth = tex2Dlod(HiZBufferSampler, float4(hiZTexPos, 0.0f, 0.0f)).r;		
-
-			//Check the depth value of the occludee and the one stored in the depth buffer.
-			if( occludeeDepth >= hiZDepth )
-				discard;  //Occludee visible. Stop searching and discard pixel shader. keep 255 original value.
-
-				
-
-		}
-	}
-
-		
-	//The occludee is not visible.
-	return 1;
-}
-
 
 //Uses the precalculated Hierachical Depth Buffer to optimize the Occlusion Test.
 float4 PixOcclusionTestPyramid( float2 pos: TEXCOORD0) : COLOR0
 {
 	//Get the 2D position inside the texture array
+	//TODO: optimizar para jugar directamente con el uv, y evitar calcular index
 	int posX = pos.x * (float) DefaultTextureSize;
 	int posY = pos.y * (float) DefaultTextureSize;
 	
@@ -368,60 +306,70 @@ float4 PixOcclusionTestPyramid( float2 pos: TEXCOORD0) : COLOR0
 	int occludeeX1, occludeeX2, occludeeY1, occludeeY2;
 	float2 mipSize;
 		
+	//Get the occludee depth value from texture.
+	occludeeDepth = tex2Dlod(OccludeeDataDepthSampler, float4(pos, 0.0f, 0.0f)).r;
+
+	//Reserve the -1 value to avoid occlusion test.
+	if( occludeeDepth == -1 )
+		discard;
+		
+		
 	//Get the AABB from the texture at mip level 0.
 	texValue = tex2Dlod(OccludeeDataAABBSampler, float4(pos, 0.0f, 0.0f));
 			
-	//Get the occludee depth value from texture.
-	occludeeDepth = tex2Dlod(OccludeeDataDepthSampler, float4(pos, 0.0f, 0.0f)).r;
+
+
+	occludeeX1 =  texValue.r;
+	occludeeY1 =  texValue.g;
+	occludeeX2 =  texValue.b;
+	occludeeY2 =  texValue.a;
+		
 	
+	float maxSide =  max(occludeeX2  - occludeeX1, occludeeY2  - occludeeY1);
 	
-	//Set the interval to 0 to a max of 20 levels to let compiler know how to unroll the loop.
-	int mipLevel = clamp(maxMipLevels - 1 , 0, 15);
-				
-	if( mipLevel > 15)
-		mipLevel = 15;
+	n = log2(maxSide);
+
+	//4 = mipmap 8x8
+	n = clamp(n, 0, maxMipLevels-4);
+
+	
+	//Set the mip level for that occludee size.
 	
 
-	for( n = 1 ; n >= 0 ; n--)
+	//Get the mipmap size
+	mipSize.x = (int) (HiZBufferWidth / pow(2, n));
+	mipSize.y = (int) (HiZBufferHeight / pow(2, n));
+
+	//Get the AABB extremes in that mipmap level.
+	occludeeX1 = ((float)(texValue.r) / HiZBufferWidth) * mipSize.x;
+	occludeeY1 = ((float)(texValue.g) / HiZBufferHeight) * mipSize.y;
+	occludeeX2 = ((float)(texValue.b) / HiZBufferWidth) * mipSize.x;
+	occludeeY2 = ((float)(texValue.a) / HiZBufferHeight) * mipSize.y;
+
+
+	for( j = occludeeY1 ; j < occludeeY2 ; j += 1.0f )
 	{
-
-		//Get the mipmap size
-		mipSize.x = (int) (HiZBufferWidth / pow(2, n));
-		mipSize.y = (int) (HiZBufferHeight / pow(2, n));
-	
-		//Get the AABB extremes in that mipmap level.
-		occludeeX1 = ((float)( texValue.r) / HiZBufferWidth) * mipSize.x;
-		occludeeY1 = ((float)( texValue.g) / HiZBufferHeight) * mipSize.y;
-		occludeeX2 = ((float)( texValue.b) / HiZBufferWidth) * mipSize.x;
-		occludeeY2 = ((float)( texValue.a) / HiZBufferHeight) * mipSize.y;
-
-		
-		int mipLevelInt = (int) mipLevel;
-
-
-		for( j = occludeeY1 ; j < occludeeY2 ; j += 1.0f )
+		for( i = occludeeX1 ; i < occludeeX2 ; i += 1.0f )
 		{
-			for( i = occludeeX1 ; i < occludeeX2 ; i += 1.0f )
-			{
-			
-				//Get the uv texture position from i and j positions.
-				hiZTexPos.x  = i / mipSize.x;
-				hiZTexPos.y  = j / mipSize.y;
-				
-				//Get Hierarchical Z Buffer depth for the given position.
-				if( mipLevelInt % 2 ==  0)
-					hiZDepth = tex2Dlod(HiZBufferEvenSampler, float4(hiZTexPos, 0.0f, mipLevel)).r;
-				else				
-					hiZDepth = tex2Dlod(HiZBufferOddSampler, float4(hiZTexPos, 0.0f, mipLevel)).r;
-				
-				//Check the depth value of the occludee and the one stored in the depth buffer.
-				if( occludeeDepth >= hiZDepth )
-					discard;       //Occludee visible. Stop searching and discard pixel shader. keep 255 original value.
-
-			}
-		}
 		
+			//Get the uv texture position from i and j positions.
+			hiZTexPos.x  = i / mipSize.x;
+			hiZTexPos.y  = j / mipSize.y;
+			
+			//Get Hierarchical Z Buffer depth for the given position.
+			if( n % 2 ==  0)
+				hiZDepth = tex2Dlod(HiZBufferEvenSampler, float4(hiZTexPos, 0.0f, n )).r;
+			else				
+				hiZDepth = tex2Dlod(HiZBufferOddSampler, float4(hiZTexPos, 0.0f, n )).r;
+			
+			//Check the depth value of the occludee and the one stored in the depth buffer.
+			if( occludeeDepth >= hiZDepth )
+				discard;       //Occludee visible. Stop searching and discard pixel shader. keep 255 original value.
+
+		}
 	}
+	
+
 
 	return 1; //Occludee not visible.
 }
@@ -446,20 +394,9 @@ technique OcclusionTestPyramid
     pass p0
     {
         VertexShader = compile vs_3_0 VertPassThru();
-		PixelShader = compile ps_3_0 PixOcclusionTest(); //PixOcclusionTestPyramid(); //Using Z Pyramid.
+		PixelShader = compile ps_3_0 PixOcclusionTestPyramid();
     }
 }
-
-technique OcclusionTestSimple
-{
-    pass p0
-    {
-        VertexShader = compile vs_3_0 VertPassThru();
-        PixelShader = compile ps_3_0 PixOcclusionTest(); //Without Z Pyramid
-    }
-}
-
-
 
 technique RenderWithOcclusionEnabled
 {
