@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using Microsoft.DirectX.Direct3D;
 using TgcViewer;
 using TgcViewer.Utils.Shaders;
@@ -19,6 +17,9 @@ namespace Examples.GpuOcclusion
         //The maximum number of total occludees in scene.
         const int MAX_OCCLUDEES = 4096;
         const float OCCLUDEES_TEXTURE_SIZE = 64; //Raiz de MAX_OCCLUDEES
+
+        //Color todo cero
+        readonly Color CERO_COLOR = Color.FromArgb(0, 0, 0, 0);
 
         //The hierarchical Z-Buffer (HiZ) texture.
         //Sepparated as even and odd mip levels. See Nick Darnells' blog.
@@ -270,6 +271,7 @@ namespace Examples.GpuOcclusion
 
             //Shader que genera depthBuffer
             d3dDevice.VertexDeclaration = occluderVertexDec;
+            d3dDevice.VertexFormat = CustomVertex.PositionOnly.Format;
             occlusionEffect.Technique = "HiZBuffer";
             occlusionEffect.SetValue("matWorldViewProj", matWorldViewProj);
 
@@ -422,7 +424,7 @@ namespace Examples.GpuOcclusion
             d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, false);
 
             //Clear the result surface with 0 values, which mean they are "visible".
-            d3dDevice.Clear(ClearFlags.Target, Color.FromArgb(0, 0, 0, 0), 1, 0);
+            d3dDevice.Clear(ClearFlags.Target, CERO_COLOR, 1, 0);
 
 
             //Proyectar occludees y guardarlo en las dos texturas

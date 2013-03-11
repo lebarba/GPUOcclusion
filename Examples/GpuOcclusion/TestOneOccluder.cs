@@ -423,6 +423,10 @@ namespace Examples.GpuOcclusion
 
             d3dDevice.EndScene();
 
+
+            //TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer.jpg", ImageFileFormat.Jpg, HiZBufferTex[0]);
+
+
             BuildMipMapChain();
 
             pHiZBufferSurface.Dispose();

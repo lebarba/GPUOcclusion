@@ -38,6 +38,8 @@ float4 p_HiZBuffer( float2 depth: TEXCOORD0) : COLOR0
 {
 	//Return the depth as z / w.
 	return  1 - (depth.x / depth.y);
+	
+	//return float4(1.0f, 0.0f, 0.0f, 0.0f);
 }
 
 
@@ -266,12 +268,12 @@ float4 PixOcclusionTestPyramid( float2 pos: TEXCOORD0 ) : COLOR0
 	float maxSide =  max(occludeeX2  - occludeeX1, occludeeY2  - occludeeY1);
 	
 	
-	
+	/*
 	n = log2(maxSide);
 	//4 = mipmap 8x8
 	n = clamp(n, 0, maxMipLevels-4);
-	
-	//n = 0;
+	*/
+	n = 0;
 	
 	
 	
