@@ -327,11 +327,14 @@ float4 PixOcclusionTestPyramid( float2 pos: TEXCOORD0) : COLOR0
 	
 	float maxSide =  max(occludeeX2  - occludeeX1, occludeeY2  - occludeeY1);
 	
+	/*
 	n = log2(maxSide);
 
 	//4 = mipmap 8x8
 	n = clamp(n, 0, maxMipLevels-4);
-
+	*/
+	n = 0;
+	
 	
 	//Set the mip level for that occludee size.
 	

@@ -46,6 +46,7 @@ sampler occlusionResultSampler = sampler_state
 //Chequear si el occludee es visible
 float isOccluded()
 {
+	
 	float2 posInTexture;
 	
 	//Get the u v coordinates from the 1D position index.
@@ -55,6 +56,9 @@ float isOccluded()
 
 	//Get the Occlusion Result texture value to see if occludee is visible. Use mipmap level 0.
 	return tex2Dlod(occlusionResultSampler, float4(posInTexture.xy, 0.0f, 0.0f)).r;
+	
+	
+	//return 0.0f;
 }
 
 
@@ -108,13 +112,14 @@ VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT Input )
 //Input del Pixel Shader
 struct PS_INPUT 
 {
-   float2 Texcoord :        TEXCOORD0;   
+   float2 Texcoord : TEXCOORD0;   
 };
 
 float4 SimplestPixelShader(PS_INPUT Input) : COLOR0
 {
 	return tex2D( diffuseMap, Input.Texcoord );
 }
+
 
 technique RenderWithOcclusionEnabled
 {

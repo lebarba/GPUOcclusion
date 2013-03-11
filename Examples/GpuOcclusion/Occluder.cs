@@ -54,7 +54,7 @@ namespace Examples.GpuOcclusion
         public Occluder()
         {
             enabled = true;
-            vertexBuffer = new VertexBuffer(typeof(CustomVertex.PositionColoredTextured), VERTEX_COUNT, GuiController.Instance.D3dDevice,
+            vertexBuffer = new VertexBuffer(typeof(CustomVertex.PositionOnly), VERTEX_COUNT, GuiController.Instance.D3dDevice,
                 Usage.Dynamic | Usage.WriteOnly, CustomVertex.PositionOnly.Format, Pool.Default);
         }
 
@@ -126,7 +126,7 @@ namespace Examples.GpuOcclusion
             vertices[34] = new CustomVertex.PositionOnly(x, y, z);
             vertices[35] = new CustomVertex.PositionOnly(x, -y, -z);
 
-            vertexBuffer.SetData(vertices, 0, LockFlags.None);
+            vertexBuffer.SetData(vertices, 0, LockFlags.Discard);
         }
 
 

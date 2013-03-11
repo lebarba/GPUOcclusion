@@ -296,6 +296,13 @@ namespace Examples.GpuOcclusion
             //Generar jerarquia de depthBuffer
             buildMipMapChain();
 
+
+
+            //TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer.jpg", ImageFileFormat.Jpg, hiZBufferTex[0]);
+
+
+
+
             pHiZBufferSurface.Dispose();
             d3dDevice.SetRenderTarget(0, pOldRT);
         }

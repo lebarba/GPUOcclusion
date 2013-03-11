@@ -11,6 +11,7 @@ using TgcViewer.Utils.TgcSceneLoader;
 using TgcViewer.Utils.TgcGeometry;
 using Examples.Shaders;
 using TgcViewer.Utils.Shaders;
+using TgcViewer.Utils;
 
 namespace Examples.GpuOcclusion
 {
@@ -70,11 +71,13 @@ namespace Examples.GpuOcclusion
 
             //Crear occluder para el engine
             Occluder occluder = new Occluder(occluderBox.BoundingBox);
+            occluder.update();
             occlusionEngine.Occluders.Add(occluder);
 
 
             //Mesh de Occludee (se crea a partir de un TgcBox y luego se convierte a un TgcMeshShader)
-            TgcMesh meshOccludee = TgcBox.fromSize(new Vector3(0, 0, -50), new Vector3(10, 30, 10), Color.Red).toMesh("occludee");
+            TgcTexture occludeeTexture = TgcTexture.createTexture(GuiController.Instance.ExamplesMediaDir + "ModelosTgc\\CiudadGrandeCerrada\\Textures\\Grey Bricks.jpg");
+            TgcMesh meshOccludee = TgcBox.fromSize(new Vector3(0, 0, -50), new Vector3(10, 30, 10), occludeeTexture).toMesh("occludee");
             occludee = TgcMeshShader.fromTgcMesh(meshOccludee, effect);
             meshOccludee.dispose();
 
@@ -86,11 +89,21 @@ namespace Examples.GpuOcclusion
 
         public override void render(float elapsedTime)
         {
+            Device d3dDevice = GuiController.Instance.D3dDevice;
+
+            
             //TODO: Hacer FrustumCulling previamente
             
             //Hacer Occlusion-Culling
             occlusionEngine.updateVisibility();
 
+
+
+            //Clear
+            d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
+
+            //FPS counter
+            GuiController.Instance.Text3d.drawText("FPS: " + HighResolutionTimer.Instance.FramesPerSecond, 0, 0, Color.Yellow);
 
 
             //Render de Occludee. Cargar todas las variables de shader propias de Occlusion

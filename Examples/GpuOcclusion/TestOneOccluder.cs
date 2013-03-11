@@ -124,13 +124,17 @@ namespace Examples.GpuOcclusion
             //Format.R32F
 
 
+            /*
             int screenWidth = GpuOcclusionUtils.getNextHighestPowerOfTwo(screenViewport.Width);
             int screenHeigth = GpuOcclusionUtils.getNextHighestPowerOfTwo(screenViewport.Height); 
+            */
+            int screenWidth = screenViewport.Width;
+            int screenHeigth = screenViewport.Height; 
 
             for (int i = 0; i < 2; i++)
             {
                 HiZBufferTex[i] = new Texture(d3dDevice, screenWidth,
-                                             screenHeigth, 0, Usage.RenderTarget,
+                                             screenHeigth, /*0*/1, Usage.RenderTarget,
                                              Format.R32F, Pool.Default);
             }
  
@@ -228,9 +232,14 @@ namespace Examples.GpuOcclusion
             //Show the occlusion related textures for debugging.
             //DebugTexturesToScreen();
 
-
+            //FPS counter
+            GuiController.Instance.Text3d.drawText("FPS: " + HighResolutionTimer.Instance.FramesPerSecond, 0, 0, Color.Yellow);
             
             //Debug
+            for (int i = 0; i < occludees.Count; i++)
+            {
+                occludees[i].BoundingBox.render();
+            }
             for (int i = 0; i < occluders.Count; i++)
             {
                 //occluders[i].Effect = "";
