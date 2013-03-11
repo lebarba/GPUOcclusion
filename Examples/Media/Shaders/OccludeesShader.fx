@@ -29,19 +29,33 @@ sampler2D diffuseMap = sampler_state
 int ocludeeIndexInTexture;
 
 //The texture side size. 64 x 64.
-uniform int DefaultTextureSize = 64;
+const int DEFAULT_TEXTURE_SIZE = 64;
 
 //Informacion de occlusion del OcclusionEngine
-texture2D OcclusionResult;
-sampler OcclusionResultSampler = sampler_state
+texture2D occlusionResult;
+sampler occlusionResultSampler = sampler_state
 {
-    Texture = <OcclusionResult>;
+    Texture = <occlusionResult>;
     MagFilter = POINT;
     MinFilter = POINT;
     MipFilter = NONE;
     AddressU = CLAMP;
     AddressV = CLAMP;
 };
+
+//Chequear si el occludee es visible
+float isOccluded()
+{
+	float2 posInTexture;
+	
+	//Get the u v coordinates from the 1D position index.
+	//TODO: Try with 1D textures to avoid this conversion.
+	posInTexture.x = (float)(ocludeeIndexInTexture % DEFAULT_TEXTURE_SIZE) / (float) DEFAULT_TEXTURE_SIZE;
+	posInTexture.y =  (float)(ocludeeIndexInTexture / (float) DEFAULT_TEXTURE_SIZE) / (float) DEFAULT_TEXTURE_SIZE;
+
+	//Get the Occlusion Result texture value to see if occludee is visible. Use mipmap level 0.
+	return tex2Dlod(occlusionResultSampler, float4(posInTexture.xy, 0.0f, 0.0f)).r;
+}
 
 
 // ----------------------------------------------------------------------------------------------- //
@@ -65,12 +79,12 @@ struct VS_OUTPUT
 
 
 //Vertex Shader for testing occlusion.
-VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT_WITH_OCCLUSION Input )
+VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT Input )
 {
-   VS_OUTPUT_WITH_OCCLUSION Output;
+   VS_OUTPUT Output;
 
    //If the value is 0 then project the vertex and let it continue through out the pipeline. 
-   if (isOccluded(Input.Position) == 0.0f)
+   if (isOccluded() == 0.0f)
    {
 		//Caso comun: hacer lo propio del Vertex Shader
    
@@ -88,20 +102,6 @@ VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT_WITH_OCCLUSION Input )
 		Output.Texcoord = 0;
 		return( Output );
 	}
-}
-
-//Chequear si el occludee es visible
-float isOccluded()
-{
-	float2 posInTexture;
-	
-	//Get the u v coordinates from the 1D position index.
-	//TODO: Try with 1D textures to avoid this conversion.
-	posInTexture.x = (float)(ocludeeIndexInTexture % DefaultTextureSize) / (float) DefaultTextureSize;
-	posInTexture.y =  (float)(ocludeeIndexInTexture / (float) DefaultTextureSize) / (float) DefaultTextureSize;
-
-	//Get the Occlusion Result texture value to see if occludee is visible. Use mipmap level 0.
-	return tex2Dlod(OcclusionResultSampler, float4(posInTexture.xy, 0.0f, 0.0f)).r;
 }
 
 

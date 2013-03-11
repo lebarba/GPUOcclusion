@@ -19,9 +19,9 @@ struct VS_OUTPUT_HiZBuffer
 };
 
 //Vertex Shader
-VS_OUTPUT v_HiZBuffer( float4 Position : POSITION0 )
+VS_OUTPUT_HiZBuffer v_HiZBuffer( float4 Position : POSITION0 )
 {
-   VS_OUTPUT Output;
+   VS_OUTPUT_HiZBuffer Output;
    
    //Project position
    Output.Position = mul( Position, matWorldViewProj);
@@ -133,8 +133,8 @@ technique HiZBufferDownSampling
 {
     pass p0
     {
-        VertexShader = compile vs_3_0 VertPassThru();
-        pixelShader = compile ps_3_0 DownSamplePS();
+        VertexShader = compile vs_3_0 v_HiZBufferDownSampling();
+        pixelShader = compile ps_3_0 p_HiZBufferDownSampling();
     }
 }
 

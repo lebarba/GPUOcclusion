@@ -191,11 +191,18 @@ namespace Examples.GpuOcclusion
             //Draw the low detail occluders. Generate the Hi Z buffer
             drawOccluders(d3dDevice);
 
+
+
+            /* TODO: Frustum Culling de occludees tendria que ir afuera del engine, asi lo maneja la propia aplicacion y no lo manda a renderizar despues
+             * 
             //Frustum Culling de occludees
             frustumCullingOccludees();
+            */
 
             //Perform the occlusion culling test. Obtain the visible set.
             performOcclussionCulling(d3dDevice);
+
+
         }
 
         
@@ -314,6 +321,9 @@ namespace Examples.GpuOcclusion
             //Set the vertex format for the quad.
             d3dDevice.VertexFormat = CustomVertex.TransformedTextured.Format;
 
+            //Store the original render target.
+            Surface pOldRT = d3dDevice.GetRenderTarget(0);
+
             const float texelOffset = 0.5f;
 
             //Generar mipmaps
@@ -380,6 +390,7 @@ namespace Examples.GpuOcclusion
                 pHiZBufferSurface.Dispose();
             }
             d3dDevice.EndScene();
+            d3dDevice.SetRenderTarget(0, pOldRT);
         }
 
         
@@ -394,6 +405,9 @@ namespace Examples.GpuOcclusion
 
             //Set the vertex format for the quad.
             d3dDevice.VertexFormat = CustomVertex.TransformedTextured.Format;
+
+            //Store the original render target.
+            Surface pOldRT = d3dDevice.GetRenderTarget(0);
 
             d3dDevice.SetRenderTarget(0, occlusionResultSurface);
 
@@ -430,6 +444,13 @@ namespace Examples.GpuOcclusion
             occlusionEffect.EndPass();
             occlusionEffect.End();
             d3dDevice.EndScene();
+
+
+            //Restore original renderTarget
+            d3dDevice.SetRenderTarget(0, pOldRT);
+            d3dDevice.SetRenderState(RenderStates.ZEnable, true);
+            d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, true);
+            d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
         }
 
         /// <summary>
@@ -476,6 +497,21 @@ namespace Examples.GpuOcclusion
             stream = occludeeDataTextureDepth.LockRectangle(0, LockFlags.Discard);
             stream.Write(occludeeDepthData);
             occludeeDataTextureDepth.UnlockRectangle(0);
+        }
+
+
+        /// <summary>
+        /// Carga en el shader los atributos necesarios para el OcclusionEngine
+        /// </summary>
+        /// <param name="meshEffect">shader</param>
+        /// <param name="meshIndex">Indice del occludee</param>
+        public void setOcclusionShaderValues(Effect meshEffect, int meshIndex)
+        {
+            //Indice del mesh
+            meshEffect.SetValue("ocludeeIndexInTexture", meshIndex);
+
+            //Informacion de visibilidad
+            meshEffect.SetValue("occlusionResult", occlusionResultTex);
         }
 
 
