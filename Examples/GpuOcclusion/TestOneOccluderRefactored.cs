@@ -67,7 +67,7 @@ namespace Examples.GpuOcclusion
 
 
             //Box de occluder
-            occluderBox = TgcBox.fromSize(new Vector3(0, 0, 0), new Vector3(100, 30, 5), Color.Green);
+            occluderBox = TgcBox.fromSize(new Vector3(0, 0, -20), new Vector3(100, 30, -15), Color.Green);
 
             //Crear occluder para el engine
             Occluder occluder = new Occluder(occluderBox.BoundingBox);
@@ -80,6 +80,7 @@ namespace Examples.GpuOcclusion
             TgcMesh meshOccludee = TgcBox.fromSize(new Vector3(0, 0, -50), new Vector3(10, 30, 10), occludeeTexture).toMesh("occludee");
             occludee = TgcMeshShader.fromTgcMesh(meshOccludee, effect);
             meshOccludee.dispose();
+            occludee.BoundingBox.setRenderColor(Color.White);
 
             //Agregar occludee al engine
             occlusionEngine.Occludees.Add(occludee);
@@ -113,6 +114,7 @@ namespace Examples.GpuOcclusion
 
             //Render de AABB de Occluder para debug
             occluderBox.BoundingBox.render();
+            occludee.BoundingBox.render();
         }
 
 

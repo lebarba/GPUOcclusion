@@ -56,9 +56,6 @@ namespace Examples.GpuOcclusion
 
         Viewport screenViewport;
 
-        //Listas para occluders y occludees que sobreviven FrustumCulling
-        List<TgcMeshShader> enabledOccludees;
-
         //Formato de vertice para Occluders
         VertexDeclaration occluderVertexDec;
 
@@ -89,8 +86,6 @@ namespace Examples.GpuOcclusion
         {
             occluders = new List<Occluder>();
             occludees = new List<TgcMeshShader>();
-
-            enabledOccludees = new List<TgcMeshShader>();
         }
 
         /// <summary>
@@ -108,6 +103,11 @@ namespace Examples.GpuOcclusion
             hiZBufferHeight = GpuOcclusionUtils.getNextHighestPowerOfTwo(screenViewport.Height);
             hiZBufferTex[0] = new Texture(d3dDevice, hiZBufferWidth, hiZBufferHeight, 0, Usage.RenderTarget, Format.R32F, Pool.Default);
             hiZBufferTex[1] = new Texture(d3dDevice, hiZBufferWidth, hiZBufferHeight, 0, Usage.RenderTarget, Format.R32F, Pool.Default);
+
+            //Agrandar ZBuffer y Stencil
+            d3dDevice.DepthStencilSurface = d3dDevice.CreateDepthStencilSurface(hiZBufferWidth, hiZBufferHeight, DepthFormat.D24S8, MultiSampleType.None, 0, true);
+            d3dDevice.PresentationParameters.MultiSample = MultiSampleType.None;
+
 
             //Get the number of mipmap levels.
             mipLevels = hiZBufferTex[0].LevelCount;
@@ -170,6 +170,11 @@ namespace Examples.GpuOcclusion
             screenQuadVertices[3].Tu = 0.0f;
             screenQuadVertices[3].Tv = 1.0f;
 
+
+
+            string code = Effect.Disassemble(occlusionEffect, true);
+
+
         }
 
 
@@ -192,13 +197,6 @@ namespace Examples.GpuOcclusion
             //Draw the low detail occluders. Generate the Hi Z buffer
             drawOccluders(d3dDevice);
 
-
-
-            /* TODO: Frustum Culling de occludees tendria que ir afuera del engine, asi lo maneja la propia aplicacion y no lo manda a renderizar despues
-             * 
-            //Frustum Culling de occludees
-            frustumCullingOccludees();
-            */
 
             //Perform the occlusion culling test. Obtain the visible set.
             performOcclussionCulling(d3dDevice);
@@ -230,24 +228,6 @@ namespace Examples.GpuOcclusion
         }
 
         /// <summary>
-        /// Hacer frustum culling para descartar los occludees fuera de pantalla
-        /// </summary>
-        private void frustumCullingOccludees()
-        {
-            enabledOccludees.Clear();
-            for (int i = 0; i < occludees.Count; i++)
-            {
-                TgcMeshShader occludee = occludees[i];
-
-                //FrustumCulling
-                if (TgcCollisionUtils.classifyFrustumAABB(GuiController.Instance.Frustum, occludee.BoundingBox) != TgcCollisionUtils.FrustumResult.OUTSIDE)
-                {
-                    enabledOccludees.Add(occludee);
-                }
-            }
-        }
-
-        /// <summary>
         /// Mandar occluders a la GPU para generar un depth buffer
         /// </summary>
         private void drawOccluders(Device d3dDevice)
@@ -262,6 +242,10 @@ namespace Examples.GpuOcclusion
 
             //Set the render target.
             d3dDevice.SetRenderTarget(0, pHiZBufferSurface);
+            d3dDevice.Viewport = screenViewport;
+
+
+
 
             d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
 
@@ -299,8 +283,22 @@ namespace Examples.GpuOcclusion
             buildMipMapChain();
 
 
-
+            /*
+            //DEBUG ZBUFFER
+             
             //TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer.jpg", ImageFileFormat.Jpg, hiZBufferTex[0]);
+
+
+            Surface s = hiZBufferTex[1].GetSurfaceLevel(3);
+            Texture t = new Texture(d3dDevice, hiZBufferWidth / 8, hiZBufferHeight / 8, 1, Usage.Dynamic, Format.R32F, Pool.SystemMemory);
+            Surface s2 = t.GetSurfaceLevel(0);
+            d3dDevice.GetRenderTargetData(s, s2);
+            s.Dispose();
+            TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer.jpg", ImageFileFormat.Jpg, t);
+            s2.Dispose();
+            t.Dispose();
+            */
+
 
 
 
@@ -457,6 +455,7 @@ namespace Examples.GpuOcclusion
 
             //Restore original renderTarget
             d3dDevice.SetRenderTarget(0, pOldRT);
+            d3dDevice.Viewport = screenViewport;
             d3dDevice.SetRenderState(RenderStates.ZEnable, true);
             d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, true);
             d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
@@ -471,11 +470,11 @@ namespace Examples.GpuOcclusion
         private void updateOccludeesData()
         {
             //Populate Occludees AABB and depth
-            for (int i = 0; i < enabledOccludees.Count; i++)
+            for (int i = 0; i < occludees.Count; i++)
             {
                 //Proyectar occludee
                 GpuOcclusionUtils.BoundingBox2D meshBox2D;
-                if (GpuOcclusionUtils.projectBoundingBox(enabledOccludees[i].BoundingBox, screenViewport, out meshBox2D))
+                if (GpuOcclusionUtils.projectBoundingBox(occludees[i].BoundingBox, screenViewport, out meshBox2D))
                 {
                     //si no pudo proyectar entonces se considera posible, skipear en shader poniendo -1 en depth
                     occludeeDepthData[i] = -1f;

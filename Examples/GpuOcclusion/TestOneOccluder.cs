@@ -124,21 +124,18 @@ namespace Examples.GpuOcclusion
             //Format.R32F
 
 
-            /*
             int screenWidth = GpuOcclusionUtils.getNextHighestPowerOfTwo(screenViewport.Width);
             int screenHeigth = GpuOcclusionUtils.getNextHighestPowerOfTwo(screenViewport.Height); 
-            */
-            int screenWidth = screenViewport.Width;
-            int screenHeigth = screenViewport.Height; 
-
             for (int i = 0; i < 2; i++)
             {
                 HiZBufferTex[i] = new Texture(d3dDevice, screenWidth,
-                                             screenHeigth, /*0*/1, Usage.RenderTarget,
+                                             screenHeigth, 0, Usage.RenderTarget,
                                              Format.R32F, Pool.Default);
             }
- 
 
+            //Agrandar ZBuffer y Stencil
+            d3dDevice.DepthStencilSurface = d3dDevice.CreateDepthStencilSurface(screenWidth, screenHeigth, DepthFormat.D24S8, MultiSampleType.None, 0, true);
+            d3dDevice.PresentationParameters.MultiSample = MultiSampleType.None;
 
 
             //Get the number of mipmap levels.
@@ -402,6 +399,7 @@ namespace Examples.GpuOcclusion
 
             //Set the render target.
             d3dDevice.SetRenderTarget(0, pHiZBufferSurface);
+            d3dDevice.Viewport = screenViewport;
 
             d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
 

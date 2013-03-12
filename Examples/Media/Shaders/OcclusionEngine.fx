@@ -229,28 +229,29 @@ float4 PixOcclusionTestPyramid( float2 pos: TEXCOORD0 ) : COLOR0
 	//Get the element number inside the array.
 	int index = posY * DefaultTextureSize + posX;
 	
+	
 	//If the index is greater than the max number of occludees discard and leave original values.
 	if( index > maxOccludees)
 		discard;
 
-
+		
 	float4 texValue; 
 	float occludeeDepth;
 	int n;
 	float i, j;
 	float2 hiZTexPos;
 	float hiZDepth;
-	int mipSizeX,mipSizeY;
 	int occludeeX1, occludeeX2, occludeeY1, occludeeY2;
 	float2 mipSize;
 		
 	//Get the occludee depth value from texture.
 	occludeeDepth = tex2Dlod(OccludeeDataDepthSampler, float4(pos, 0.0f, 0.0f)).r;
 
+	
 	//Reserve the -1 value to avoid occlusion test.
 	if( occludeeDepth == -1 )
 		discard;
-				
+			
 		
 		
 		
@@ -268,13 +269,12 @@ float4 PixOcclusionTestPyramid( float2 pos: TEXCOORD0 ) : COLOR0
 	float maxSide =  max(occludeeX2  - occludeeX1, occludeeY2  - occludeeY1);
 	
 	
-	/*
+	
 	n = log2(maxSide);
 	//4 = mipmap 8x8
 	n = clamp(n, 0, maxMipLevels-4);
-	*/
-	n = 0;
 	
+	//n = 0;
 	
 	
 	//Set the mip level for that occludee size.
@@ -290,7 +290,8 @@ float4 PixOcclusionTestPyramid( float2 pos: TEXCOORD0 ) : COLOR0
 	occludeeX2 = ((float)(texValue.b) / HiZBufferWidth) * mipSize.x;
 	occludeeY2 = ((float)(texValue.a) / HiZBufferHeight) * mipSize.y;
 
-
+	float a = 0.0f;
+	
 	for( j = occludeeY1 ; j < occludeeY2 ; j += 1.0f )
 	{
 		for( i = occludeeX1 ; i < occludeeX2 ; i += 1.0f )
@@ -299,20 +300,19 @@ float4 PixOcclusionTestPyramid( float2 pos: TEXCOORD0 ) : COLOR0
 			//Get the uv texture position from i and j positions.
 			hiZTexPos.x  = i / mipSize.x;
 			hiZTexPos.y  = j / mipSize.y;
-			
+
 			//Get Hierarchical Z Buffer depth for the given position.
 			if( n % 2 ==  0)
 				hiZDepth = tex2Dlod(HiZBufferEvenSampler, float4(hiZTexPos, 0.0f, n )).r;
 			else				
 				hiZDepth = tex2Dlod(HiZBufferOddSampler, float4(hiZTexPos, 0.0f, n )).r;
-			
+
 			//Check the depth value of the occludee and the one stored in the depth buffer.
 			if( occludeeDepth >= hiZDepth )
 				discard;       //Occludee visible. Stop searching and discard pixel shader. keep 255 original value.
-
+			
 		}
 	}
-	
 
 
 	return 1; //Occludee not visible.
