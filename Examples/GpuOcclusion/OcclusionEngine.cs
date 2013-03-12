@@ -6,6 +6,7 @@ using Microsoft.DirectX;
 using System.Drawing;
 using Examples.Shaders;
 using TgcViewer.Utils.TgcGeometry;
+using System.IO;
 
 namespace Examples.GpuOcclusion
 {
@@ -504,7 +505,7 @@ namespace Examples.GpuOcclusion
 
                 occlusionEffect.SetValue("OccludeeDataTextureAABB", occludeeDataTextureAABB);
                 occlusionEffect.SetValue("OccludeeDataTextureDepth", occludeeDataTextureDepth);
-                occlusionEffect.SetValue("maxOccludees", occludees.Count);
+                occlusionEffect.SetValue("maxOccludees", enabledOccludees.Count);
 
                 //Tamaño del depthBuffer
                 occlusionEffect.SetValue("HiZBufferWidth", (float)(hiZBufferWidth));
@@ -599,6 +600,53 @@ namespace Examples.GpuOcclusion
             //Informacion de visibilidad
             meshEffect.SetValue("occlusionResult", occlusionResultTex);
         }
+
+        /// <summary>
+        /// Devuelve el estado de visibilidad de occludee.
+        /// El orden correlativo al de la lista EnabledOccludees.
+        /// Esta funcion trae la textura de GPU a CPU para poder leer la informacion.
+        /// Ese pasaje es muy lento. Solo debe ejecutarse a efectos de debug.
+        /// </summary>
+        /// <returns>Estado de occludees</returns>
+        public bool[] getVisibilityData()
+        {
+            Device d3dDevice = GuiController.Instance.D3dDevice;
+            bool[] data = new bool[enabledOccludees.Count];
+
+            //Traer textura de GPU a CPU
+            Texture debugTexture = new Texture(d3dDevice, (int)OCCLUDEES_TEXTURE_SIZE, (int)OCCLUDEES_TEXTURE_SIZE, 1, Usage.None, Format.R32F, Pool.SystemMemory);
+            Surface debugSurface = debugTexture.GetSurfaceLevel(0);
+            d3dDevice.GetRenderTargetData(occlusionResultSurface, debugSurface);
+            //TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "visibility.png", ImageFileFormat.Png, debugTexture);
+            GraphicsStream stream = debugSurface.LockRectangle(LockFlags.ReadOnly);
+            BinaryReader reader = new BinaryReader(stream);
+
+            /*
+            int total = (int)(OCCLUDEES_TEXTURE_SIZE * OCCLUDEES_TEXTURE_SIZE);
+            float[] values = new float[total];
+            for (int i = 0; i < total; i++)
+            {
+                float value = reader.ReadSingle();
+                values[i] = value;
+            }
+            */
+
+
+            //Leer datos textura
+            for (int i = 0; i < enabledOccludees.Count; i++)
+            {
+                float value = reader.ReadSingle();
+                data[i] = value == 0.0f ? true : false;
+            }
+
+            reader.Close();
+            stream.Dispose();
+            debugSurface.Dispose();
+            debugTexture.Dispose();
+
+            return data;
+        }
+
 
         /// <summary>
         /// Liberar recursos

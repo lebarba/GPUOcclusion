@@ -107,9 +107,11 @@ namespace Examples.GpuOcclusion
             GuiController.Instance.Modifiers.addBoolean("occlusionCull", "occlusionCull", true);
             GuiController.Instance.Modifiers.addBoolean("drawMeshes", "drawMeshes", true);
             GuiController.Instance.Modifiers.addBoolean("drawOccluders", "drawOccluders", false);
+            GuiController.Instance.Modifiers.addBoolean("countOcclusion", "countOcclusion", false);
 
             //UserVars
             GuiController.Instance.UserVars.addVar("frustumCull");
+            GuiController.Instance.UserVars.addVar("occlusionCull");
         }
 
 
@@ -170,7 +172,26 @@ namespace Examples.GpuOcclusion
 
             //Meshes visibles
             GuiController.Instance.UserVars["frustumCull"] = occlusionEngine.EnabledOccludees.Count + "/" + occlusionEngine.Occludees.Count;
+
+
+            //Debug: contar la cantidad de objetos occluidos (es lento)
+            bool countOcclusion = (bool)GuiController.Instance.Modifiers["countOcclusion"];
+            if (countOcclusion)
+            {
+                bool[] data = occlusionEngine.getVisibilityData();
+                int n = 0;
+                for (int i = 0; i < data.Length; i++)
+                {
+                    if (data[i]) n++;
+                }
+                GuiController.Instance.UserVars["occlusionCull"] = n + "/" + occlusionEngine.EnabledOccludees.Count;
+            }
+            else
+            {
+                GuiController.Instance.UserVars["occlusionCull"] = "-";
+            }
             
+
         }
 
 
