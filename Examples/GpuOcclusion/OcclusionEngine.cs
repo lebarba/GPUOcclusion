@@ -62,6 +62,17 @@ namespace Examples.GpuOcclusion
         //Matriz almacenada para calcularla una sola vez por frame
         Matrix matWorldViewProj;
 
+        List<TgcMeshShader> enabledOccludees;
+        /// <summary>
+        /// Occludees que sobreviven Frustum-Culling.
+        /// Son los que se tienen que usar para renderizar los meshes.
+        /// </summary>
+        public List<TgcMeshShader> EnabledOccludees
+        {
+            get { return enabledOccludees; }
+            set { enabledOccludees = value; }
+        }
+
 
         List<Occluder> occluders;
         /// <summary>
@@ -81,11 +92,33 @@ namespace Examples.GpuOcclusion
             get { return occludees; }
         }
 
+        bool frustumCullingEnabled;
+        /// <summary>
+        /// Habilitar Frustum-Culling de occluders y occludees
+        /// </summary>
+        public bool FrustumCullingEnabled
+        {
+            get { return frustumCullingEnabled; }
+            set { frustumCullingEnabled = value; }
+        }
+
+        bool occlusionCullingEnabled;
+        /// <summary>
+        /// Habilitar Occlusion-Culling de occludees
+        /// </summary>
+        public bool OcclusionCullingEnabled
+        {
+            get { return occlusionCullingEnabled; }
+            set { occlusionCullingEnabled = value; }
+        }
 
         public OcclusionEngine()
         {
             occluders = new List<Occluder>();
             occludees = new List<TgcMeshShader>();
+            enabledOccludees = new List<TgcMeshShader>();
+            frustumCullingEnabled = true;
+            occlusionCullingEnabled = true;
         }
 
         /// <summary>
@@ -197,32 +230,71 @@ namespace Examples.GpuOcclusion
             //Draw the low detail occluders. Generate the Hi Z buffer
             drawOccluders(d3dDevice);
 
+            //Frustum Culling de occludees
+            frustumCullingOccludees();
 
             //Perform the occlusion culling test. Obtain the visible set.
             performOcclussionCulling(d3dDevice);
+        }
 
+        public void resetVisibility()
+        {
 
         }
 
-        
+
+        /// <summary>
+        /// Hacer frustum culling para descartar los occludees fuera de pantalla
+        /// </summary>
+        private void frustumCullingOccludees()
+        {
+            enabledOccludees.Clear();
+            if (frustumCullingEnabled)
+            {
+                for (int i = 0; i < occludees.Count; i++)
+                {
+                    TgcMeshShader occludee = occludees[i];
+
+                    //FrustumCulling
+                    if (TgcCollisionUtils.classifyFrustumAABB(GuiController.Instance.Frustum, occludee.BoundingBox) != TgcCollisionUtils.FrustumResult.OUTSIDE)
+                    {
+                        enabledOccludees.Add(occludee);
+                    }
+                }
+            }
+            else
+            {
+                enabledOccludees.AddRange(occludees);
+            }
+        }
 
         /// <summary>
         /// Hacer frustum culling para descartar los occluders fuera de pantalla
         /// </summary>
         private void frustumCullingOccluders()
         {
-            for (int i = 0; i < occluders.Count; i++)
+            if (frustumCullingEnabled)
             {
-                Occluder occluder = occluders[i];
+                for (int i = 0; i < occluders.Count; i++)
+                {
+                    Occluder occluder = occluders[i];
 
-                //FrustumCulling
-                if (TgcCollisionUtils.classifyFrustumAABB(GuiController.Instance.Frustum, occluder.Aabb) == TgcCollisionUtils.FrustumResult.OUTSIDE)
-                {
-                    occluder.Enabled = false;
+                    //FrustumCulling
+                    if (TgcCollisionUtils.classifyFrustumAABB(GuiController.Instance.Frustum, occluder.Aabb) == TgcCollisionUtils.FrustumResult.OUTSIDE)
+                    {
+                        occluder.Enabled = false;
+                    }
+                    else
+                    {
+                        occluder.Enabled = true;
+                    }
                 }
-                else
+            }
+            else
+            {
+                for (int i = 0; i < occluders.Count; i++)
                 {
-                    occluder.Enabled = true;
+                    occluders[i].Enabled = true;
                 }
             }
         }
@@ -424,32 +496,36 @@ namespace Examples.GpuOcclusion
             //Clear the result surface with 0 values, which mean they are "visible".
             d3dDevice.Clear(ClearFlags.Target, CERO_COLOR, 1, 0);
 
+            //Hacer Occlusion
+            if (occlusionCullingEnabled)
+            {
+                //Proyectar occludees y guardarlo en las dos texturas
+                updateOccludeesData();
 
-            //Proyectar occludees y guardarlo en las dos texturas
-            updateOccludeesData();
+                occlusionEffect.SetValue("OccludeeDataTextureAABB", occludeeDataTextureAABB);
+                occlusionEffect.SetValue("OccludeeDataTextureDepth", occludeeDataTextureDepth);
+                occlusionEffect.SetValue("maxOccludees", occludees.Count);
 
-            occlusionEffect.SetValue("OccludeeDataTextureAABB", occludeeDataTextureAABB);
-            occlusionEffect.SetValue("OccludeeDataTextureDepth", occludeeDataTextureDepth);
-            occlusionEffect.SetValue("maxOccludees", occludees.Count);
+                //Tamaño del depthBuffer
+                occlusionEffect.SetValue("HiZBufferWidth", (float)(hiZBufferWidth));
+                occlusionEffect.SetValue("HiZBufferHeight", (float)(hiZBufferHeight));
 
-            //Tamaño del depthBuffer
-            occlusionEffect.SetValue("HiZBufferWidth", (float)(hiZBufferWidth));
-            occlusionEffect.SetValue("HiZBufferHeight", (float)(hiZBufferHeight));
+                occlusionEffect.SetValue("maxMipLevels", mipLevels); //Send number of mipmaps.
 
-            occlusionEffect.SetValue("maxMipLevels", mipLevels); //Send number of mipmaps.
+                //Set even and odd hierarchical z buffer textures.
+                occlusionEffect.SetValue("HiZBufferEvenTex", hiZBufferTex[0]);
+                occlusionEffect.SetValue("HiZBufferOddTex", hiZBufferTex[1]);
 
-            //Set even and odd hierarchical z buffer textures.
-            occlusionEffect.SetValue("HiZBufferEvenTex", hiZBufferTex[0]);
-            occlusionEffect.SetValue("HiZBufferOddTex", hiZBufferTex[1]);
+                //Render quad
+                occlusionEffect.Technique = "OcclusionTestPyramid";
+                occlusionEffect.Begin(0);
+                occlusionEffect.BeginPass(0);
+                //Draw the quad making the pixel shaders inside of it execute.
+                d3dDevice.DrawUserPrimitives(PrimitiveType.TriangleFan, 2, screenQuadVertices);
+                occlusionEffect.EndPass();
+                occlusionEffect.End();
+            }
 
-            //Render quad
-            occlusionEffect.Technique = "OcclusionTestPyramid";
-            occlusionEffect.Begin(0);
-            occlusionEffect.BeginPass(0);
-            //Draw the quad making the pixel shaders inside of it execute.
-            d3dDevice.DrawUserPrimitives(PrimitiveType.TriangleFan, 2, screenQuadVertices);
-            occlusionEffect.EndPass();
-            occlusionEffect.End();
             d3dDevice.EndScene();
 
 
@@ -461,6 +537,8 @@ namespace Examples.GpuOcclusion
             d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
         }
 
+        
+
         /// <summary>
         /// Cargar datos de occludee en textura
         /// Se proyecta cada occludee a 2D y se guarda en dos texturas.
@@ -470,11 +548,11 @@ namespace Examples.GpuOcclusion
         private void updateOccludeesData()
         {
             //Populate Occludees AABB and depth
-            for (int i = 0; i < occludees.Count; i++)
+            for (int i = 0; i < enabledOccludees.Count; i++)
             {
                 //Proyectar occludee
                 GpuOcclusionUtils.BoundingBox2D meshBox2D;
-                if (GpuOcclusionUtils.projectBoundingBox(occludees[i].BoundingBox, screenViewport, out meshBox2D))
+                if (GpuOcclusionUtils.projectBoundingBox(enabledOccludees[i].BoundingBox, screenViewport, out meshBox2D))
                 {
                     //si no pudo proyectar entonces se considera posible, skipear en shader poniendo -1 en depth
                     occludeeDepthData[i] = -1f;
@@ -522,10 +600,24 @@ namespace Examples.GpuOcclusion
             meshEffect.SetValue("occlusionResult", occlusionResultTex);
         }
 
-
+        /// <summary>
+        /// Liberar recursos
+        /// </summary>
         public void close()
         {
-            //TODO: liberar todo
+            hiZBufferTex[0].Dispose();
+            hiZBufferTex[1].Dispose();
+            occlusionResultTex.Dispose();
+            occlusionResultSurface.Dispose();
+            occlusionEffect.Dispose();
+            occludeeDataTextureAABB.Dispose();
+            occludeeDataTextureDepth.Dispose();
+            occludeeAABBdata = null;
+            occludeeDepthData = null;
+            occluderVertexDec.Dispose();
+            enabledOccludees = null;
+            occluders = null;
+            occludees = null;
         }
 
     }
