@@ -75,6 +75,9 @@ namespace Examples.GpuOcclusion
         //Matriz almacenada para calcularla una sola vez por frame
         Matrix matWorldViewProj;
 
+        //IndexBuffer comun a todos los Occluders
+        IndexBuffer occluderIndexBuffer;
+
         List<TgcMeshShader> enabledOccludees;
         /// <summary>
         /// Occludees que sobreviven Frustum-Culling.
@@ -226,6 +229,11 @@ namespace Examples.GpuOcclusion
             screenQuadVertices[3].Tv = 1.0f;
 
 
+            //Crear IndexBuffer para occluders
+            occluderIndexBuffer = new IndexBuffer(typeof(short), Occluder.BOX_INDICES.Length, GuiController.Instance.D3dDevice, Usage.WriteOnly, Pool.Default);
+            occluderIndexBuffer.SetData(Occluder.BOX_INDICES, 0, LockFlags.None);
+
+
 
             //DEBUG
             //string code = Effect.Disassemble(occlusionEffect, true);
@@ -351,6 +359,7 @@ namespace Examples.GpuOcclusion
             d3dDevice.VertexFormat = CustomVertex.PositionOnly.Format;
             occlusionEffect.Technique = "HiZBuffer";
             occlusionEffect.SetValue("matWorldViewProj", matWorldViewProj);
+            d3dDevice.Indices = occluderIndexBuffer;
 
             //Draw the objects being occluded
             for (int i = 0; i < occluders.Count; i++)
@@ -360,12 +369,11 @@ namespace Examples.GpuOcclusion
                 {
                     //Cargar vertexBuffer del occluder
                     d3dDevice.SetStreamSource(0, occluder.VertexBuffer, 0);
-                    d3dDevice.Indices = occluder.IndexBuffer;
-
+  
                     //Render
                     occlusionEffect.Begin(0);
                     occlusionEffect.BeginPass(0);
-                    d3dDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, Occluder.INDEXED_VERTEX_COUNT, 0, Occluder.TRIANGLE_COUNT);
+                    d3dDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, Occluder.BOX_INDICES.Length, 0, Occluder.TRIANGLE_COUNT);
                     occlusionEffect.EndPass();
                     occlusionEffect.End();
                 }

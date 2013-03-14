@@ -12,6 +12,7 @@ using TgcViewer.Utils.TgcGeometry;
 using Examples.Shaders;
 using TgcViewer.Utils.Shaders;
 using TgcViewer.Utils;
+using TgcViewer.Utils._2D;
 
 namespace Examples.GpuOcclusion
 {
@@ -28,6 +29,7 @@ namespace Examples.GpuOcclusion
         TgcMeshShader occludee2;
         TgcBox occluderBox;
         TgcBox occluderBox2;
+        TgcSprite depthBufferSprite;
 
 
         public override string getCategory()
@@ -101,8 +103,21 @@ namespace Examples.GpuOcclusion
             occludee2.BoundingBox.setRenderColor(Color.White);
             occlusionEngine.Occludees.Add(occludee2);
 
+
+
+            //Debug para ver DepthBuffer
+            depthBufferSprite = new TgcSprite();
+            depthBufferSprite.Position = new Vector2(0, 20);
+            depthBufferSprite.Texture = new TgcTexture("OcclusionResultTex", "OcclusionResultTex", occlusionEngine.HiZBufferTex[0], false);
+            Vector2 scale = new Vector2(0.2f, 0.2f);
+            depthBufferSprite.Scaling = scale;
+
+
+
             //Modifiers
             GuiController.Instance.Modifiers.addBoolean("countOcclusion", "countOcclusion", false);
+            GuiController.Instance.Modifiers.addBoolean("depthBuffer", "depthBuffer", false);
+
             GuiController.Instance.UserVars.addVar("occlusionCull");
         }
 
@@ -161,6 +176,16 @@ namespace Examples.GpuOcclusion
                 GuiController.Instance.UserVars["occlusionCull"] = "-";
             }
 
+
+            //Debug: dibujar depthBuffer
+            bool depthBuffer = (bool)GuiController.Instance.Modifiers["depthBuffer"];
+            if (depthBuffer)
+            {
+                //Dibujar sprite
+                GuiController.Instance.Drawer2D.beginDrawSprite();
+                depthBufferSprite.render();
+                GuiController.Instance.Drawer2D.endDrawSprite();
+            }
 
 
             d3dDevice.EndScene();
