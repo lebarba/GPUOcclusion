@@ -19,13 +19,15 @@ namespace Examples.GpuOcclusion
     /// Demo GPU occlusion Culling
     /// GIGC - UTN-FRBA
     /// </summary>
-    public class TestOneOccluderRefactored : TgcExample
+    public class TestTwoOccludees : TgcExample
     {
 
         Effect effect;
         OcclusionEngine occlusionEngine;
         TgcMeshShader occludee;
+        TgcMeshShader occludee2;
         TgcBox occluderBox;
+        TgcBox occluderBox2;
 
 
         public override string getCategory()
@@ -35,12 +37,12 @@ namespace Examples.GpuOcclusion
 
         public override string getName()
         {
-            return "Test One Occluder Refactored";
+            return "Test 2 Occludees";
         }
 
         public override string getDescription()
         {
-            return "Test One Occluder Refactored";
+            return "Test 2 Occludees";
         }
 
         public override void init()
@@ -55,7 +57,7 @@ namespace Examples.GpuOcclusion
 
             //Engine de Occlusion
             occlusionEngine = new OcclusionEngine();
-            occlusionEngine.init(1);
+            occlusionEngine.init(2);
 
 
             //Cargar shader para render de meshes (mas info de occlusion)
@@ -65,7 +67,6 @@ namespace Examples.GpuOcclusion
 
             //Escenario
 
-
             //Box de occluder
             occluderBox = TgcBox.fromSize(new Vector3(0, 0, -20), new Vector3(100, 30, -15), Color.Green);
 
@@ -73,6 +74,14 @@ namespace Examples.GpuOcclusion
             Occluder occluder = new Occluder(occluderBox.BoundingBox);
             occluder.update();
             occlusionEngine.Occluders.Add(occluder);
+
+
+            //Occluder 2
+            occluderBox2 = TgcBox.fromSize(new Vector3(50, 0, -50), new Vector3(5, 30, 100), Color.Green);
+            Occluder occluder2 = new Occluder(occluderBox2.BoundingBox);
+            occluder2.update();
+            occlusionEngine.Occluders.Add(occluder2);
+
 
 
             //Mesh de Occludee (se crea a partir de un TgcBox y luego se convierte a un TgcMeshShader)
@@ -85,6 +94,12 @@ namespace Examples.GpuOcclusion
             //Agregar occludee al engine
             occlusionEngine.Occludees.Add(occludee);
 
+            //Occludee2
+            TgcMesh meshOccludee2 = TgcBox.fromSize(new Vector3(-30, 0, -50), new Vector3(10, 30, 10), occludeeTexture).toMesh("occludee2");
+            occludee2 = TgcMeshShader.fromTgcMesh(meshOccludee2, effect);
+            meshOccludee2.dispose();
+            occludee2.BoundingBox.setRenderColor(Color.White);
+            occlusionEngine.Occludees.Add(occludee2);
 
             //Modifiers
             GuiController.Instance.Modifiers.addBoolean("countOcclusion", "countOcclusion", false);
@@ -96,9 +111,9 @@ namespace Examples.GpuOcclusion
         {
             Device d3dDevice = GuiController.Instance.D3dDevice;
 
-            
+
             //TODO: Hacer FrustumCulling previamente
-            
+
             //Hacer Occlusion-Culling
             occlusionEngine.updateVisibility();
 
@@ -115,11 +130,17 @@ namespace Examples.GpuOcclusion
             //Render de Occludee. Cargar todas las variables de shader propias de Occlusion
             occlusionEngine.setOcclusionShaderValues(effect, 0);
             occludee.render();
+            occlusionEngine.setOcclusionShaderValues(effect, 1);
+            occludee2.render();
 
+            //Debug: Mostrar AABB de occludees
+            occludee.BoundingBox.render();
+            occludee2.BoundingBox.render();
 
             //Render de AABB de Occluder para debug
             occluderBox.BoundingBox.render();
-            occludee.BoundingBox.render();
+            occluderBox2.BoundingBox.render();
+
 
 
 
@@ -143,6 +164,8 @@ namespace Examples.GpuOcclusion
 
 
             d3dDevice.EndScene();
+
+
         }
 
 
@@ -151,7 +174,9 @@ namespace Examples.GpuOcclusion
         {
             occlusionEngine.close();
             occludee.dispose();
+            occludee2.dispose();
             occluderBox.dispose();
+            occluderBox2.dispose();
             effect.Dispose();
         }
 

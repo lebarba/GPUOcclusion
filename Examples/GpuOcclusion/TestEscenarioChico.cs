@@ -13,6 +13,7 @@ using Examples.Shaders;
 using TgcViewer.Utils.Shaders;
 using TgcViewer.Utils;
 using TgcViewer.Utils.Terrain;
+using TgcViewer.Utils._2D;
 
 namespace Examples.GpuOcclusion
 {
@@ -20,14 +21,12 @@ namespace Examples.GpuOcclusion
     /// Demo GPU occlusion Culling
     /// GIGC - UTN-FRBA
     /// </summary>
-    public class TestCiudad : TgcExample
+    public class TestEscenarioChico : TgcExample
     {
 
         Effect effect;
         OcclusionEngine occlusionEngine;
-        List<TgcMeshShader> occludees;
-        TgcBox occluderBox;
-        TgcSkyBox skyBox;
+        TgcSprite depthBufferSprite;
 
 
         public override string getCategory()
@@ -37,12 +36,12 @@ namespace Examples.GpuOcclusion
 
         public override string getName()
         {
-            return "Test Ciudad";
+            return "Test Escenario chico";
         }
 
         public override string getDescription()
         {
-            return "Test Ciudad";
+            return "Test Escenario chico";
         }
 
         public override void init()
@@ -52,7 +51,7 @@ namespace Examples.GpuOcclusion
             GuiController.Instance.CustomRenderEnabled = true;
 
             GuiController.Instance.FpsCamera.Enable = true;
-            GuiController.Instance.FpsCamera.setCamera(new Vector3(-465.5077f, 20.0006f, 441.59f), new Vector3(-466.4288f, 20.3778f, 441.4932f));
+            GuiController.Instance.FpsCamera.setCamera(new Vector3(-245.205f, 26.0474f, -13.3574f), new Vector3(-244.2058f, 26.0258f, -13.3899f));
 
 
             //Engine de Occlusion
@@ -64,44 +63,37 @@ namespace Examples.GpuOcclusion
             effect.Technique = "RenderWithOcclusionEnabled";
 
 
-            //Cargar ciudad
+            //Cargar escenario
             TgcSceneLoader loader = new TgcSceneLoader();
             loader.MeshFactory = new CustomMeshShaderFactory();
-            TgcScene scene = loader.loadSceneFromFile(GuiController.Instance.ExamplesMediaDir + "ModelosTgc\\CiudadGrandeCerrada\\CiudadGrandeCerrada-TgcScene.xml");
+            TgcScene scene = loader.loadSceneFromFile(GuiController.Instance.ExamplesMediaDir + "ModelosTgc\\EscenarioChico\\EscenarioChico-TgcScene.xml");
 
-            //Separar occluders y occludees
+            //En este ejemplo los occluders son los mismos que los occludees (son todos cajas)
             for (int i = 0; i < scene.Meshes.Count; i++)
             {
+                //Agregar como occludee
                 TgcMeshShader mesh = (TgcMeshShader)scene.Meshes[i];
-                if (mesh.Layer == "Occluders")
-                {
-                    Occluder occluder = new Occluder(mesh.BoundingBox.clone());
-                    occlusionEngine.Occluders.Add(occluder);
-                    mesh.dispose();
-                }
-                else
-                {
-                    mesh.Effect = effect;
-                    occlusionEngine.Occludees.Add(mesh);
-                }
+                mesh.Effect = effect;
+                occlusionEngine.Occludees.Add(mesh);
+
+                //Agregar como occluder
+                Occluder occluder = new Occluder(/*mesh.BoundingBox.clone()*/mesh.BoundingBox);
+                occlusionEngine.Occluders.Add(occluder);
             }
+
 
             //Iniciar engine de occlusion
             occlusionEngine.init(occlusionEngine.Occludees.Count);
 
 
-            //Crear SkyBox
-            skyBox = new TgcSkyBox();
-            skyBox.Center = new Vector3(0, 0, 0);
-            skyBox.Size = new Vector3(10000, 10000, 10000);
-            string texturesPath = GuiController.Instance.ExamplesMediaDir + "ModelosTgc\\SkyBoxCiudad\\";
-            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Up, texturesPath + "Up.jpg");
-            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Down, texturesPath + "Down.jpg");
-            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Left, texturesPath + "Left.jpg");
-            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Right, texturesPath + "Right.jpg");
-            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Front, texturesPath + "Back.jpg");
-            skyBox.setFaceTexture(TgcSkyBox.SkyFaces.Back, texturesPath + "Front.jpg");
-            skyBox.updateValues();
+
+            //Debug para ver DepthBuffer
+            depthBufferSprite = new TgcSprite();
+            depthBufferSprite.Position = new Vector2(0, 20);
+            depthBufferSprite.Texture = new TgcTexture("OcclusionResultTex", "OcclusionResultTex", occlusionEngine.HiZBufferTex[0], false);
+            Vector2 scale = new Vector2(0.2f, 0.2f);
+            depthBufferSprite.Scaling = scale;
+
 
             //Modifiers
             GuiController.Instance.Modifiers.addBoolean("frustumCull", "frustumCull", true);
@@ -109,6 +101,7 @@ namespace Examples.GpuOcclusion
             GuiController.Instance.Modifiers.addBoolean("drawMeshes", "drawMeshes", true);
             GuiController.Instance.Modifiers.addBoolean("drawOccluders", "drawOccluders", false);
             GuiController.Instance.Modifiers.addBoolean("countOcclusion", "countOcclusion", false);
+            GuiController.Instance.Modifiers.addBoolean("depthBuffer", "depthBuffer", false);
 
             //UserVars
             GuiController.Instance.UserVars.addVar("frustumCull");
@@ -127,6 +120,7 @@ namespace Examples.GpuOcclusion
 
             //Actualizar visibilidad
             occlusionEngine.updateVisibility();
+
 
 
 
@@ -168,9 +162,6 @@ namespace Examples.GpuOcclusion
             }
 
 
-            //Skybox
-            skyBox.render();
-
 
             //Meshes visibles
             GuiController.Instance.UserVars["frustumCull"] = occlusionEngine.EnabledOccludees.Count + "/" + occlusionEngine.Occludees.Count;
@@ -192,10 +183,24 @@ namespace Examples.GpuOcclusion
             {
                 GuiController.Instance.UserVars["occlusionCull"] = "-";
             }
+            
+
+
+            //Debug: dibujar depthBuffer
+            bool depthBuffer = (bool)GuiController.Instance.Modifiers["depthBuffer"];
+            if (depthBuffer)
+            {
+                //Dibujar sprite
+                GuiController.Instance.Drawer2D.beginDrawSprite();
+                depthBufferSprite.render();
+                GuiController.Instance.Drawer2D.endDrawSprite();
+            }
 
 
 
             d3dDevice.EndScene();
+
+
         }
 
 
@@ -209,7 +214,6 @@ namespace Examples.GpuOcclusion
             occlusionEngine.close();
             occlusionEngine = null;
             effect.Dispose();
-            skyBox.dispose();
         }
 
     }

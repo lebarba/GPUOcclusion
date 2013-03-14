@@ -28,8 +28,8 @@ sampler2D diffuseMap = sampler_state
 //The current occludee number in the array of occludees.
 int ocludeeIndexInTexture;
 
-//The texture side size. 64 x 64.
-const int DEFAULT_TEXTURE_SIZE = 64;
+//The texture side size. Default = 64 x 64.
+int OccludeeTextureSize = 64;
 
 //Informacion de occlusion del OcclusionEngine
 texture2D occlusionResult;
@@ -51,8 +51,8 @@ float isOccluded()
 	
 	//Get the u v coordinates from the 1D position index.
 	//TODO: Try with 1D textures to avoid this conversion.
-	posInTexture.x = (float)(ocludeeIndexInTexture % DEFAULT_TEXTURE_SIZE) / (float) DEFAULT_TEXTURE_SIZE;
-	posInTexture.y =  (float)(ocludeeIndexInTexture / (float) DEFAULT_TEXTURE_SIZE) / (float) DEFAULT_TEXTURE_SIZE;
+	posInTexture.x = (float)(ocludeeIndexInTexture % OccludeeTextureSize) / (float) OccludeeTextureSize;
+	posInTexture.y =  (float)(ocludeeIndexInTexture / (float) OccludeeTextureSize) / (float) OccludeeTextureSize;
 
 	//Get the Occlusion Result texture value to see if occludee is visible. Use mipmap level 0.
 	return tex2Dlod(occlusionResultSampler, float4(posInTexture.xy, 0.0f, 0.0f)).r;

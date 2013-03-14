@@ -207,7 +207,7 @@ namespace TgcViewer.Utils.TgcGeometry
         }
         
         /// <summary>
-        /// Devuelve el número entero más pequeño mayor o igual que el número decimal especificado.
+        /// Devuelve el siguiente entero mayor o igual que el número decimal especificado.
         /// </summary>
         /// <param name="x">Número decimal.</param>
         /// <returns>El número entero más pequeño mayor o igual que x.</returns>
@@ -217,7 +217,7 @@ namespace TgcViewer.Utils.TgcGeometry
         }
         
         /// <summary>
-        /// Devuelve el entero más grande mayor o igual que el número de punto flotante
+        /// Devuelve el siguiente entero menor o igual que el número de punto flotante
         /// de precisión doble especificado.
         /// </summary>
         /// <param name="x">Número decimal.</param>
@@ -235,6 +235,17 @@ namespace TgcViewer.Utils.TgcGeometry
         public static float Log( float x )
         {
             return( (float)Math.Log( x ) );
+        }
+
+        /// <summary>
+        /// Devuelve el logaritmo de un número especificado, con la base especificada
+        /// </summary>
+        /// <param name="x">Número cuyo logaritmo hay que calcular.</param>
+        /// <param name="newBase">Base del algoritmo.</param>
+        /// <returns>Logaritmo natural de x</returns>
+        public static float Log(float x, float newBase)
+        {
+            return ((float)Math.Log(x, newBase));
         }
 
         /// <summary>

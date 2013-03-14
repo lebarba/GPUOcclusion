@@ -144,8 +144,8 @@ technique HiZBufferDownSampling
 
 /* ---------------------------------------- TECHNIQUE: OcclusionTestPyramid -------------------------------------------------- */
 
-//The texture side size. 64 x 64.
-uniform int DefaultTextureSize = 64;
+//The texture side size. Default = 64 x 64.
+uniform int OccludeeTextureSize = 64;
 
 //The total valid occludees that are used from the total array capacity.
 int maxOccludees;
@@ -223,11 +223,11 @@ float4 PixOcclusionTestPyramid( float2 pos: TEXCOORD0 ) : COLOR0
 {
 	//Get the 2D position inside the texture array
 	//TODO: optimizar para jugar directamente con el uv, y evitar calcular index
-	int posX = pos.x * (float) DefaultTextureSize;
-	int posY = pos.y * (float) DefaultTextureSize;
+	int posX = pos.x * (float) OccludeeTextureSize;
+	int posY = pos.y * (float) OccludeeTextureSize;
 	
 	//Get the element number inside the array.
-	int index = posY * DefaultTextureSize + posX;
+	int index = posY * OccludeeTextureSize + posX;
 	
 	
 	//If the index is greater than the max number of occludees discard and leave original values.

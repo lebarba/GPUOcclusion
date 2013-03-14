@@ -15,7 +15,23 @@ namespace Examples.GpuOcclusion
     {
         public const int TRIANGLE_COUNT = 12;
         public const int VERTEX_COUNT = 36;
+        public const int INDEXED_VERTEX_COUNT = 8;
 
+        //Indices de BOX
+        private static readonly short[] BOX_INDICES = {
+                0,1,2, // Front Face
+                1,3,2, // Front Face
+                4,5,6, // Back Face
+                6,5,7, // Back Face
+                0,5,4, // Top Face
+                0,2,5, // Top Face
+                1,6,7, // Bottom Face
+                1,7,3, // Bottom Face
+                0,6,1, // Left Face
+                4,6,0, // Left Face
+                2,3,7, // Right Face
+                5,2,7 // Right Face
+            };
 
         TgcBoundingBox aabb;
         /// <summary>
@@ -47,6 +63,14 @@ namespace Examples.GpuOcclusion
             get { return vertexBuffer; }
         }
 
+        IndexBuffer indexBuffer;
+        /// <summary>
+        /// IndexBuffer del Occluder
+        /// </summary>
+        public IndexBuffer IndexBuffer
+        {
+            get { return indexBuffer; }
+        }
 
         /// <summary>
         /// Crear Occluder
@@ -54,8 +78,11 @@ namespace Examples.GpuOcclusion
         public Occluder()
         {
             enabled = true;
-            vertexBuffer = new VertexBuffer(typeof(CustomVertex.PositionOnly), VERTEX_COUNT, GuiController.Instance.D3dDevice,
+            vertexBuffer = new VertexBuffer(typeof(CustomVertex.PositionOnly), INDEXED_VERTEX_COUNT, GuiController.Instance.D3dDevice,
                 Usage.Dynamic | Usage.WriteOnly, CustomVertex.PositionOnly.Format, Pool.Default);
+
+            indexBuffer = new IndexBuffer(typeof(short), BOX_INDICES.Length, GuiController.Instance.D3dDevice, Usage.WriteOnly, Pool.Default);
+            indexBuffer.SetData(BOX_INDICES, 0, LockFlags.None);
         }
 
         public Occluder(TgcBoundingBox aabb)
@@ -70,61 +97,19 @@ namespace Examples.GpuOcclusion
         /// </summary>
         public void update()
         {
-            CustomVertex.PositionOnly[] vertices = new CustomVertex.PositionOnly[36];
+            CustomVertex.PositionOnly[] vertices = new CustomVertex.PositionOnly[INDEXED_VERTEX_COUNT];
 
-            Vector3 extens = aabb.calculateAxisRadius();
-            Vector3 center = aabb.calculateBoxCenter();
-            float x = center.X + extens.X;
-            float y = center.Y + extens.Y;
-            float z = center.Z + extens.Z;
+            Vector3 min = aabb.PMin;
+            Vector3 max = aabb.PMax;
 
-            // Front face
-            vertices[0] = new CustomVertex.PositionOnly(-x, y, z);
-            vertices[1] = new CustomVertex.PositionOnly(-x, -y, z);
-            vertices[2] = new CustomVertex.PositionOnly(x, y, z);
-            vertices[3] = new CustomVertex.PositionOnly(-x, -y, z);
-            vertices[4] = new CustomVertex.PositionOnly(x, -y, z);
-            vertices[5] = new CustomVertex.PositionOnly(x, y, z);
-
-            // Back face (remember this is facing *away* from the camera, so vertices should be clockwise order)
-            vertices[6] = new CustomVertex.PositionOnly(-x, y, -z);
-            vertices[7] = new CustomVertex.PositionOnly(x, y, -z);
-            vertices[8] = new CustomVertex.PositionOnly(-x, -y, -z);
-            vertices[9] = new CustomVertex.PositionOnly(-x, -y, -z);
-            vertices[10] = new CustomVertex.PositionOnly(x, y, -z);
-            vertices[11] = new CustomVertex.PositionOnly(x, -y, -z);
-
-            // Top face
-            vertices[12] = new CustomVertex.PositionOnly(-x, y, z);
-            vertices[13] = new CustomVertex.PositionOnly(x, y, -z);
-            vertices[14] = new CustomVertex.PositionOnly(-x, y, -z);
-            vertices[15] = new CustomVertex.PositionOnly(-x, y, z);
-            vertices[16] = new CustomVertex.PositionOnly(x, y, z);
-            vertices[17] = new CustomVertex.PositionOnly(x, y, -z);
-
-            // Bottom face (remember this is facing *away* from the camera, so vertices should be clockwise order)
-            vertices[18] = new CustomVertex.PositionOnly(-x, -y, z);
-            vertices[19] = new CustomVertex.PositionOnly(-x, -y, -z);
-            vertices[20] = new CustomVertex.PositionOnly(x, -y, -z);
-            vertices[21] = new CustomVertex.PositionOnly(-x, -y, z);
-            vertices[22] = new CustomVertex.PositionOnly(x, -y, -z);
-            vertices[23] = new CustomVertex.PositionOnly(x, -y, z);
-
-            // Left face
-            vertices[24] = new CustomVertex.PositionOnly(-x, y, z);
-            vertices[25] = new CustomVertex.PositionOnly(-x, -y, -z);
-            vertices[26] = new CustomVertex.PositionOnly(-x, -y, z);
-            vertices[27] = new CustomVertex.PositionOnly(-x, y, -z);
-            vertices[28] = new CustomVertex.PositionOnly(-x, -y, -z);
-            vertices[29] = new CustomVertex.PositionOnly(-x, y, z);
-
-            // Right face (remember this is facing *away* from the camera, so vertices should be clockwise order)
-            vertices[30] = new CustomVertex.PositionOnly(x, y, z);
-            vertices[31] = new CustomVertex.PositionOnly(x, -y, z);
-            vertices[32] = new CustomVertex.PositionOnly(x, -y, -z);
-            vertices[33] = new CustomVertex.PositionOnly(x, y, -z);
-            vertices[34] = new CustomVertex.PositionOnly(x, y, z);
-            vertices[35] = new CustomVertex.PositionOnly(x, -y, -z);
+            vertices[0] = new CustomVertex.PositionOnly(min.X, max.Y, max.Z);
+            vertices[1] = new CustomVertex.PositionOnly(min.X, min.Y, max.Z);
+            vertices[2] = new CustomVertex.PositionOnly(max.X, max.Y, max.Z);
+            vertices[3] = new CustomVertex.PositionOnly(max.X, min.Y, max.Z);
+            vertices[4] = new CustomVertex.PositionOnly(min.X, max.Y, min.Z);
+            vertices[5] = new CustomVertex.PositionOnly(max.X, max.Y, min.Z);
+            vertices[6] = new CustomVertex.PositionOnly(min.X, min.Y, min.Z);
+            vertices[7] = new CustomVertex.PositionOnly(max.X, min.Y, min.Z);
 
             vertexBuffer.SetData(vertices, 0, LockFlags.Discard);
         }

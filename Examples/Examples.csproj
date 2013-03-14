@@ -89,6 +89,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GpuOcclusion\TestTwoOccludees.cs" />
+    <Compile Include="GpuOcclusion\TestEscenarioChico.cs" />
     <Compile Include="GpuOcclusion\TestOneOccluderRefactored.cs" />
     <Compile Include="GpuOcclusion\Occluder.cs" />
     <Compile Include="GpuOcclusion\OcclusionEngine.cs" />

@@ -16,16 +16,22 @@ namespace Examples.GpuOcclusion
     public class OcclusionEngine
     {
         //The maximum number of total occludees in scene.
-        const int MAX_OCCLUDEES = 4096;
-        const float OCCLUDEES_TEXTURE_SIZE = 64; //Raiz de MAX_OCCLUDEES
+        int maxOccludeesCount;
+        int occludeesTextureSize; //maxOccludeesCount
 
         //Color todo cero
         readonly Color CERO_COLOR = Color.FromArgb(0, 0, 0, 0);
 
-        //The hierarchical Z-Buffer (HiZ) texture.
-        //Sepparated as even and odd mip levels. See Nick Darnells' blog.
-        // 0 is even 1 is odd.
         Texture[] hiZBufferTex;
+        /// <summary>
+        /// The hierarchical Z-Buffer (HiZ) texture.
+        /// Sepparated as even and odd mip levels. See Nick Darnells' blog.
+        /// 0 is even 1 is odd.
+        /// </summary>
+        public Texture[] HiZBufferTex
+        {
+            get { return hiZBufferTex; }
+        }
 
         //Dimensiones del HiZ (tamaño original)
         int hiZBufferWidth;
@@ -34,8 +40,14 @@ namespace Examples.GpuOcclusion
         //The number of mip levels for the Hi Z texture;
         int mipLevels;
 
-        //The results of the occlusion test texture;
         Texture occlusionResultTex;
+        /// <summary>
+        /// The results of the occlusion test texture;
+        /// </summary>
+        public Texture OcclusionResultTex
+        {
+            get { return occlusionResultTex; }
+        }
 
 
         //The surface to store the results of the occlusion test.
@@ -125,10 +137,19 @@ namespace Examples.GpuOcclusion
         /// <summary>
         /// Iniciar engine
         /// </summary>
-        public void init()
+        /// <param name="maxOccludees">Cantidad maxima de Occludees que tiene que soportar el engine</param>
+        public void init(int maxOccludees)
         {
             Device d3dDevice = GuiController.Instance.D3dDevice;
 
+            //Calcular cantidad de occludees
+            occludeesTextureSize = (int)FastMath.Ceiling(FastMath.Log(maxOccludees, 2));
+            occludeesTextureSize = GpuOcclusionUtils.getNextHighestPowerOfTwo(occludeesTextureSize);
+            occludeesTextureSize = occludeesTextureSize < 2 ? 2 : occludeesTextureSize;
+            maxOccludeesCount = occludeesTextureSize * occludeesTextureSize;
+
+
+            //Almacenar viewport original
             screenViewport = d3dDevice.Viewport;
 
             //Create the Occlusion map (Hierarchical Z Buffer)
@@ -148,7 +169,7 @@ namespace Examples.GpuOcclusion
 
             //TODO: hacer de 16F para optimizar
             //Create the texture that will hold the results of the occlusion test.
-            occlusionResultTex = new Texture(d3dDevice, (int)OCCLUDEES_TEXTURE_SIZE, (int)OCCLUDEES_TEXTURE_SIZE, 1, Usage.RenderTarget, /*Format.R16F*/Format.R32F, Pool.Default);
+            occlusionResultTex = new Texture(d3dDevice, occludeesTextureSize, occludeesTextureSize, 1, Usage.RenderTarget, /*Format.R16F*/Format.R32F, Pool.Default);
 
             //Get the surface.
             occlusionResultSurface = occlusionResultTex.GetSurfaceLevel(0);
@@ -162,8 +183,8 @@ namespace Examples.GpuOcclusion
 
             //Crear texturas para datos de Occludees
             //Get a texture size based on the max number of occludees.
-            occludeeAABBdata = new float[MAX_OCCLUDEES * 4];
-            occludeeDepthData = new float[MAX_OCCLUDEES];
+            occludeeAABBdata = new float[this.maxOccludeesCount * 4];
+            occludeeDepthData = new float[this.maxOccludeesCount];
 
             //Iniciar arrays
             for (int i = 0; i < occludeeAABBdata.Length; i++)
@@ -176,8 +197,8 @@ namespace Examples.GpuOcclusion
             }
 
             //Crear texturas para occludees (AABB y Depth)
-            occludeeDataTextureAABB = new Texture(d3dDevice, (int)OCCLUDEES_TEXTURE_SIZE, (int)OCCLUDEES_TEXTURE_SIZE, 0, Usage.None, Format.A32B32G32R32F, Pool.Managed);
-            occludeeDataTextureDepth = new Texture(d3dDevice, (int)OCCLUDEES_TEXTURE_SIZE, (int)OCCLUDEES_TEXTURE_SIZE, 0, Usage.None, Format.R32F, Pool.Managed);
+            occludeeDataTextureAABB = new Texture(d3dDevice, occludeesTextureSize, occludeesTextureSize, 0, Usage.None, Format.A32B32G32R32F, Pool.Managed);
+            occludeeDataTextureDepth = new Texture(d3dDevice, occludeesTextureSize, occludeesTextureSize, 0, Usage.None, Format.R32F, Pool.Managed);
 
 
 
@@ -189,24 +210,25 @@ namespace Examples.GpuOcclusion
             screenQuadVertices[0].Tu = 0.0f;
             screenQuadVertices[0].Tv = 0.0f;
 
-            screenQuadVertices[1].Position = new Vector4(OCCLUDEES_TEXTURE_SIZE, 0f, 0f, 1f);
+            screenQuadVertices[1].Position = new Vector4(occludeesTextureSize, 0f, 0f, 1f);
             screenQuadVertices[1].Rhw = 1.0f;
             screenQuadVertices[1].Tu = 1.0f;
             screenQuadVertices[1].Tv = 0.0f;
 
-            screenQuadVertices[2].Position = new Vector4(OCCLUDEES_TEXTURE_SIZE, OCCLUDEES_TEXTURE_SIZE, 0f, 1f);
+            screenQuadVertices[2].Position = new Vector4(occludeesTextureSize, occludeesTextureSize, 0f, 1f);
             screenQuadVertices[2].Rhw = 1.0f;
             screenQuadVertices[2].Tu = 1.0f;
             screenQuadVertices[2].Tv = 1.0f;
 
-            screenQuadVertices[3].Position = new Vector4(0f, OCCLUDEES_TEXTURE_SIZE, 0f, 1f);
+            screenQuadVertices[3].Position = new Vector4(0f, occludeesTextureSize, 0f, 1f);
             screenQuadVertices[3].Rhw = 1.0f;
             screenQuadVertices[3].Tu = 0.0f;
             screenQuadVertices[3].Tv = 1.0f;
 
 
 
-            string code = Effect.Disassemble(occlusionEffect, true);
+            //DEBUG
+            //string code = Effect.Disassemble(occlusionEffect, true);
 
 
         }
@@ -318,8 +340,6 @@ namespace Examples.GpuOcclusion
             d3dDevice.Viewport = screenViewport;
 
 
-
-
             d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
 
             //Enable Z test and Z write.
@@ -340,11 +360,12 @@ namespace Examples.GpuOcclusion
                 {
                     //Cargar vertexBuffer del occluder
                     d3dDevice.SetStreamSource(0, occluder.VertexBuffer, 0);
+                    d3dDevice.Indices = occluder.IndexBuffer;
 
                     //Render
                     occlusionEffect.Begin(0);
                     occlusionEffect.BeginPass(0);
-                    d3dDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, Occluder.TRIANGLE_COUNT);
+                    d3dDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, Occluder.INDEXED_VERTEX_COUNT, 0, Occluder.TRIANGLE_COUNT);
                     occlusionEffect.EndPass();
                     occlusionEffect.End();
                 }
@@ -359,7 +380,7 @@ namespace Examples.GpuOcclusion
             /*
             //DEBUG ZBUFFER
              
-            //TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer.jpg", ImageFileFormat.Jpg, hiZBufferTex[0]);
+            //TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer.png", ImageFileFormat.Png, hiZBufferTex[0]);
 
 
             Surface s = hiZBufferTex[1].GetSurfaceLevel(3);
@@ -371,10 +392,7 @@ namespace Examples.GpuOcclusion
             s2.Dispose();
             t.Dispose();
             */
-
-
-
-
+            //TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer.png", ImageFileFormat.Png, hiZBufferTex[0]);
 
             pHiZBufferSurface.Dispose();
             d3dDevice.SetRenderTarget(0, pOldRT);
@@ -503,6 +521,7 @@ namespace Examples.GpuOcclusion
                 //Proyectar occludees y guardarlo en las dos texturas
                 updateOccludeesData();
 
+                occlusionEffect.SetValue("OccludeeTextureSize", this.occludeesTextureSize);
                 occlusionEffect.SetValue("OccludeeDataTextureAABB", occludeeDataTextureAABB);
                 occlusionEffect.SetValue("OccludeeDataTextureDepth", occludeeDataTextureDepth);
                 occlusionEffect.SetValue("maxOccludees", enabledOccludees.Count);
@@ -598,6 +617,7 @@ namespace Examples.GpuOcclusion
             meshEffect.SetValue("ocludeeIndexInTexture", meshIndex);
 
             //Informacion de visibilidad
+            meshEffect.SetValue("OccludeeTextureSize", this.occludeesTextureSize);
             meshEffect.SetValue("occlusionResult", occlusionResultTex);
         }
 
@@ -614,7 +634,7 @@ namespace Examples.GpuOcclusion
             bool[] data = new bool[enabledOccludees.Count];
 
             //Traer textura de GPU a CPU
-            Texture debugTexture = new Texture(d3dDevice, (int)OCCLUDEES_TEXTURE_SIZE, (int)OCCLUDEES_TEXTURE_SIZE, 1, Usage.None, Format.R32F, Pool.SystemMemory);
+            Texture debugTexture = new Texture(d3dDevice, this.occludeesTextureSize, this.occludeesTextureSize, 1, Usage.None, Format.R32F, Pool.SystemMemory);
             Surface debugSurface = debugTexture.GetSurfaceLevel(0);
             d3dDevice.GetRenderTargetData(occlusionResultSurface, debugSurface);
             //TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "visibility.png", ImageFileFormat.Png, debugTexture);
@@ -622,7 +642,7 @@ namespace Examples.GpuOcclusion
             BinaryReader reader = new BinaryReader(stream);
 
             /*
-            int total = (int)(OCCLUDEES_TEXTURE_SIZE * OCCLUDEES_TEXTURE_SIZE);
+            int total = (int)(this.occludeesTextureSize * this.occludeesTextureSize);
             float[] values = new float[total];
             for (int i = 0; i < total; i++)
             {
@@ -630,7 +650,6 @@ namespace Examples.GpuOcclusion
                 values[i] = value;
             }
             */
-
 
             //Leer datos textura
             for (int i = 0; i < enabledOccludees.Count; i++)
