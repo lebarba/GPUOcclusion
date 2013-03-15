@@ -76,6 +76,7 @@ namespace Examples.GpuOcclusion
                 if (mesh.Layer == "Occluders")
                 {
                     Occluder occluder = new Occluder(mesh.BoundingBox.clone());
+                    occluder.update();
                     occlusionEngine.Occluders.Add(occluder);
                     mesh.dispose();
                 }

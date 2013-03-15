@@ -78,6 +78,7 @@ namespace Examples.GpuOcclusion
 
                 //Agregar como occluder
                 Occluder occluder = new Occluder(/*mesh.BoundingBox.clone()*/mesh.BoundingBox);
+                occluder.update();
                 occlusionEngine.Occluders.Add(occluder);
             }
 
