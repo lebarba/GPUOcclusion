@@ -145,7 +145,7 @@ technique HiZBufferDownSampling
 /* ---------------------------------------- TECHNIQUE: OcclusionTestPyramid -------------------------------------------------- */
 
 //The texture side size. Default = 64 x 64.
-uniform int OccludeeTextureSize = 64;
+int OccludeeTextureSize = 64;
 
 //The total valid occludees that are used from the total array capacity.
 int maxOccludees;
