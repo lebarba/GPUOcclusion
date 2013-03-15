@@ -292,15 +292,19 @@ float4 PixOcclusionTestPyramid( float2 pos: TEXCOORD0 ) : COLOR0
 
 	float a = 0.0f;
 	
-	for( j = occludeeY1 ; j < occludeeY2 ; j += 1.0f )
+	for( j = occludeeY1 ; j <= occludeeY2 ; j += 1.0f )
 	{
-		for( i = occludeeX1 ; i < occludeeX2 ; i += 1.0f )
+		for( i = occludeeX1 ; i <= occludeeX2 ; i += 1.0f )
 		{
 		
 			//Get the uv texture position from i and j positions.
 			hiZTexPos.x  = i / mipSize.x;
 			hiZTexPos.y  = j / mipSize.y;
 
+			
+			//TODO: Hacer texture array de HiZBufferEvenSampler y HiZBufferOddSampler
+			
+			
 			//Get Hierarchical Z Buffer depth for the given position.
 			if( n % 2 ==  0)
 				hiZDepth = tex2Dlod(HiZBufferEvenSampler, float4(hiZTexPos, 0.0f, n )).r;
