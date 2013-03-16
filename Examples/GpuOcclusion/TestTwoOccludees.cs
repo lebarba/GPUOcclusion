@@ -108,7 +108,7 @@ namespace Examples.GpuOcclusion
             //Debug para ver DepthBuffer
             depthBufferSprite = new TgcSprite();
             depthBufferSprite.Position = new Vector2(0, 20);
-            depthBufferSprite.Texture = new TgcTexture("OcclusionResultTex", "OcclusionResultTex", occlusionEngine.HiZBufferTex[0], false);
+            depthBufferSprite.Texture = new TgcTexture("OcclusionResultTex", "OcclusionResultTex", occlusionEngine.HiZBufferTex[1], false);
             Vector2 scale = new Vector2(0.2f, 0.2f);
             depthBufferSprite.Scaling = scale;
 

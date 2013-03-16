@@ -497,6 +497,99 @@ namespace Examples.GpuOcclusion
             }
             d3dDevice.EndScene();
             d3dDevice.SetRenderTarget(0, pOldRT);
+
+
+
+            /*
+            //Debug ZBuffer
+            Texture t;
+            Surface s;
+            Surface sAux;
+            int level;
+
+            //Impares
+            level = 1;
+            t = new Texture(d3dDevice, hiZBufferWidth >> level, hiZBufferHeight >> level, 1, Usage.None, Format.R32F, Pool.SystemMemory);
+            sAux = t.GetSurfaceLevel(0);
+            s = hiZBufferTex[1].GetSurfaceLevel(level);
+            d3dDevice.GetRenderTargetData(s, sAux);
+            TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer_" + level + ".png", ImageFileFormat.Png, t);
+            sAux.Dispose();
+            s.Dispose();
+            t.Dispose();
+
+            level = 3;
+            t = new Texture(d3dDevice, hiZBufferWidth >> level, hiZBufferHeight >> level, 1, Usage.None, Format.R32F, Pool.SystemMemory);
+            sAux = t.GetSurfaceLevel(0);
+            s = hiZBufferTex[1].GetSurfaceLevel(level);
+            d3dDevice.GetRenderTargetData(s, sAux);
+            TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer_" + level + ".png", ImageFileFormat.Png, t);
+            sAux.Dispose();
+            s.Dispose();
+            t.Dispose();
+
+            level = 5;
+            t = new Texture(d3dDevice, hiZBufferWidth >> level, hiZBufferHeight >> level, 1, Usage.None, Format.R32F, Pool.SystemMemory);
+            sAux = t.GetSurfaceLevel(0);
+            s = hiZBufferTex[1].GetSurfaceLevel(level);
+            d3dDevice.GetRenderTargetData(s, sAux);
+            TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer_" + level + ".png", ImageFileFormat.Png, t);
+            sAux.Dispose();
+            s.Dispose();
+            t.Dispose();
+
+            level = 7;
+            t = new Texture(d3dDevice, hiZBufferWidth >> level, hiZBufferHeight >> level, 1, Usage.None, Format.R32F, Pool.SystemMemory);
+            sAux = t.GetSurfaceLevel(0);
+            s = hiZBufferTex[1].GetSurfaceLevel(level);
+            d3dDevice.GetRenderTargetData(s, sAux);
+            TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer_" + level + ".png", ImageFileFormat.Png, t);
+            sAux.Dispose();
+            s.Dispose();
+            t.Dispose();
+
+
+            //Pares
+            level = 0;
+            t = new Texture(d3dDevice, hiZBufferWidth >> level, hiZBufferHeight >> level, 1, Usage.None, Format.R32F, Pool.SystemMemory);
+            sAux = t.GetSurfaceLevel(0);
+            s = hiZBufferTex[0].GetSurfaceLevel(level);
+            d3dDevice.GetRenderTargetData(s, sAux);
+            TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer_" + level + ".png", ImageFileFormat.Png, t);
+            sAux.Dispose();
+            s.Dispose();
+            t.Dispose();
+
+            level = 2;
+            t = new Texture(d3dDevice, hiZBufferWidth >> level, hiZBufferHeight >> level, 1, Usage.None, Format.R32F, Pool.SystemMemory);
+            sAux = t.GetSurfaceLevel(0);
+            s = hiZBufferTex[0].GetSurfaceLevel(level);
+            d3dDevice.GetRenderTargetData(s, sAux);
+            TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer_" + level + ".png", ImageFileFormat.Png, t);
+            sAux.Dispose();
+            s.Dispose();
+            t.Dispose();
+
+            level = 4;
+            t = new Texture(d3dDevice, hiZBufferWidth >> level, hiZBufferHeight >> level, 1, Usage.None, Format.R32F, Pool.SystemMemory);
+            sAux = t.GetSurfaceLevel(0);
+            s = hiZBufferTex[0].GetSurfaceLevel(level);
+            d3dDevice.GetRenderTargetData(s, sAux);
+            TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer_" + level + ".png", ImageFileFormat.Png, t);
+            sAux.Dispose();
+            s.Dispose();
+            t.Dispose();
+
+            level = 6;
+            t = new Texture(d3dDevice, hiZBufferWidth >> level, hiZBufferHeight >> level, 1, Usage.None, Format.R32F, Pool.SystemMemory);
+            sAux = t.GetSurfaceLevel(0);
+            s = hiZBufferTex[0].GetSurfaceLevel(level);
+            d3dDevice.GetRenderTargetData(s, sAux);
+            TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer_" + level + ".png", ImageFileFormat.Png, t);
+            sAux.Dispose();
+            s.Dispose();
+            t.Dispose();
+            */
         }
 
         

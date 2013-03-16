@@ -37,9 +37,9 @@ VS_OUTPUT_HiZBuffer v_HiZBuffer( float4 Position : POSITION0 )
 float4 p_HiZBuffer( float2 depth: TEXCOORD0) : COLOR0
 {
 	//Return the depth as z / w.
-	return  1 - (depth.x / depth.y);
+	//return  1 - (depth.x / depth.y);
 	
-	//return float4(1.0f, 0.0f, 0.0f, 0.0f);
+	return float4(10.0f, 0.0f, 0.0f, 0.0f);
 }
 
 
@@ -271,10 +271,19 @@ float4 PixOcclusionTestPyramid( float2 pos: TEXCOORD0 ) : COLOR0
 	
 	/*
 	n = log2(maxSide);
+	n = n - 4;
 	//4 = mipmap 8x8
 	n = clamp(n, 0, maxMipLevels-4);
 	*/
-	n = 0;
+	//n = 0;
+	
+	
+	n = ceil(log2(max(maxSide / 5, 1)));
+	
+	
+	if(n % 0 == 1) {
+		n--;
+	}
 	
 	
 	//Set the mip level for that occludee size.
@@ -303,8 +312,7 @@ float4 PixOcclusionTestPyramid( float2 pos: TEXCOORD0 ) : COLOR0
 
 			
 			//TODO: Hacer texture array de HiZBufferEvenSampler y HiZBufferOddSampler
-			
-			
+
 			//Get Hierarchical Z Buffer depth for the given position.
 			if( n % 2 ==  0)
 				hiZDepth = tex2Dlod(HiZBufferEvenSampler, float4(hiZTexPos, 0.0f, n )).r;
