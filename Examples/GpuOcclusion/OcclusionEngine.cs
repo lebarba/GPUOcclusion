@@ -508,6 +508,16 @@ namespace Examples.GpuOcclusion
             int level;
 
             //Impares
+            level = 0;
+            t = new Texture(d3dDevice, hiZBufferWidth >> level, hiZBufferHeight >> level, 1, Usage.None, Format.R32F, Pool.SystemMemory);
+            sAux = t.GetSurfaceLevel(0);
+            s = hiZBufferTex[1].GetSurfaceLevel(level);
+            d3dDevice.GetRenderTargetData(s, sAux);
+            TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer_Impar_" + level + ".png", ImageFileFormat.Png, t);
+            sAux.Dispose();
+            s.Dispose();
+            t.Dispose();
+
             level = 1;
             t = new Texture(d3dDevice, hiZBufferWidth >> level, hiZBufferHeight >> level, 1, Usage.None, Format.R32F, Pool.SystemMemory);
             sAux = t.GetSurfaceLevel(0);
@@ -590,6 +600,7 @@ namespace Examples.GpuOcclusion
             s.Dispose();
             t.Dispose();
             */
+
         }
 
         
