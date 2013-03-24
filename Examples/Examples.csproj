@@ -89,6 +89,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GpuOcclusion\ReducedZBuffer\TestReducedZBuffer.cs" />
+    <Compile Include="GpuOcclusion\TestManyOccludees.cs" />
+    <Compile Include="GpuOcclusion\ReducedZBuffer\OcclusionEngineReducedZBuffer.cs" />
     <Compile Include="GpuOcclusion\TestTwoOccludees.cs" />
     <Compile Include="GpuOcclusion\TestEscenarioChico.cs" />
     <Compile Include="GpuOcclusion\TestOneOccluderRefactored.cs" />
@@ -96,8 +99,7 @@
     <Compile Include="GpuOcclusion\OcclusionEngine.cs" />
     <Compile Include="GpuOcclusion\TestCiudad.cs" />
     <Compile Include="GpuOcclusion\GpuOcclusionUtils.cs" />
-    <Compile Include="GpuOcclusion\TestOneOccluder.cs" />
-    <Compile Include="GpuOcclusion\DemoGPUCulling.cs" />
+    <Compile Include="GpuOcclusion\Viejo\DemoGPUCulling.cs" />
     <Compile Include="Otros\EjemploDefault.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>

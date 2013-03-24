@@ -12,16 +12,14 @@ using TgcViewer.Utils.TgcGeometry;
 using TgcViewer.Utils._2D;
 using TgcViewer.Utils.Terrain;
 using TgcViewer.Utils;
-using Examples.Shaders;
-using System.IO;
 
-namespace Examples.GpuOcclusion
+namespace Examples.GpuOcclusion.Viejo
 {
     /// <summary>
     /// Demo GPU occlusion Culling
     /// GIGC - UTN-FRBA
     /// </summary>
-    public class TestOneOccluder : TgcExample
+    public class DemoGPUCulling : TgcExample
     {
 
         #region Members
@@ -54,6 +52,9 @@ namespace Examples.GpuOcclusion
 
         Device d3dDevice;
 
+        //The mesh to draw as example.
+        Mesh teapot;
+
         //The textures to store the Occludees AABB and Depth.
         Texture OccludeeDataTextureAABB, OccludeeDataTextureDepth;
 
@@ -61,82 +62,63 @@ namespace Examples.GpuOcclusion
         CustomVertex.TransformedTextured[] ScreenQuadVertices;
 
         Surface pOldRT;
+        VertexFormats oldVertexFormat;
 
+        bool OcclusionWithPyramid = true;
 
-
-        //Escenario
-        List<TgcMeshShader> occluders;
-        List<TgcMeshShader> occludees;
-        Viewport screenViewport;
-
-        //Buffers para occludees
-        float[] occludeeAABBdata;
-        float[] occludeeDepthData;
-        int textureSize;
-
-
-        //Debug
-        Texture OcclusionResultTexCopy;
-        Surface OcclusionResultSurfaceCopy;
-
+        Random rnd = new Random();
 
         #endregion
 
-
-
         public override string getCategory()
         {
-            return "GPUCulling";
+            return "Viejo";
         }
 
         public override string getName()
         {
-            return "Test One Occluder";
+            return "Lea - GPU Culling";
         }
 
         public override string getDescription()
         {
-            return "Test One Occluder";
+            return "Lea - GPU Culling";
         }
 
         public override void init()
         {
             d3dDevice = GuiController.Instance.D3dDevice;
 
-
-            /*
-            Texture t = new Texture(d3dDevice, 256, 256, 0, Usage.RenderTarget, Format.R32F, Pool.Default);
-            Surface s = t.GetSurfaceLevel(2);
-            */
-
-
             GuiController.Instance.CustomRenderEnabled = true;
 
-            screenViewport = d3dDevice.Viewport;
+            GuiController.Instance.Modifiers.addBoolean("UsePyramid", "UsePyramid", OcclusionWithPyramid);
+
+            float aspectRatio = (float)GuiController.Instance.Panel3d.Width / GuiController.Instance.Panel3d.Height;
+            d3dDevice.Transform.Projection = Matrix.PerspectiveFovLH(TgcD3dDevice.fieldOfViewY, aspectRatio, TgcD3dDevice.zNearPlaneDistance, TgcD3dDevice.zFarPlaneDistance);
+
 
             GuiController.Instance.FpsCamera.Enable = true;
-            GuiController.Instance.FpsCamera.setCamera(new Vector3(-40.1941f, 0f, 102.0864f), new Vector3(-39.92f, -0.0593f, 101.1265f));
+            GuiController.Instance.FpsCamera.setCamera(new Vector3(0, 0, -10), new Vector3(0, 0, 0));
 
+            int mipValue;
+
+            if (OcclusionWithPyramid)
+                mipValue = 0; //Creates all the mip levels needed.
+            else
+                mipValue = 1; //Sticks to only one mip level.
 
 
             HiZBufferTex = new Texture[2];
             //Create the Occlusion map (Hierarchical Z Buffer).
             //Format.R32F
 
-
-            int screenWidth = GpuOcclusionUtils.getNextHighestPowerOfTwo(screenViewport.Width);
-            int screenHeigth = GpuOcclusionUtils.getNextHighestPowerOfTwo(screenViewport.Height); 
             for (int i = 0; i < 2; i++)
             {
-                HiZBufferTex[i] = new Texture(d3dDevice, screenWidth,
-                                             screenHeigth, 0, Usage.RenderTarget,
+                HiZBufferTex[i] = new Texture(d3dDevice, GuiController.Instance.D3dDevice.Viewport.Width,
+                                             GuiController.Instance.D3dDevice.Viewport.Height, mipValue, Usage.RenderTarget,
                                              Format.R32F, Pool.Default);
             }
-
-            //Agrandar ZBuffer y Stencil
-            d3dDevice.DepthStencilSurface = d3dDevice.CreateDepthStencilSurface(screenWidth, screenHeigth, DepthFormat.D24S8, MultiSampleType.None, 0, true);
-            d3dDevice.PresentationParameters.MultiSample = MultiSampleType.None;
-
+ 
 
             //Get the number of mipmap levels.
             mipLevels = HiZBufferTex[0].LevelCount;
@@ -144,78 +126,63 @@ namespace Examples.GpuOcclusion
 
 
             //Create the texture that will hold the results of the occlusion test.
-            OcclusionResultTex = new Texture(d3dDevice, (int)TextureSize, (int)TextureSize, 1, Usage.RenderTarget, /*Format.R16F*/Format.R32F, Pool.Default);
+            OcclusionResultTex = new Texture(d3dDevice, (int)TextureSize, (int)TextureSize, 1, Usage.RenderTarget, Format.R16F, Pool.Default);
 
             //Get the surface.
             OcclusionResultSurface = OcclusionResultTex.GetSurfaceLevel(0);
 
 
-
-
-            string MyShaderDir = GuiController.Instance.ExamplesDir + "media\\Shaders\\";
+            string MyShaderDir = GuiController.Instance.ExamplesDir + "media\\Shaders\\Viejo\\";
 
             //Load the Shader
             string compilationErrors;
-            OcclusionEffect = Effect.FromFile(d3dDevice, MyShaderDir + "OcclusionMap.fx", null, null, ShaderFlags.None, null, out compilationErrors);
-            //OcclusionEffect = Effect.FromFile(d3dDevice, MyShaderDir + "OcclusionMap.fxo", null, null, ShaderFlags.NotCloneable, null, out compilationErrors);
+            //OcclusionEffect = Effect.FromFile(d3dDevice, MyShaderDir + "OcclusionMap.fx", null, null, ShaderFlags.None, null, out compilationErrors);
+
+            OcclusionEffect = Effect.FromFile(d3dDevice, MyShaderDir + "OcclusionMap.fxo", null, null, ShaderFlags.NotCloneable, null, out compilationErrors);
             if (OcclusionEffect == null)
             {
                 throw new Exception("Error al cargar shader. Errores: " + compilationErrors);
             }
 
+            teapot = Mesh.Teapot(d3dDevice);
 
 
-
-
-
-
-
-            //Escenario
-
-
-            //Box de occluder
-            TgcBox box = TgcBox.fromSize(new Vector3(0, 0, 0), new Vector3(100, 30, 5), Color.Green);
-            TgcMesh meshOccluder = box.toMesh("occluder");
-            TgcMeshShader meshOccluderShader = TgcMeshShader.fromTgcMesh(meshOccluder, OcclusionEffect);
-            meshOccluder.dispose();
-            occluders = new List<TgcMeshShader>();
-            occluders.Add(meshOccluderShader);
-
-
-            //Occludee
-            TgcMesh meshOccludee = TgcBox.fromSize(new Vector3(0, 0, -50), new Vector3(10, 30, 10), Color.Red).toMesh("occludee");
-            TgcMeshShader meshOccludeeShader = TgcMeshShader.fromTgcMesh(meshOccludee, OcclusionEffect);
-            meshOccludee.dispose();
-            occludees = new List<TgcMeshShader>();
-            occludees.Add(meshOccludeeShader);
-
-            //Texturas de occludees
-            initOccludeeBuffers();
-
-            //Crear Quad para occludees
-            createQuadVertexDeclaration();
-
-
-
-
-
-            //Debug
-            OcclusionResultTexCopy = new Texture(d3dDevice, (int)TextureSize, (int)TextureSize, 1, Usage.Dynamic, Format.R32F, Pool.SystemMemory);
-            OcclusionResultSurfaceCopy = OcclusionResultTexCopy.GetSurfaceLevel(0);
-
-
-
-
-
-
-            //UserVars
-            GuiController.Instance.UserVars.addVar("visible", false);
-
+            //Create the vertex buffer with occludees.
+            createOccludees();
         }
 
 
         public override void render(float elapsedTime)
         {
+          //  if( GuiController.Instance.D3dInput.keyPressed(Microsoft.DirectX.DirectInput.Key.P) )
+
+            OcclusionWithPyramid = (bool)GuiController.Instance.Modifiers["UsePyramid"] ;
+
+
+            DrawOcclusionBuffer();
+
+            
+            
+        }
+
+        private void DrawSprite(Texture tex, Point pos, float scale)
+        {
+            DrawSprite(tex, pos, scale, 0);
+        }
+
+        private void DrawSprite(Texture tex, Point pos, float scale, int mipMapLevel)
+        {
+            using (Sprite spriteobject = new Sprite(d3dDevice))
+            {
+                spriteobject.Begin(SpriteFlags.DoNotModifyRenderState);
+                spriteobject.Transform = Matrix.Scaling(scale, scale, scale);
+                spriteobject.Draw(tex, new Rectangle(0, 0, tex.GetSurfaceLevel(mipMapLevel).Description.Width, tex.GetSurfaceLevel(mipMapLevel).Description.Height), new Vector3(0, 0, 0), new Vector3(pos.X, pos.Y, 0), Color.White);
+                spriteobject.End();
+            }
+        }
+        private void DrawOcclusionBuffer()
+        {
+
 
             //Draw the low detail occluders. Generate the Hi Z buffer
             DrawOccluders();
@@ -227,50 +194,10 @@ namespace Examples.GpuOcclusion
             DrawGeometryWithOcclusionEnabled();
 
             //Show the occlusion related textures for debugging.
-            //DebugTexturesToScreen();
-
-            //FPS counter
-            GuiController.Instance.Text3d.drawText("FPS: " + HighResolutionTimer.Instance.FramesPerSecond, 0, 0, Color.Yellow);
-            
-            //Debug
-            for (int i = 0; i < occludees.Count; i++)
-            {
-                occludees[i].BoundingBox.render();
-            }
-            for (int i = 0; i < occluders.Count; i++)
-            {
-                //occluders[i].Effect = "";
-                occluders[i].BoundingBox.render();
-            }
-            
-
-            //Leer textura de visibilidad de occludees para debug
-            GuiController.Instance.D3dDevice.GetRenderTargetData(OcclusionResultSurface, OcclusionResultSurfaceCopy);
-            GraphicsStream debugStream = OcclusionResultSurfaceCopy.LockRectangle(LockFlags.ReadOnly);
-            BinaryReader reader = new BinaryReader(debugStream);
-            float debugValue = reader.ReadSingle();
-            OcclusionResultSurfaceCopy.UnlockRectangle();
-            GuiController.Instance.UserVars["visible"] = debugValue == 0.0f ? "SI" : "NO";
+            DebugTexturesToScreen();
 
         }
 
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        /*
         //Renders the debug textures.
         private void DebugTexturesToScreen()
         {
@@ -351,10 +278,6 @@ namespace Examples.GpuOcclusion
 
             
         }
-        */
-
-
-
 
         private void UpdateMipMapVertices(ref CustomVertex.TransformedTextured[] MipMapQuadVertices, int x, int y, int mipWidth, int mipHeight)
         {
@@ -384,9 +307,6 @@ namespace Examples.GpuOcclusion
 
         }
 
-        /// <summary>
-        /// Mandar occluders a la GPU para generar un depth buffer
-        /// </summary>
         private void DrawOccluders()
         {
             d3dDevice.BeginScene();
@@ -399,7 +319,6 @@ namespace Examples.GpuOcclusion
 
             //Set the render target.
             d3dDevice.SetRenderTarget(0, pHiZBufferSurface);
-            d3dDevice.Viewport = screenViewport;
 
             d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
 
@@ -408,32 +327,15 @@ namespace Examples.GpuOcclusion
             d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, true);
 
             //Draw the objects being occluded
-            for (int i = 0; i < occluders.Count; i++)
-            {
-                TgcMeshShader occluder = occluders[i];
-
-                //Shader que genera depthBuffer
-                occluder.Effect.Technique = "HiZBuffer";
-                occluders[i].render();
-            }
-
-
+            DrawTeapots(true, "HiZBuffer");
 
             d3dDevice.EndScene();
 
-
-            //TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "depthBuffer.jpg", ImageFileFormat.Jpg, HiZBufferTex[0]);
-
-
             BuildMipMapChain();
 
-            pHiZBufferSurface.Dispose();
             d3dDevice.SetRenderTarget(0, pOldRT);
         }
 
-        /// <summary>
-        /// Crear jerarquia de DepthBuffer
-        /// </summary>
         private void BuildMipMapChain()
         {
 
@@ -511,52 +413,53 @@ namespace Examples.GpuOcclusion
             d3dDevice.EndScene();
         }
 
-
-        /// <summary>
-        /// Dibujar objetos reales
-        /// </summary>
         private void DrawGeometryWithOcclusionEnabled()
         {
+
+
             d3dDevice.BeginScene();
 
             d3dDevice.SetRenderState(RenderStates.ZEnable, true);
             d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, true);
 
-
-            //TODO: Frustum Culling
-
-
             //Set screen as render target.
             d3dDevice.SetRenderTarget(0, pOldRT);
+            d3dDevice.VertexFormat = oldVertexFormat;
+
             d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
 
-            //Render
-            for (int i = 0; i < occludees.Count; i++)
-            {
-                TgcMeshShader occludee = occludees[i];
-                occludee.Effect.Technique = "RenderWithOcclusionEnabled";
 
-                //Indice del mesh
-                occludee.Effect.SetValue("ocludeeIndexInTexture", i);
+            //TODO: See if this is needed anymore.
+            d3dDevice.SetTexture(0, OccludeeDataTextureAABB);
+            d3dDevice.SetTexture(1, OccludeeDataTextureDepth);
+            d3dDevice.SetTexture(2, HiZBufferTex[0]);
+            d3dDevice.SetTexture(3, OcclusionResultTex);
 
 
-                occludee.Effect.SetValue("OcclusionResult", OcclusionResultTex);
-                occludee.render();
-            }
+            DrawTeapots(true, "RenderWithOcclusionEnabled");
+
 
             d3dDevice.EndScene();
         }
 
-
-        /// <summary>
-        /// Mandar Occludees a la GPU
-        /// </summary>
         private void PerformOcclussionCulling()
         {
+
             d3dDevice.BeginScene();
-            
+
+
+            //Save the previous vertex format for later use.
+            oldVertexFormat = d3dDevice.VertexFormat;
+
+
             //Set the vertex format for the quad.
             d3dDevice.VertexFormat = CustomVertex.TransformedTextured.Format;
+
+            //TODO: See if this is needed anymore.
+            d3dDevice.SetTexture(0, OccludeeDataTextureAABB);
+            d3dDevice.SetTexture(1, OccludeeDataTextureDepth);
+            d3dDevice.SetTexture(2, HiZBufferTex[0]);
+            d3dDevice.SetTexture(3, OcclusionResultTex);
 
             d3dDevice.SetRenderTarget(0, OcclusionResultSurface);
 
@@ -567,14 +470,17 @@ namespace Examples.GpuOcclusion
             d3dDevice.Clear(ClearFlags.Target, Color.FromArgb(0, 0, 0, 0), 1, 0);
 
 
-            //Proyectar occludees y guardarlo en las dos texturas
-            updateOccludeesData();
+            Matrix matWorldViewProj = d3dDevice.Transform.World * d3dDevice.Transform.View * d3dDevice.Transform.Projection;
+            Matrix matWorldView = d3dDevice.Transform.World * d3dDevice.Transform.View;
+
+            OcclusionEffect.SetValue("matWorldViewProj", matWorldViewProj);
+            OcclusionEffect.SetValue("matWorldView", matWorldView);
 
             OcclusionEffect.SetValue("OccludeeDataTextureAABB", OccludeeDataTextureAABB);
             OcclusionEffect.SetValue("OccludeeDataTextureDepth", OccludeeDataTextureDepth);
-            OcclusionEffect.SetValue("maxOccludees", occludees.Count);
+            OcclusionEffect.SetValue("HiZBufferTex", HiZBufferTex[0]);
+            OcclusionEffect.SetValue("maxOccludees", 100);
 
-            //Tamaño del depthBuffer
             OcclusionEffect.SetValue("HiZBufferWidth", (float)(HiZBufferTex[0].GetLevelDescription(0).Width));
             OcclusionEffect.SetValue("HiZBufferHeight", (float)(HiZBufferTex[0].GetLevelDescription(0).Height));
 
@@ -585,22 +491,31 @@ namespace Examples.GpuOcclusion
             OcclusionEffect.SetValue("HiZBufferEvenTex", HiZBufferTex[0]);
             OcclusionEffect.SetValue("HiZBufferOddTex", HiZBufferTex[1]);
 
-            //Render quad
-            OcclusionEffect.Technique = "OcclusionTestPyramid";
-            OcclusionEffect.Begin(0);
-            OcclusionEffect.BeginPass(0);
-            //Draw the quad making the pixel shaders inside of it execute.
-            d3dDevice.DrawUserPrimitives(PrimitiveType.TriangleFan, 2, ScreenQuadVertices);
-            OcclusionEffect.EndPass();
+            if( OcclusionWithPyramid )
+                OcclusionEffect.Technique = "OcclusionTestPyramid";
+            else
+                OcclusionEffect.Technique = "OcclusionTestSimple";
+
+            int numPasses = OcclusionEffect.Begin(0);
+
+            for (int n = 0; n < numPasses; n++)
+            {
+
+                OcclusionEffect.BeginPass(n);
+
+                //Draw the quad making the pixel shaders inside of it execute.
+                d3dDevice.DrawUserPrimitives(PrimitiveType.TriangleFan, 2, ScreenQuadVertices);
+
+                OcclusionEffect.EndPass();
+            }
             OcclusionEffect.End();
+
             d3dDevice.EndScene();
 
         }
 
-        /// <summary>
-        /// Vertices for a screen aligned quad
-        /// </summary>
-        private void createQuadVertexDeclaration()
+        //Vertices for a screen aligned quad
+        private void QuadVertexDeclaration()
         {
 
             ScreenQuadVertices = new CustomVertex.TransformedTextured[4];
@@ -629,97 +544,115 @@ namespace Examples.GpuOcclusion
 
         }
 
-
-        /// <summary>
-        /// Crear arrays usados en texturas de Occludees
-        /// </summary>
-        private void initOccludeeBuffers()
+        private void DrawTeapots(bool withShader, string technique)
         {
-            //Get a texture size based on the max number of occludees.
-            textureSize = (int)Math.Sqrt(MAX_OCCLUDEES);
-            occludeeAABBdata = new float[MAX_OCCLUDEES * 4];
-            occludeeDepthData = new float[MAX_OCCLUDEES];
+            int index = 0;
 
-            //Iniciar arrays
-            for (int i = 0; i < occludeeAABBdata.Length; i++)
+            int rowSize = 100;
+            for (int i = 0; i < rowSize; i++)
             {
-                occludeeAABBdata[i] = 0;
-            }
-            for (int i = 0; i < occludeeDepthData.Length; i++)
-            {
-                occludeeDepthData[i] = 0;
-            }
+                //for (int j = 0; j < 10; j++)
+                {
+                    d3dDevice.Transform.World = Matrix.Translation(i * 4, 0, 0);
+
+                    if (withShader)
+                    {
+                        Matrix matWorldViewProj = d3dDevice.Transform.World * d3dDevice.Transform.View * d3dDevice.Transform.Projection;
+                        Matrix matWorldView = d3dDevice.Transform.World * d3dDevice.Transform.View;
+
+                        OcclusionEffect.SetValue("matWorldViewProj", matWorldViewProj);
+                        OcclusionEffect.SetValue("matWorldView", matWorldView);
+
+                        OcclusionEffect.SetValue("ocludeeIndexInTexture", index);
+                        OcclusionEffect.SetValue("OcclusionResult", OcclusionResultTex);
+
+                        OcclusionEffect.Technique = technique;
+                        int numPasses = OcclusionEffect.Begin(0);
+
+                        for (int n = 0; n < numPasses; n++)
+                        {
+
+                            OcclusionEffect.BeginPass(n);
+                            teapot.DrawSubset(0);
+                            OcclusionEffect.EndPass();
+                        }
+                        OcclusionEffect.End();
+
+                        index++;
+                    }
+                    else
+                    {
+                        teapot.DrawSubset(0);
+                    }
+                }
 
 
-            //Crear texturas para occludees (AABB y Depth)
-            OccludeeDataTextureAABB = new Texture(d3dDevice, textureSize, textureSize, 0, Usage.None, Format.A32B32G32R32F, Pool.Managed);
-            OccludeeDataTextureDepth = new Texture(d3dDevice, textureSize, textureSize, 0, Usage.None, Format.R32F, Pool.Managed);
+            }
+
+            d3dDevice.Transform.World = Matrix.Identity;
         }
 
 
-        /// <summary>
-        /// Cargar datos de occludee en textura
-        /// Se proyecta cada occludee a 2D y se guarda en dos texturas.
-        /// Una con boundingRect de cada occludee (x1, y1, x2, y2)
-        /// Otra con el depth de cada occludee
-        /// </summary>
-        private void updateOccludeesData()
+        private void createOccludees()
         {
-            //Populate Occludees AABB and depth
-            for (int i = 0; i < occludees.Count; i ++)
+
+            //Get a texture size based on the max number of occludees.
+            int textureSize = (int)Math.Sqrt(MAX_OCCLUDEES);
+
+            float[] occludeeAABBdata = new float[MAX_OCCLUDEES * 4];
+
+            float[] occludeeDepthData = new float[MAX_OCCLUDEES];
+
+
+            float tempoccludeeSize = 4;
+
+            //Populate Occludees AABB with random position and sizes.
+            for (int i = 0; i < MAX_OCCLUDEES * 4; i += 4)
             {
-                //Proyectar occludee
-                GpuOcclusionUtils.BoundingBox2D meshBox2D;
-                if (GpuOcclusionUtils.projectBoundingBox(occludees[i].BoundingBox, screenViewport, out meshBox2D))
-                {
-                    //si no pudo proyectar entonces se considera posible, skipear en shader poniendo -1 en depth
-                    occludeeDepthData[i] = -1f;
-                    occludeeAABBdata[i * 4] = 0;
-                    occludeeAABBdata[i * 4 + 1] = 0;
-                    occludeeAABBdata[i * 4 + 2] = 0;
-                    occludeeAABBdata[i * 4 + 3] = 0;
+                //x1, y1, x2, y2
+                //TODO: Mati, mete codigo aca.
+                occludeeAABBdata[i] = GuiController.Instance.D3dDevice.Viewport.Width / 2 - tempoccludeeSize/2; //r
+                occludeeAABBdata[i + 1] = GuiController.Instance.D3dDevice.Viewport.Height / 2 - tempoccludeeSize / 2; //g
+                occludeeAABBdata[i + 2] = GuiController.Instance.D3dDevice.Viewport.Width / 2 + tempoccludeeSize / 2; //b
+                occludeeAABBdata[i + 3] = GuiController.Instance.D3dDevice.Viewport.Height / 2 + tempoccludeeSize / 2; //a
 
-                }
-                else
-                {
-                    //Cargar datos en array de textura (x1, y1, x2, y2)
-                    occludeeAABBdata[i * 4] = meshBox2D.min.X;
-                    occludeeAABBdata[i * 4 + 1] = meshBox2D.min.Y;
-                    occludeeAABBdata[i * 4 + 2] = meshBox2D.max.X;
-                    occludeeAABBdata[i * 4 + 3] = meshBox2D.max.Y;
-
-                    //depth
-                    occludeeDepthData[i] = 1.0f - meshBox2D.depth;
-                }
-                
             }
 
+            //Populate Occludees depth with random depth.
+            //Here 0 means far and 1 is closest to the near plane.
+            for (int i = 0; i < MAX_OCCLUDEES; i++)
+            {
+                //occludeeDepthData[i] = (float)rnd.NextDouble();
+                //TODO: Mati, mete codigo aca.
+                occludeeDepthData[i] = (float) i / 1000;
+            }
+
+            //TODO: Ver que hace esto por atras, a ver s se puede poner Usage.WriteOnly.
 
             //Stores the AABB in the texure as float32 x1,y1, x2, y2 
-            GraphicsStream stream = OccludeeDataTextureAABB.LockRectangle(0, LockFlags.Discard);
+            OccludeeDataTextureAABB = new Texture(d3dDevice, textureSize, textureSize, 0, Usage.None, Format.A32B32G32R32F, Pool.Managed);
+            GraphicsStream stream = OccludeeDataTextureAABB.LockRectangle(0, LockFlags.None);
             stream.Write(occludeeAABBdata);
             OccludeeDataTextureAABB.UnlockRectangle(0);
 
 
             //Stores the occludee depth as int8.
-            stream = OccludeeDataTextureDepth.LockRectangle(0, LockFlags.Discard);
+            OccludeeDataTextureDepth = new Texture(d3dDevice, textureSize, textureSize, 0, Usage.None, Format.R32F, Pool.Managed);
+
+            stream = OccludeeDataTextureDepth.LockRectangle(0, LockFlags.None);
             stream.Write(occludeeDepthData);
             OccludeeDataTextureDepth.UnlockRectangle(0);
+
+
+            QuadVertexDeclaration();
+
         }
 
 
 
         public override void close()
         {
-            foreach (TgcMeshShader mesh in occludees)
-            {
-                mesh.dispose();
-            }
-            foreach (TgcMeshShader mesh in occluders)
-            {
-                mesh.dispose();
-            }
-            OcclusionEffect.Dispose();
+
         }
 
     }
