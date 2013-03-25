@@ -146,7 +146,7 @@ namespace Examples.GpuOcclusion
             Device d3dDevice = GuiController.Instance.D3dDevice;
 
             //Calcular cantidad de occludees
-            occludeesTextureSize = (int)FastMath.Ceiling(FastMath.Log(maxOccludees, 2));
+            occludeesTextureSize = (int)FastMath.Ceiling(FastMath.Sqrt(maxOccludees));
             occludeesTextureSize = GpuOcclusionUtils.getNextHighestPowerOfTwo(occludeesTextureSize);
             occludeesTextureSize = occludeesTextureSize < 2 ? 2 : occludeesTextureSize;
             maxOccludeesCount = occludeesTextureSize * occludeesTextureSize;

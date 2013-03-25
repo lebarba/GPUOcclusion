@@ -124,6 +124,21 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
             set { occlusionCullingEnabled = value; }
         }
 
+        int maxOccludeeSizeAllowed;
+        /// <summary>
+        /// Tamaño maximo de occludee (proyectado) que se usa para occlusion.
+        /// Se calcula como: size = width x height.
+        /// Si el tamaño del occludee supera este limite, entonces se considera visible, sin testar occlusion.
+        /// El objetivo es no saturar la GPU con muchas lecturas de texel en objetos que ocupan mucho tamaño de pantalla
+        /// y que probablemente sean visibles.
+        /// </summary>
+        public int MaxOccludeeSizeAllowed
+        {
+            get { return maxOccludeeSizeAllowed; }
+            set { maxOccludeeSizeAllowed = value; }
+        }
+
+
         public OcclusionEngineReducedZBuffer()
         {
             occluders = new List<Occluder>();
@@ -131,6 +146,7 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
             enabledOccludees = new List<TgcMeshShader>();
             frustumCullingEnabled = true;
             occlusionCullingEnabled = true;
+            maxOccludeeSizeAllowed = 10000;
         }
 
         /// <summary>
@@ -142,7 +158,8 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
             Device d3dDevice = GuiController.Instance.D3dDevice;
 
             //Calcular cantidad de occludees
-            occludeesTextureSize = (int)FastMath.Ceiling(FastMath.Log(maxOccludees, 2));
+            //occludeesTextureSize = (int)FastMath.Ceiling(FastMath.Log(maxOccludees, 2));
+            occludeesTextureSize = (int)FastMath.Ceiling(FastMath.Sqrt(maxOccludees));
             occludeesTextureSize = GpuOcclusionUtils.getNextHighestPowerOfTwo(occludeesTextureSize);
             occludeesTextureSize = occludeesTextureSize < 2 ? 2 : occludeesTextureSize;
             maxOccludeesCount = occludeesTextureSize * occludeesTextureSize;
@@ -497,14 +514,28 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
                 }
                 else
                 {
-                    //Cargar datos en array de textura (x1, y1, x2, y2)
-                    occludeeAABBdata[i * 4] = meshBox2D.min.X;
-                    occludeeAABBdata[i * 4 + 1] = meshBox2D.min.Y;
-                    occludeeAABBdata[i * 4 + 2] = meshBox2D.max.X;
-                    occludeeAABBdata[i * 4 + 3] = meshBox2D.max.Y;
+                    //Ver que el tamaño no supere el umbral maximo permitido
+                    int size = (int)((meshBox2D.max.X - meshBox2D.min.X) * (meshBox2D.max.Y - meshBox2D.min.Y));
+                    if (size > this.maxOccludeeSizeAllowed)
+                    {
+                        //skipear en shader poniendo -1 en depth
+                        occludeeDepthData[i] = -1f;
+                        occludeeAABBdata[i * 4] = 0;
+                        occludeeAABBdata[i * 4 + 1] = 0;
+                        occludeeAABBdata[i * 4 + 2] = 0;
+                        occludeeAABBdata[i * 4 + 3] = 0;
+                    }
+                    else
+                    {
+                        //Cargar datos en array de textura (x1, y1, x2, y2)
+                        occludeeAABBdata[i * 4] = meshBox2D.min.X;
+                        occludeeAABBdata[i * 4 + 1] = meshBox2D.min.Y;
+                        occludeeAABBdata[i * 4 + 2] = meshBox2D.max.X;
+                        occludeeAABBdata[i * 4 + 3] = meshBox2D.max.Y;
 
-                    //depth
-                    occludeeDepthData[i] = 1.0f - meshBox2D.depth;
+                        //depth
+                        occludeeDepthData[i] = 1.0f - meshBox2D.depth;
+                    }
                 }
             }
 
@@ -540,6 +571,7 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
         /// El orden correlativo al de la lista EnabledOccludees.
         /// Esta funcion trae la textura de GPU a CPU para poder leer la informacion.
         /// Ese pasaje es muy lento. Solo debe ejecutarse a efectos de debug.
+        /// True significa que el occludee es visible. False que fue descartado por occlusion.
         /// </summary>
         /// <returns>Estado de occludees</returns>
         public bool[] getVisibilityData()
