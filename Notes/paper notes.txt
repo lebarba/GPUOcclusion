@@ -36,3 +36,6 @@ Thanks
 	Daniel Es journal
 	Daniel Rákos - Rastergrid
 	Nick Darnell
+	 
+		
+ver si encuentro Efficient Occlusion Culling with Occupancy Proportion
