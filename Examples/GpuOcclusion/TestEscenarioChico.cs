@@ -97,11 +97,12 @@ namespace Examples.GpuOcclusion
 
 
             //Modifiers
+            GuiController.Instance.Modifiers.addBoolean("countOcclusion", "countOcclusion", false);
+            GuiController.Instance.Modifiers.addInt("maxTexels", 0, 1000000, 10000);
             GuiController.Instance.Modifiers.addBoolean("frustumCull", "frustumCull", true);
             GuiController.Instance.Modifiers.addBoolean("occlusionCull", "occlusionCull", true);
             GuiController.Instance.Modifiers.addBoolean("drawMeshes", "drawMeshes", true);
             GuiController.Instance.Modifiers.addBoolean("drawOccluders", "drawOccluders", false);
-            GuiController.Instance.Modifiers.addBoolean("countOcclusion", "countOcclusion", false);
             GuiController.Instance.Modifiers.addBoolean("depthBuffer", "depthBuffer", false);
 
             //UserVars
@@ -118,6 +119,8 @@ namespace Examples.GpuOcclusion
             occlusionEngine.FrustumCullingEnabled = (bool)GuiController.Instance.Modifiers["frustumCull"];
             occlusionEngine.OcclusionCullingEnabled = (bool)GuiController.Instance.Modifiers["occlusionCull"];
 
+            //Umbral de texels
+            occlusionEngine.MaxOccludeeSizeAllowed = (int)GuiController.Instance.Modifiers["maxTexels"];
 
             //Actualizar visibilidad
             occlusionEngine.updateVisibility();
@@ -172,12 +175,21 @@ namespace Examples.GpuOcclusion
             bool countOcclusion = (bool)GuiController.Instance.Modifiers["countOcclusion"];
             if (countOcclusion)
             {
+                d3dDevice.RenderState.ZBufferEnable = false;
                 bool[] data = occlusionEngine.getVisibilityData();
                 int n = 0;
                 for (int i = 0; i < data.Length; i++)
                 {
-                    if (data[i]) n++;
+                    if (data[i])
+                    {
+                        n++;
+                    }
+                    else
+                    {
+                        occlusionEngine.EnabledOccludees[i].BoundingBox.render();
+                    }
                 }
+                d3dDevice.RenderState.ZBufferEnable = true;
                 GuiController.Instance.UserVars["occlusionCull"] = n + "/" + occlusionEngine.EnabledOccludees.Count;
             }
             else

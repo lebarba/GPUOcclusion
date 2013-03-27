@@ -128,6 +128,21 @@ namespace Examples.GpuOcclusion
             set { occlusionCullingEnabled = value; }
         }
 
+        int maxOccludeeSizeAllowed;
+        /// <summary>
+        /// Tamaño maximo de occludee (proyectado) que se usa para occlusion.
+        /// Se calcula como: size = width x height.
+        /// Si el tamaño del occludee supera este limite, entonces se considera visible, sin testar occlusion.
+        /// El objetivo es no saturar la GPU con muchas lecturas de texel en objetos que ocupan mucho tamaño de pantalla
+        /// y que probablemente sean visibles.
+        /// </summary>
+        public int MaxOccludeeSizeAllowed
+        {
+            get { return maxOccludeeSizeAllowed; }
+            set { maxOccludeeSizeAllowed = value; }
+        }
+
+
         public OcclusionEngine()
         {
             occluders = new List<Occluder>();
@@ -135,6 +150,7 @@ namespace Examples.GpuOcclusion
             enabledOccludees = new List<TgcMeshShader>();
             frustumCullingEnabled = true;
             occlusionCullingEnabled = true;
+            maxOccludeeSizeAllowed = 10000;
         }
 
         /// <summary>
@@ -695,14 +711,28 @@ namespace Examples.GpuOcclusion
                 }
                 else
                 {
-                    //Cargar datos en array de textura (x1, y1, x2, y2)
-                    occludeeAABBdata[i * 4] = meshBox2D.min.X;
-                    occludeeAABBdata[i * 4 + 1] = meshBox2D.min.Y;
-                    occludeeAABBdata[i * 4 + 2] = meshBox2D.max.X;
-                    occludeeAABBdata[i * 4 + 3] = meshBox2D.max.Y;
+                    //Ver que el tamaño no supere el umbral maximo permitido
+                    int size = (int)((meshBox2D.max.X - meshBox2D.min.X) * (meshBox2D.max.Y - meshBox2D.min.Y));
+                    if (size > this.maxOccludeeSizeAllowed)
+                    {
+                        //skipear en shader poniendo -1 en depth
+                        occludeeDepthData[i] = -1f;
+                        occludeeAABBdata[i * 4] = 0;
+                        occludeeAABBdata[i * 4 + 1] = 0;
+                        occludeeAABBdata[i * 4 + 2] = 0;
+                        occludeeAABBdata[i * 4 + 3] = 0;
+                    }
+                    else
+                    {
+                        //Cargar datos en array de textura (x1, y1, x2, y2)
+                        occludeeAABBdata[i * 4] = meshBox2D.min.X;
+                        occludeeAABBdata[i * 4 + 1] = meshBox2D.min.Y;
+                        occludeeAABBdata[i * 4 + 2] = meshBox2D.max.X;
+                        occludeeAABBdata[i * 4 + 3] = meshBox2D.max.Y;
 
-                    //depth
-                    occludeeDepthData[i] = 1.0f - meshBox2D.depth;
+                        //depth
+                        occludeeDepthData[i] = 1.0f - meshBox2D.depth;
+                    }
                 }
             }
 

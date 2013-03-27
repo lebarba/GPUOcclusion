@@ -166,7 +166,7 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
 
 
             //Almacenar viewport original
-            int viewportReduced = 4;
+            int viewportReduced = 8;
             screenViewport = d3dDevice.Viewport;
             occlusionViewport = new Viewport();
             occlusionViewport.X = screenViewport.X;

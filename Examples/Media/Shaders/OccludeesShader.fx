@@ -5,6 +5,7 @@
 float4x4 matWorld;
 float4x4 matWorldView;
 float4x4 matWorldViewProj;
+float4x4 matInverseTransposeWorld; //Matriz Transpose(Invert(World))
 
 
 //Textura utilizada por el Pixel Shader
@@ -114,6 +115,21 @@ struct PS_INPUT
 
 float4 SimplestPixelShader(PS_INPUT Input) : COLOR0
 {
+	/*
+	int bucle = 2;
+	int i, j;
+	float v = 0;
+	
+	for(i = 0; i < bucle; i++) {
+		for(j = 0; j < bucle; j++) {
+			v += tex2Dlod( diffuseMap, float4(Input.Texcoord + float2(i, j), 0.0f, 0 ));
+		}
+	}
+	v = v / (bucle * bucle);
+	return tex2D( diffuseMap, Input.Texcoord ) + v * 0.0001f;
+	*/
+
+	
 	return tex2D( diffuseMap, Input.Texcoord );
 }
 

@@ -112,8 +112,8 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
             
 
             //UserVars
-            GuiController.Instance.UserVars.addVar("frustumCull");
-            GuiController.Instance.UserVars.addVar("occlusionCull");
+            GuiController.Instance.UserVars.addVar("frus");
+            GuiController.Instance.UserVars.addVar("occ");
         }
 
 
@@ -176,7 +176,7 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
 
 
             //Meshes visibles
-            GuiController.Instance.UserVars["frustumCull"] = occlusionEngine.EnabledOccludees.Count + "/" + occlusionEngine.Occludees.Count;
+            GuiController.Instance.UserVars["frus"] = occlusionEngine.EnabledOccludees.Count + "/" + occlusionEngine.Occludees.Count;
 
 
             //Debug: contar la cantidad de objetos occluidos (es lento)
@@ -194,15 +194,15 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
                     }
                     else
                     {
-                        occlusionEngine.Occludees[i].BoundingBox.render();
+                        occlusionEngine.EnabledOccludees[i].BoundingBox.render();
                     }
                 }
                 d3dDevice.RenderState.ZBufferEnable = true;
-                GuiController.Instance.UserVars["occlusionCull"] = n + "/" + occlusionEngine.EnabledOccludees.Count;
+                GuiController.Instance.UserVars["occ"] = n + "/" + occlusionEngine.EnabledOccludees.Count;
             }
             else
             {
-                GuiController.Instance.UserVars["occlusionCull"] = "-";
+                GuiController.Instance.UserVars["occ"] = "-";
             }
 
 

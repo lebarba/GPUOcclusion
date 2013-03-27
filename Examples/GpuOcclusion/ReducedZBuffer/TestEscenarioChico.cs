@@ -186,7 +186,7 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
                     }
                     else
                     {
-                        occlusionEngine.Occludees[i].BoundingBox.render();
+                        occlusionEngine.EnabledOccludees[i].BoundingBox.render();
                     }
                 }
                 d3dDevice.RenderState.ZBufferEnable = true;
