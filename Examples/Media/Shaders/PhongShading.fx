@@ -10,6 +10,7 @@ float3 fvEyePosition = float3( 0.00, 0.00, -100.00 );
 float4x4 matWorld;
 float4x4 matWorldView;
 float4x4 matWorldViewProj;
+float4x4 matInverseTransposeWorld; //Matriz Transpose(Invert(World))
 
 //Input del Vertex Shader
 struct VS_INPUT 

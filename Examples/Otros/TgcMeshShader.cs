@@ -88,6 +88,7 @@ namespace Examples.Shaders
             effect.SetValue("matWorld", this.transform);
             effect.SetValue("matWorldView", matWorldView);
             effect.SetValue("matWorldViewProj", matWorldViewProj);
+            effect.SetValue("matInverseTransposeWorld", Matrix.TransposeMatrix(Matrix.Invert(this.transform)));
 
             //Renderizar segun el tipo de render de la malla
             int numPasses;

@@ -89,6 +89,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GpuOcclusion\ReducedZBuffer\TestMuchosCubos.cs" />
     <Compile Include="GpuOcclusion\ReducedZBuffer\TestCiudad.cs" />
     <Compile Include="GpuOcclusion\ReducedZBuffer\TestEscenarioChico.cs" />
     <Compile Include="GpuOcclusion\ReducedZBuffer\TestReducedZBuffer.cs" />
