@@ -59,7 +59,7 @@ sampler occlusionResultSampler = sampler_state
     Texture = <occlusionResult>;
     MagFilter = POINT;
     MinFilter = POINT;
-    MipFilter = NONE;
+    MipFilter = POINT;
     AddressU = CLAMP;
     AddressV = CLAMP;
 };
@@ -121,9 +121,7 @@ VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT input )
 		//Posicion pasada a World-Space (necesaria para atenuación por distancia)
 		output.WorldPosition = mul(input.Position, matWorld);
 
-		/* Pasar normal a World-Space 
-		Solo queremos rotarla, no trasladarla ni escalarla.
-		Por eso usamos matInverseTransposeWorld en vez de matWorld */
+		//Pasar normal a World-Space 
 		output.WorldNormal = mul(input.Normal, matInverseTransposeWorld).xyz;
 
 		return output;
@@ -186,8 +184,7 @@ float4 SimplestPixelShader(PS_INPUT input) : COLOR0
 				? float3(0.0, 0.0, 0.0)
 				: (intensity * lightColor[i] * materialSpecularColor * pow(max( 0.0, n_dot_h), materialSpecularExp));
 		
-		/* Color final: modular (Emissive + Ambient + Diffuse) por el color de la textura, y luego sumar Specular.
-		   El color Alpha sale del diffuse material */
+		//Color final
 		finalDiffuseColor += materialEmissiveColor + ambientLight + diffuseLight;
 		finalSpecularColor += specularLight;
 	}
@@ -202,11 +199,75 @@ float4 SimplestPixelShader(PS_INPUT input) : COLOR0
 }
 
 
-technique RenderWithOcclusionEnabled
+technique Algoritmo
 {
     pass p0
     {
         VertexShader = compile vs_3_0 VertDoOcclusionDiscard();
+        PixelShader = compile ps_3_0 SimplestPixelShader();
+    }
+}
+
+// ----------------------------------------------------------------------------------------------- //
+
+
+//Vertex Shader for testing occlusion.
+VS_OUTPUT v_normal( VS_INPUT input )
+{
+   VS_OUTPUT output;
+
+   //Caso comun: hacer lo propio del Vertex Shader
+
+	//Proyectar posicion
+	output.Position = mul(input.Position, matWorldViewProj);
+
+	//Enviar Texcoord directamente
+	output.Texcoord = input.Texcoord;
+
+	//Posicion pasada a World-Space (necesaria para atenuación por distancia)
+	output.WorldPosition = mul(input.Position, matWorld);
+
+	//Pasar normal a World-Space 
+	output.WorldNormal = mul(input.Normal, matInverseTransposeWorld).xyz;
+
+	return output;
+}
+
+
+
+technique Normal
+{
+    pass p0
+    {
+        VertexShader = compile vs_3_0 v_normal();
+        PixelShader = compile ps_3_0 SimplestPixelShader();
+    }
+}
+
+
+// ----------------------------------------------------------------------------------------------- //
+
+
+//Vertex Shader for testing occlusion.
+VS_OUTPUT v_discard( VS_INPUT input )
+{
+	VS_OUTPUT output;
+
+	//Discard vertex by assigning a z value that will be invisible.
+	output.Position = float4(0.0f, 0.0f, -1.0f, 1.0f);
+	output.Texcoord = 0;
+	output.WorldPosition = 0;
+	output.WorldNormal = 0;
+	return output;
+}
+
+
+
+technique Discard
+{
+    pass p0
+    {
+        VertexShader = compile vs_3_0 v_discard();
         PixelShader = compile ps_3_0 SimplestPixelShader();
     }
 }

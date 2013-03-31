@@ -58,7 +58,6 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
 
             //Cargar shader para render de meshes (mas info de occlusion)
             effect = ShaderUtils.loadEffect(GuiController.Instance.ExamplesMediaDir + "Shaders\\ReducedZBuffer\\OccludeesShaderMuchosCubos.fx");
-            effect.Technique = "RenderWithOcclusionEnabled";
 
 
             //Escenario
@@ -99,9 +98,9 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
 
             //Crear n cubos de Occludees
             occludees = new List<TgcMeshShader>();
-            for (int i = 0; i < 40; i++)
+            for (int i = 0; i < 20; i++)
             {
-                for (int j = 0; j < 40; j++)
+                for (int j = 0; j < 20; j++)
                 {
                     //Crear cubo
                     TgcMeshShader occludee = TgcMeshShader.fromTgcMesh(meshOccludeeTemplate, effect);
@@ -123,6 +122,7 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
             //Modifiers
             GuiController.Instance.Modifiers.addBoolean("countOcclusion", "countOcclusion", false);
             GuiController.Instance.Modifiers.addBoolean("occlusionCull", "occlusionCull", true);
+            GuiController.Instance.Modifiers.addInterval("technique", new string[] { "Normal", "Discard", "Algoritmo" }, 0);
 
             //UserVars
             GuiController.Instance.UserVars.addVar("frus");
@@ -141,7 +141,6 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
             occlusionEngine.updateVisibility();
 
 
-
             //Clear
             d3dDevice.BeginScene();
             d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
@@ -149,6 +148,9 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
             //FPS counter
             GuiController.Instance.Text3d.drawText("FPS: " + HighResolutionTimer.Instance.FramesPerSecond, 0, 0, Color.Yellow);
 
+
+
+            effect.Technique = (string)GuiController.Instance.Modifiers["technique"];
 
             //Cargar atributos de la luz
             effect.SetValue("lightColor", new ColorValue[] { ColorValue.FromColor(Color.White), ColorValue.FromColor(Color.Red), ColorValue.FromColor(Color.Blue), ColorValue.FromColor(Color.Green), ColorValue.FromColor(Color.Yellow), ColorValue.FromColor(Color.Brown) });
