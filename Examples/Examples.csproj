@@ -89,9 +89,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GpuOcclusion\ParalellOccludee\TestCiudadReadBack.cs" />
+    <Compile Include="GpuOcclusion\ParalellOccludee\TestReadBack.cs" />
     <Compile Include="GpuOcclusion\ParalellOccludee\OcclusionEngineParalellOccludee.cs" />
     <Compile Include="GpuOcclusion\ParalellOccludee\TestCiudad.cs" />
     <Compile Include="GpuOcclusion\ParalellOccludee\TestEscenarioChico.cs" />
+    <Compile Include="GpuOcclusion\ParalellOccludee\TestMuchosCubos.cs" />
     <Compile Include="GpuOcclusion\ParalellOccludee\TestParalellOccludee.cs" />
     <Compile Include="GpuOcclusion\ReducedZBuffer\TestDiscardVS.cs" />
     <Compile Include="GpuOcclusion\ReducedZBuffer\TestMuchosCubos.cs" />

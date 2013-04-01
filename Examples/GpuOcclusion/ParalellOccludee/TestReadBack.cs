@@ -17,9 +17,9 @@ using TgcViewer.Utils._2D;
 namespace Examples.GpuOcclusion.ParalellOccludee
 {
     /// <summary>
-    /// Varios occludees uno atras del otro
+    /// ReadBack
     /// </summary>
-    public class TestReducedZBuffer : TgcExample
+    public class TestReadBack : TgcExample
     {
 
         Effect effect;
@@ -35,12 +35,12 @@ namespace Examples.GpuOcclusion.ParalellOccludee
 
         public override string getName()
         {
-            return "Test Many Occludees";
+            return "Test Read Back";
         }
 
         public override string getDescription()
         {
-            return "Test Many Occludees";
+            return "Test Read Back";
         }
 
         public override void init()
@@ -57,8 +57,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
             occlusionEngine = new OcclusionEngineParalellOccludee();
 
             //Cargar shader para render de meshes (mas info de occlusion)
-            effect = ShaderUtils.loadEffect(GuiController.Instance.ExamplesMediaDir + "Shaders\\OccludeesShader.fx");
-            effect.Technique = "RenderWithOcclusionEnabled";
+            effect = ShaderUtils.loadEffect(GuiController.Instance.ExamplesMediaDir + "Shaders\\ParalellOccludee\\OccludeesShaderReadBack.fx");
 
 
             //Escenario
@@ -97,7 +96,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
 
 
             //Modifiers
-            GuiController.Instance.Modifiers.addBoolean("countOcclusion", "countOcclusion", false);
+            GuiController.Instance.Modifiers.addBoolean("readBack", "readBack", false);
 
             GuiController.Instance.UserVars.addVar("occ");
         }
@@ -122,41 +121,56 @@ namespace Examples.GpuOcclusion.ParalellOccludee
             //FPS counter
             GuiController.Instance.Text3d.drawText("FPS: " + HighResolutionTimer.Instance.FramesPerSecond, 0, 0, Color.Yellow);
 
-
-            //Render de Occludee. Cargar todas las variables de shader propias de Occlusion
-            for (int i = 0; i < occlusionEngine.EnabledOccludees.Count; i++)
+            //Ver si hacemos readBack
+            bool readBack = (bool)GuiController.Instance.Modifiers["readBack"];
+            if (readBack)
             {
-                TgcMeshShader occludee = occlusionEngine.EnabledOccludees[i];
+                effect.Technique = "NormalRender";
 
-                occlusionEngine.setOcclusionShaderValues(effect, i);
-                occludee.render();
-                occludee.BoundingBox.render();
+                //Traer datos de visibilidad de gpu
+                bool[] data = occlusionEngine.getVisibilityData();
+                for (int i = 0; i < occlusionEngine.EnabledOccludees.Count; i++)
+                {
+                    //Solo dibujar si es visible
+                    if (data[i])
+                    {
+                        TgcMeshShader occludee = occlusionEngine.EnabledOccludees[i];
+                        occlusionEngine.setOcclusionShaderValues(effect, i);
+                        occludee.render();
+                        occludee.BoundingBox.render();
+                    }
+                    else
+                    {
+                        TgcMeshShader occludee = occlusionEngine.EnabledOccludees[i];
+                        occludee.BoundingBox.render();
+                    }
+                }
+
             }
+            else
+            {
+                effect.Technique = "RenderWithOcclusionEnabled";
+
+                //Render de Occludee. Cargar todas las variables de shader propias de Occlusion
+                for (int i = 0; i < occlusionEngine.EnabledOccludees.Count; i++)
+                {
+                    TgcMeshShader occludee = occlusionEngine.EnabledOccludees[i];
+
+                    occlusionEngine.setOcclusionShaderValues(effect, i);
+                    occludee.render();
+                    occludee.BoundingBox.render();
+                }
+            }
+
+
+
+            
 
 
             //Render de AABB de Occluder para debug
             occluderBox.BoundingBox.render();
             occluderBox2.BoundingBox.render();
 
-
-
-
-            //Debug: contar la cantidad de objetos occluidos (es lento)
-            bool countOcclusion = (bool)GuiController.Instance.Modifiers["countOcclusion"];
-            if (countOcclusion)
-            {
-                bool[] data = occlusionEngine.getVisibilityData();
-                int n = 0;
-                for (int i = 0; i < data.Length; i++)
-                {
-                    if (data[i]) n++;
-                }
-                GuiController.Instance.UserVars["occ"] = n + "/" + occlusionEngine.EnabledOccludees.Count;
-            }
-            else
-            {
-                GuiController.Instance.UserVars["occ"] = "-";
-            }
 
 
 

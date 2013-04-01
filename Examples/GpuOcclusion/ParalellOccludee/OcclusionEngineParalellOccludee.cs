@@ -11,7 +11,7 @@ using System.IO;
 namespace Examples.GpuOcclusion.ParalellOccludee
 {
     /// <summary>
-    /// Tecnica Occluees en paralelo
+    /// Tecnica de Occluees en paralelo con bloques de 8x8
     /// </summary>
     public class OcclusionEngineParalellOccludee
     {
@@ -61,6 +61,9 @@ namespace Examples.GpuOcclusion.ParalellOccludee
         Texture halfReduceOccludeeTexture;
         Surface halfReduceOccludeeSurface;
 
+        //Textura para traer los resultados de GPU a CPU
+        Texture readBackTexture;
+        Surface readBackSurface;
 
         //Shader con todos los pasos de Occlusion
         Effect occlusionEffect;
@@ -203,6 +206,10 @@ namespace Examples.GpuOcclusion.ParalellOccludee
             halfReduceOccludeeTexture = new Texture(d3dDevice, occludeesTextureSize, occludeesTextureExpandedSize, 1, Usage.RenderTarget, /*Format.R16F*/Format.R32F, Pool.Default);
             halfReduceOccludeeSurface = halfReduceOccludeeTexture.GetSurfaceLevel(0);
 
+            //TODO: hacer de 16F para optimizar
+            //Crear textura para traer los datos de GPU a CPU (es para debug)
+            readBackTexture = new Texture(d3dDevice, this.occludeesTextureSize, this.occludeesTextureSize, 1, Usage.None, Format.R32F/*Format.R16F*/, Pool.SystemMemory);
+            readBackSurface = readBackTexture.GetSurfaceLevel(0);
 
 
             //Cargar shader de occlusion
@@ -237,6 +244,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
             screenQuadVertices[3].Rhw = 1.0f;
             screenQuadVertices[3].Tu = 0.0f;
             screenQuadVertices[3].Tv = 1.0f;
+
         }
 
 
@@ -277,9 +285,19 @@ namespace Examples.GpuOcclusion.ParalellOccludee
             d3dDevice.Clear(ClearFlags.Target | ClearFlags.ZBuffer, Color.Black, 1.0f, 0);
         }
 
+        /// <summary>
+        /// Marcar todos los occludees como visibles
+        /// </summary>
         public void resetVisibility()
         {
-            //TODO: implementar, limpiar todo
+            Device d3dDevice = GuiController.Instance.D3dDevice;
+
+            //Habilitar todos los occludees
+            enabledOccludees.Clear();
+            enabledOccludees.AddRange(occludees);
+
+            //Cargar la textura de occludees como todo visible
+            markAllOccludeesAsVisibleInTexture(d3dDevice);
         }
 
 
@@ -469,8 +487,8 @@ namespace Examples.GpuOcclusion.ParalellOccludee
                 else
                 {
                     //Calcular cantidad de bloques de 8x8
-                    int quadWidth = (int)FastMath.Ceiling(occWidth / 8);
-                    int quadHeight = (int)FastMath.Ceiling(occHeight / 8);
+                    int quadWidth = (int)FastMath.Ceiling(occWidth / 8f);
+                    int quadHeight = (int)FastMath.Ceiling(occHeight / 8f);
 
                     //Calcular punto extremo del quad para ubicarlo en la textura de resultado de todos los occludees
                     int quadMaxX = quadMinX + quadWidth;
@@ -490,8 +508,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
                     occlusionEffect.SetValue("occludeeMin", new float[] { meshBox2D.min.X, meshBox2D.min.Y });
                     occlusionEffect.SetValue("occludeeMax", new float[] { meshBox2D.max.X, meshBox2D.max.Y });
                     occlusionEffect.SetValue("occludeeDepth", 1.0f - meshBox2D.depth);
-                    occlusionEffect.SetValue("quadWidth", quadWidth);
-                    occlusionEffect.SetValue("quadHeight", quadHeight);
+                    occlusionEffect.SetValue("quadSize", new float[] { quadWidth, quadHeight });
 
                     //Render quad
                     occlusionEffect.Begin(0);
@@ -564,8 +581,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
 
             //Parametros de shader
             occlusionEffect.Technique = "Reduce1erPass";
-            occlusionEffect.SetValue("quadWidth", occludeesTextureSize);
-            occlusionEffect.SetValue("quadHeight", occludeesTextureExpandedSize);
+            occlusionEffect.SetValue("quadSize", new float[] { occludeesTextureSize, occludeesTextureExpandedSize });
             occlusionEffect.SetValue("paralellOccludeeOutputTexture", paralellOccludeeOutputTexture);
             occlusionEffect.SetValue("resultsTexWidth", (float)(occludeesTextureExpandedSize));
             occlusionEffect.SetValue("resultsTexHeight", (float)(occludeesTextureExpandedSize));
@@ -615,8 +631,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
 
             //Parametros de shader
             occlusionEffect.Technique = "Reduce2doPass";
-            occlusionEffect.SetValue("quadWidth", occludeesTextureSize);
-            occlusionEffect.SetValue("quadHeight", occludeesTextureSize);
+            occlusionEffect.SetValue("quadSize", new float[] { occludeesTextureSize, occludeesTextureSize });
             occlusionEffect.SetValue("halfReduceOccludeeTexture", halfReduceOccludeeTexture);
             occlusionEffect.SetValue("resultsTexWidth", (float)(occludeesTextureSize));
             occlusionEffect.SetValue("resultsTexHeight", (float)(occludeesTextureExpandedSize));
@@ -669,39 +684,21 @@ namespace Examples.GpuOcclusion.ParalellOccludee
         public bool[] getVisibilityData()
         {
             Device d3dDevice = GuiController.Instance.D3dDevice;
-            bool[] data = new bool[enabledOccludees.Count];
 
             //Traer textura de GPU a CPU
-            Texture debugTexture = new Texture(d3dDevice, this.occludeesTextureSize, this.occludeesTextureSize, 1, Usage.None, Format.R32F, Pool.SystemMemory);
-            Surface debugSurface = debugTexture.GetSurfaceLevel(0);
-            d3dDevice.GetRenderTargetData(occlusionResultSurface, debugSurface);
+            d3dDevice.GetRenderTargetData(occlusionResultSurface, readBackSurface);
             //TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "visibility.png", ImageFileFormat.Png, debugTexture);
-            GraphicsStream stream = debugSurface.LockRectangle(LockFlags.ReadOnly);
-            BinaryReader reader = new BinaryReader(stream);
+            float[] textureValues = (float[])readBackSurface.LockRectangle(typeof(float), LockFlags.ReadOnly, enabledOccludees.Count);
+            readBackSurface.UnlockRectangle();
 
-            /*
-            int total = (int)(this.occludeesTextureSize * this.occludeesTextureSize);
-            float[] values = new float[total];
-            for (int i = 0; i < total; i++)
+            //Pasar a array de boolean
+            bool[] visibilityData = new bool[textureValues.Length];
+            for (int i = 0; i < textureValues.Length; i++)
             {
-                float value = reader.ReadSingle();
-                values[i] = value;
-            }
-            */
-
-            //Leer datos textura
-            for (int i = 0; i < enabledOccludees.Count; i++)
-            {
-                float value = reader.ReadSingle();
-                data[i] = value == 0.0f ? true : false;
+                visibilityData[i] = textureValues[i] == 0.0f ? true : false;
             }
 
-            reader.Close();
-            stream.Dispose();
-            debugSurface.Dispose();
-            debugTexture.Dispose();
-
-            return data;
+            return visibilityData;
         }
 
 
