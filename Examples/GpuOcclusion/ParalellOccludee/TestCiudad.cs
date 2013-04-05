@@ -50,7 +50,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
             GuiController.Instance.CustomRenderEnabled = true;
 
             GuiController.Instance.FpsCamera.Enable = true;
-            GuiController.Instance.FpsCamera.setCamera(new Vector3(-465.5077f, 20.0006f, 441.59f), new Vector3(-466.4288f, 20.3778f, 441.4932f));
+            GuiController.Instance.FpsCamera.setCamera(new Vector3(-1473.558f, 20.0006f, 395.7999f), new Vector3(-1472.858f, 20.0678f, 395.0885f));
 
 
             //Engine de Occlusion
@@ -58,6 +58,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
 
 
             //Cargar shader para render de meshes (mas info de occlusion)
+            //effect = ShaderUtils.loadEffect(GuiController.Instance.ExamplesMediaDir + "Shaders\\ParalellOccludee\\OccludeesShader.fx");
             effect = ShaderUtils.loadEffect(GuiController.Instance.ExamplesMediaDir + "Shaders\\OccludeesShader.fx");
             effect.Technique = "RenderWithOcclusionEnabled";
 

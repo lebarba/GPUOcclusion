@@ -190,12 +190,26 @@ float4 SimplestPixelShader(PS_INPUT input) : COLOR0
 	}
 	
 	//Obtener texel de la textura
-	float4 texelColor = tex2D(diffuseMap, input.Texcoord);
+	//float4 texelColor = tex2D(diffuseMap, input.Texcoord);
+	
+	float4 texelColor = 0;
+	int cant = 0;
+	for(int i = 0; i < 10; i++) {
+		for(int j = 0; j < 10; j++) {
+			texelColor = tex2Dlod(diffuseMap, float4(input.Texcoord, 0, 0));
+			cant++;
+		}
+	}
+	
+	float4 finalColor = texelColor / (float)cant;
 	
 	//Sumar todo
-	float4 finalColor = float4(finalDiffuseColor * texelColor + finalSpecularColor, materialDiffuseColor.a);
+	//float4 finalColor = float4(finalDiffuseColor * texelColor + finalSpecularColor, materialDiffuseColor.a);
 
-	return finalColor;
+	//return finalColor;
+	
+	
+	return float4(lerp(finalColor.xyz, 1, 0.75f), 1);
 }
 
 

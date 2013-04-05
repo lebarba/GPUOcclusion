@@ -56,7 +56,8 @@ float isOccluded()
 	posInTexture.y =  (float)(ocludeeIndexInTexture / (float) OccludeeTextureSize) / (float) OccludeeTextureSize;
 
 	//Get the Occlusion Result texture value to see if occludee is visible. Use mipmap level 0.
-	return tex2Dlod(occlusionResultSampler, float4(posInTexture.xy, 0.0f, 0.0f)).r;
+	float value = tex2Dlod(occlusionResultSampler, float4(posInTexture.xy, 0.0f, 0.0f)).r;
+	return value < 1.0f ? 0.0f : 1.0f;
 }
 
 

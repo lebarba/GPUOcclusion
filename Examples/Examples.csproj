@@ -89,6 +89,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GpuOcclusion\ParalellOccludee\DemoCiudadArriba.cs" />
     <Compile Include="GpuOcclusion\ParalellOccludee\TestCiudadReadBack.cs" />
     <Compile Include="GpuOcclusion\ParalellOccludee\TestReadBack.cs" />
     <Compile Include="GpuOcclusion\ParalellOccludee\OcclusionEngineParalellOccludee.cs" />

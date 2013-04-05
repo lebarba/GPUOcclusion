@@ -115,12 +115,12 @@ float4 p_ParalellOverlapTest( float2 pos: TEXCOORD0 ) : COLOR0
 	//Pixel del cual arrancar el bloque de 8x8
 	float2 base = occludeeMin + pos * quadSize * 8;
 	
+	
 	//Maximo texel a iterar (8x8 o menos si estamos justo en el borde del occludee)
 	float2 maxTexel = float2(
-		min(8, occludeeMax.x - base.x),
-		min(8, occludeeMax.y - base.y)
+		min(7, occludeeMax.x - base.x),
+		min(7, occludeeMax.y - base.y)
 	);
-	//float2 maxTexel = min(float2(8, 8), occludeeMax - base);
 	
 	//Recorrer 8x8 del occludee
 	float i, j;
@@ -217,6 +217,7 @@ float4 p_Reduce1erPass( float2 pos: TEXCOORD0 ) : COLOR0
 		base.x += delta;
 		minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base, 0.0f, 0 )).r);
 	}
+
 	
 	
 	/*
@@ -417,3 +418,31 @@ technique Reduce2doPass
     }
 }
 
+/* ---------------------------------------- TECHNIQUE: GpuReduce -------------------------------------------------- */
+
+//Textura con resultado de los 32x32 bloques de cada occludee
+texture2D paralellOccludeeOutputLinearTexture;
+sampler paralellOccludeeOutputLinearSampler = sampler_state
+{
+    Texture = <paralellOccludeeOutputLinearTexture>;
+    MagFilter = LINEAR;
+    MinFilter = LINEAR;
+    MipFilter = LINEAR;
+    AddressU = CLAMP;
+    AddressV = CLAMP;
+};
+
+//Vertical reduce
+float4 p_GpuReduce( float2 pos: TEXCOORD0 ) : COLOR0
+{
+	return tex2D(paralellOccludeeOutputLinearSampler, pos);
+}
+
+technique GpuReduce
+{
+    pass p0
+    {
+        VertexShader = compile vs_3_0 v_passThrough();
+		PixelShader = compile ps_3_0 p_GpuReduce();
+    }
+}

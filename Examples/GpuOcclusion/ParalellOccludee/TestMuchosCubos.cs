@@ -63,7 +63,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
             //Escenario
 
             //Box de occluder
-            occluderBox = TgcBox.fromSize(new Vector3(150, 0, -20), new Vector3(600, 60, 5), Color.Green);
+            occluderBox = TgcBox.fromSize(new Vector3(150, 0, -20), new Vector3(600, 160, 5), Color.Green);
 
             //Crear occluder para el engine
             Occluder occluder = new Occluder(occluderBox.BoundingBox);
@@ -92,7 +92,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
             
             //Occludee template
             float occludeeSize = 8;
-            TgcMesh meshOccludeeTemplate = TgcBox.fromSize(new Vector3(0, 0, 0), new Vector3(occludeeSize, occludeeSize, occludeeSize), textures[0]).toMesh("occludee");
+            TgcMesh meshOccludeeTemplate = TgcBox.fromSize(new Vector3(0, 0, 0), new Vector3(occludeeSize, occludeeSize * 10, occludeeSize), textures[0]).toMesh("occludee");
 
 
 

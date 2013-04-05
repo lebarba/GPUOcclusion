@@ -32,7 +32,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
         const int MAX_OCCLUDEE_BLOQS = 32;
 
         //Por cuanto se divide cada lado del viewport original para definir el tamaño del ZBuffer a utilizar
-        const int VIEWPORT_REDUCTION = 2;
+        const int VIEWPORT_REDUCTION = 4;
 
 
         //Z Buffer
@@ -528,9 +528,62 @@ namespace Examples.GpuOcclusion.ParalellOccludee
             d3dDevice.EndScene();
 
 
+            
             //Reducir resultados hasta poder cargar la textura occlusionResultTex con la informacion de visibilidad de cada occludee
             reduceResults1erPass(d3dDevice);
             reduceResults2doPass(d3dDevice);
+             
+
+            //Reducir resultados hasta poder cargar la textura occlusionResultTex con la informacion de visibilidad de cada occludee
+            //gpuReduce(d3dDevice);
+
+        }
+
+        /// <summary>
+        /// Reducir la textura de visibilidad a una de un pixel por cada occludee
+        /// </summary>
+        private void gpuReduce(Device d3dDevice)
+        {
+            d3dDevice.BeginScene();
+
+            //Set the vertex format for the quad.
+            d3dDevice.VertexFormat = CustomVertex.TransformedTextured.Format;
+
+            //Salida: textura de todos los occludees pero con 1x32 para cada uno (reduccion horizontal)
+            d3dDevice.Viewport = paralellViewport;
+            d3dDevice.SetRenderTarget(0, occlusionResultSurface);
+
+            //Sin ZBuffer
+            d3dDevice.SetRenderState(RenderStates.ZEnable, false);
+            d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, false);
+
+            //Limpiar como todo invisible (1)
+            d3dDevice.Clear(ClearFlags.Target, ONE_COLOR, 1, 0);
+
+            //Parametros de shader
+            occlusionEffect.Technique = "GpuReduce";
+            occlusionEffect.SetValue("paralellOccludeeOutputLinearTexture", paralellOccludeeOutputTexture);
+
+            //Quad que abarque todos los occludees de forma 1x32
+            screenQuadVertices[0].Position = new Vector4(0f, 0f, 0f, 1f);
+            screenQuadVertices[1].Position = new Vector4(occludeesTextureSize, 0f, 0f, 1f);
+            screenQuadVertices[2].Position = new Vector4(occludeesTextureSize, occludeesTextureSize, 0f, 1f);
+            screenQuadVertices[3].Position = new Vector4(0f, occludeesTextureSize, 0f, 1f);
+
+            //Render quad
+            occlusionEffect.Begin(0);
+            occlusionEffect.BeginPass(0);
+            d3dDevice.DrawUserPrimitives(PrimitiveType.TriangleFan, 2, screenQuadVertices);
+            occlusionEffect.EndPass();
+            occlusionEffect.End();
+
+
+
+            //DEBUG
+            //TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "gpuReduce.png", ImageFileFormat.Png, occlusionResultTex);
+
+
+            d3dDevice.EndScene();
         }
 
         /// <summary>
