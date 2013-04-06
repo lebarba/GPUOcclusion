@@ -57,7 +57,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
 
 
             //Cargar shader para render de meshes (mas info de occlusion)
-            effect = ShaderUtils.loadEffect(GuiController.Instance.ExamplesMediaDir + "Shaders\\ParalellOccludee\\OccludeesShaderReadBack.fx");
+            effect = ShaderUtils.loadEffect(GuiController.Instance.ExamplesMediaDir + "Shaders\\ParalellOccludee\\OccludeesShader.fx");
 
 
             //Cargar ciudad

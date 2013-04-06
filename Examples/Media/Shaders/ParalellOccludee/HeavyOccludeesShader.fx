@@ -44,8 +44,8 @@ sampler occlusionResultSampler = sampler_state
     AddressV = CLAMP;
 };
 
-//Chequear si el occludee es visible (1 = visible, 0 = oculto)
-float isVisible()
+//Chequear si el occludee es visible
+float isOccluded()
 {
 	
 	float2 posInTexture;
@@ -56,11 +56,12 @@ float isVisible()
 	posInTexture.y =  (float)(ocludeeIndexInTexture / (float) OccludeeTextureSize) / (float) OccludeeTextureSize;
 
 	//Get the Occlusion Result texture value to see if occludee is visible. Use mipmap level 0.
-	return tex2Dlod(occlusionResultSampler, float4(posInTexture.xy, 0.0f, 0.0f)).r;
+	float value = tex2Dlod(occlusionResultSampler, float4(posInTexture.xy, 0.0f, 0.0f)).r;
+	return value < 1.0f ? 0.0f : 1.0f;
 }
 
 
-/* ---------------------------------------- TECHNIQUE: RenderWithOcclusionEnabled -------------------------------------------------- */
+// ----------------------------------------------------------------------------------------------- //
 
 
 //Input del Vertex Shader
@@ -77,6 +78,7 @@ struct VS_OUTPUT
 {
    float4 Position :        POSITION0;
    float2 Texcoord :        TEXCOORD0;
+   float2 PosZW :        	TEXCOORD1;
 };
 
 
@@ -85,14 +87,15 @@ VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT Input )
 {
    VS_OUTPUT Output;
 
-   //Ver si es visible (1 = visible, 0 = oculto) 
-   if (isVisible() == 1.0f)
+   //If the value is 0 then project the vertex and let it continue through out the pipeline. 
+   if (isOccluded() == 0.0f)
    {
 		//Caso comun: hacer lo propio del Vertex Shader
    
 	   //Project position
 	   Output.Position = mul( Input.Position, matWorldViewProj);
 	   Output.Texcoord = Input.Texcoord;
+	   Output.PosZW = Output.Position.zw;
 	   
 	   return( Output );
     }
@@ -102,6 +105,7 @@ VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT Input )
 		//Discard vertex by assigning a z value that will be invisible.
 		Output.Position = float4(0.0f, 0.0f, -1.0f, 1.0f);
 		Output.Texcoord = 0;
+		Output.PosZW = 0;
 		return( Output );
 	}
 }
@@ -110,12 +114,37 @@ VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT Input )
 //Input del Pixel Shader
 struct PS_INPUT 
 {
-   float2 Texcoord : TEXCOORD0;   
+   float2 Texcoord : TEXCOORD0;  
+   float2 PosZW :        	TEXCOORD1;   
 };
 
-float4 SimplestPixelShader(PS_INPUT Input) : COLOR0
+struct PS_OUTPUT
 {
-	return tex2D( diffuseMap, Input.Texcoord );
+   float4 Color : COLOR0;   
+   float Depth : DEPTH;   
+};
+
+PS_OUTPUT SimplestPixelShader(PS_INPUT Input)
+{
+	PS_OUTPUT output;
+
+	//return tex2D( diffuseMap, Input.Texcoord );
+	
+	float4 texelColor = 0;
+	int cant = 0;
+	for(int i = 0; i < 3; i++) {
+		for(int j = 0; j < 3; j++) {
+			texelColor = tex2Dlod(diffuseMap, float4(Input.Texcoord, 0, 0));
+			cant++;
+		}
+	}
+	
+	float4 realColor = tex2D( diffuseMap, Input.Texcoord );
+	float4 finalColor = texelColor / (float)cant;
+	output.Color = float4(lerp(finalColor.xyz, realColor.xyz, 0.75f), 1);
+	output.Depth =  Input.PosZW.x / Input.PosZW.y;
+	
+	return output;
 }
 
 
@@ -124,29 +153,6 @@ technique RenderWithOcclusionEnabled
     pass p0
     {
         VertexShader = compile vs_3_0 VertDoOcclusionDiscard();
-        PixelShader = compile ps_3_0 SimplestPixelShader();
-    }
-}
-
-/* ---------------------------------------- TECHNIQUE: NormalRender -------------------------------------------------- */
-
-//Vertex Shader normal
-VS_OUTPUT v_NormalRender( VS_INPUT Input )
-{
-   VS_OUTPUT Output;
-
-   //Project position
-   Output.Position = mul( Input.Position, matWorldViewProj);
-   Output.Texcoord = Input.Texcoord;
-
-   return Output;
-}
-
-technique NormalRender
-{
-    pass p0
-    {
-        VertexShader = compile vs_3_0 v_NormalRender();
         PixelShader = compile ps_3_0 SimplestPixelShader();
     }
 }

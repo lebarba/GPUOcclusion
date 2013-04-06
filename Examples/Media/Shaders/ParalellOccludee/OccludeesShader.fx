@@ -60,7 +60,7 @@ float isVisible()
 }
 
 
-/* ---------------------------------------- TECHNIQUE: RenderWithOcclusionEnabled -------------------------------------------------- */
+// ----------------------------------------------------------------------------------------------- //
 
 
 //Input del Vertex Shader
@@ -113,7 +113,7 @@ struct PS_INPUT
    float2 Texcoord : TEXCOORD0;   
 };
 
-float4 SimplestPixelShader(PS_INPUT Input) : COLOR0
+float4 SimplestPixelShader(PS_INPUT Input) : COLOR
 {
 	return tex2D( diffuseMap, Input.Texcoord );
 }
@@ -124,29 +124,6 @@ technique RenderWithOcclusionEnabled
     pass p0
     {
         VertexShader = compile vs_3_0 VertDoOcclusionDiscard();
-        PixelShader = compile ps_3_0 SimplestPixelShader();
-    }
-}
-
-/* ---------------------------------------- TECHNIQUE: NormalRender -------------------------------------------------- */
-
-//Vertex Shader normal
-VS_OUTPUT v_NormalRender( VS_INPUT Input )
-{
-   VS_OUTPUT Output;
-
-   //Project position
-   Output.Position = mul( Input.Position, matWorldViewProj);
-   Output.Texcoord = Input.Texcoord;
-
-   return Output;
-}
-
-technique NormalRender
-{
-    pass p0
-    {
-        VertexShader = compile vs_3_0 v_NormalRender();
         PixelShader = compile ps_3_0 SimplestPixelShader();
     }
 }
