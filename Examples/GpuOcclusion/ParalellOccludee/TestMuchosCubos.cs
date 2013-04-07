@@ -14,7 +14,7 @@ using TgcViewer.Utils.Shaders;
 using TgcViewer.Utils;
 using TgcViewer.Utils._2D;
 
-namespace Examples.GpuOcclusion.ReducedZBuffer
+namespace Examples.GpuOcclusion.ParalellOccludee
 {
     /// <summary>
     /// Test Muchos Cubos
@@ -23,14 +23,14 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
     {
 
         Effect effect;
-        OcclusionEngineReducedZBuffer occlusionEngine;
+        OcclusionEngineParalellOccludee occlusionEngine;
         List<TgcMeshShader> occludees;
         TgcBox occluderBox;
 
 
         public override string getCategory()
         {
-            return "ReducedZBuffer";
+            return "ParalellOccludee";
         }
 
         public override string getName()
@@ -54,16 +54,16 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
 
 
             //Engine de Occlusion
-            occlusionEngine = new OcclusionEngineReducedZBuffer();
+            occlusionEngine = new OcclusionEngineParalellOccludee();
 
             //Cargar shader para render de meshes (mas info de occlusion)
-            effect = ShaderUtils.loadEffect(GuiController.Instance.ExamplesMediaDir + "Shaders\\ReducedZBuffer\\OccludeesShaderMuchosCubos.fx");
+            effect = ShaderUtils.loadEffect(GuiController.Instance.ExamplesMediaDir + "Shaders\\ParalellOccludee\\OccludeesShaderMuchosCubos.fx");
 
 
             //Escenario
 
             //Box de occluder
-            occluderBox = TgcBox.fromSize(new Vector3(150, 0, -20), new Vector3(600, 60, 5), Color.Green);
+            occluderBox = TgcBox.fromSize(new Vector3(150, 0, -20), new Vector3(600, 160, 5), Color.Green);
 
             //Crear occluder para el engine
             Occluder occluder = new Occluder(occluderBox.BoundingBox);
@@ -92,7 +92,7 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
             
             //Occludee template
             float occludeeSize = 8;
-            TgcMesh meshOccludeeTemplate = TgcBox.fromSize(new Vector3(0, 0, 0), new Vector3(occludeeSize, occludeeSize, occludeeSize), textures[0]).toMesh("occludee");
+            TgcMesh meshOccludeeTemplate = TgcBox.fromSize(new Vector3(0, 0, 0), new Vector3(occludeeSize, occludeeSize * 10, occludeeSize), textures[0]).toMesh("occludee");
 
 
 
@@ -122,7 +122,7 @@ namespace Examples.GpuOcclusion.ReducedZBuffer
             //Modifiers
             GuiController.Instance.Modifiers.addBoolean("countOcclusion", "countOcclusion", false);
             GuiController.Instance.Modifiers.addBoolean("occlusionCull", "occlusionCull", true);
-            GuiController.Instance.Modifiers.addInterval("technique", new string[] { "Normal", "Discard", "Algoritmo" }, 0);
+            GuiController.Instance.Modifiers.addInterval("technique", new string[] { "Algoritmo", "Normal", "Discard" }, 0);
 
             //UserVars
             GuiController.Instance.UserVars.addVar("frus");

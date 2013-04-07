@@ -136,7 +136,7 @@ VS_OUTPUT_QUAD v_OcclusionTestPyramid( VS_INPUT_QUAD Input )
 float4 PixOcclusionTestPyramid( float2 pos: TEXCOORD0 ) : COLOR0
 {
 	//return 1;
-
+	
 
 	//Get the 2D position inside the texture array
 	//TODO: optimizar para jugar directamente con el uv, y evitar calcular index

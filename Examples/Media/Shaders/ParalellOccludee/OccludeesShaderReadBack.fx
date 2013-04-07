@@ -56,12 +56,11 @@ float isOccluded()
 	posInTexture.y =  (float)(ocludeeIndexInTexture / (float) OccludeeTextureSize) / (float) OccludeeTextureSize;
 
 	//Get the Occlusion Result texture value to see if occludee is visible. Use mipmap level 0.
-	float value = tex2Dlod(occlusionResultSampler, float4(posInTexture.xy, 0.0f, 0.0f)).r;
-	return value < 1.0f ? 0.0f : 1.0f;
+	return tex2Dlod(occlusionResultSampler, float4(posInTexture.xy, 0.0f, 0.0f)).r;
 }
 
 
-// ----------------------------------------------------------------------------------------------- //
+/* ---------------------------------------- TECHNIQUE: RenderWithOcclusionEnabled -------------------------------------------------- */
 
 
 //Input del Vertex Shader
@@ -125,6 +124,29 @@ technique RenderWithOcclusionEnabled
     pass p0
     {
         VertexShader = compile vs_3_0 VertDoOcclusionDiscard();
+        PixelShader = compile ps_3_0 SimplestPixelShader();
+    }
+}
+
+/* ---------------------------------------- TECHNIQUE: NormalRender -------------------------------------------------- */
+
+//Vertex Shader normal
+VS_OUTPUT v_NormalRender( VS_INPUT Input )
+{
+   VS_OUTPUT Output;
+
+   //Project position
+   Output.Position = mul( Input.Position, matWorldViewProj);
+   Output.Texcoord = Input.Texcoord;
+
+   return Output;
+}
+
+technique NormalRender
+{
+    pass p0
+    {
+        VertexShader = compile vs_3_0 v_NormalRender();
         PixelShader = compile ps_3_0 SimplestPixelShader();
     }
 }
