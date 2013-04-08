@@ -44,8 +44,8 @@ sampler occlusionResultSampler = sampler_state
     AddressV = CLAMP;
 };
 
-//Chequear si el occludee es visible
-float isOccluded()
+//Chequear si el occludee es visible (1 = visible, 0 = oculto)
+float isVisible()
 {
 	
 	float2 posInTexture;
@@ -56,12 +56,11 @@ float isOccluded()
 	posInTexture.y =  (float)(ocludeeIndexInTexture / (float) OccludeeTextureSize) / (float) OccludeeTextureSize;
 
 	//Get the Occlusion Result texture value to see if occludee is visible. Use mipmap level 0.
-	float value = tex2Dlod(occlusionResultSampler, float4(posInTexture.xy, 0.0f, 0.0f)).r;
-	return value < 1.0f ? 0.0f : 1.0f;
+	return tex2Dlod(occlusionResultSampler, float4(posInTexture.xy, 0.0f, 0.0f)).r;
 }
 
 
-// ----------------------------------------------------------------------------------------------- //
+// -----------------------------RenderWithOcclusionEnabled--------------------------------- //
 
 
 //Input del Vertex Shader
@@ -78,7 +77,6 @@ struct VS_OUTPUT
 {
    float4 Position :        POSITION0;
    float2 Texcoord :        TEXCOORD0;
-   float2 PosZW :        	TEXCOORD1;
 };
 
 
@@ -87,8 +85,72 @@ VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT Input )
 {
    VS_OUTPUT Output;
 
-   //If the value is 0 then project the vertex and let it continue through out the pipeline. 
-   if (isOccluded() == 0.0f)
+   //Ver si es visible (1 = visible, 0 = oculto) 
+   if (isVisible() == 1.0f)
+   {
+		//Caso comun: hacer lo propio del Vertex Shader
+   
+	   //Project position
+	   Output.Position = mul( Input.Position, matWorldViewProj);
+	   Output.Texcoord = Input.Texcoord;
+	   
+	   return( Output );
+    }
+	//Assign negative z so the vertex is discarded later.
+	else 
+	{	
+		//Discard vertex by assigning a z value that will be invisible.
+		Output.Position = float4(0.0f, 0.0f, -1.0f, 1.0f);
+		Output.Texcoord = 0;
+		return( Output );
+	}
+}
+
+
+//Input del Pixel Shader
+struct PS_INPUT 
+{
+   float2 Texcoord : TEXCOORD0;  
+};
+
+struct PS_OUTPUT
+{
+   float4 Color : COLOR0;   
+};
+
+float4 SimplestPixelShader(PS_INPUT Input) : COLOR
+{
+	return tex2D( diffuseMap, Input.Texcoord );
+}
+
+
+technique RenderWithOcclusionEnabled
+{
+    pass p0
+    {
+        VertexShader = compile vs_3_0 VertDoOcclusionDiscard();
+        PixelShader = compile ps_3_0 SimplestPixelShader();
+    }
+}
+
+// -------------------------------HeavyRender------------------------------ //
+
+//Output del Vertex Shader
+struct VS_OUTPUT_HEAVY 
+{
+   float4 Position :        POSITION0;
+   float2 Texcoord :        TEXCOORD0;
+   float2 PosZW :        	TEXCOORD1;
+};
+
+
+//Vertex Shader for testing occlusion.
+VS_OUTPUT_HEAVY v_HeavyRender( VS_INPUT Input )
+{
+   VS_OUTPUT_HEAVY Output;
+
+   //Ver si es visible (1 = visible, 0 = oculto) 
+   if (isVisible() == 1.0f)
    {
 		//Caso comun: hacer lo propio del Vertex Shader
    
@@ -112,47 +174,53 @@ VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT Input )
 
 
 //Input del Pixel Shader
-struct PS_INPUT 
+struct PS_INPUT_HEAVY 
 {
    float2 Texcoord : TEXCOORD0;  
    float2 PosZW :        	TEXCOORD1;   
 };
 
-struct PS_OUTPUT
+struct PS_OUTPUT_HEAVY
 {
    float4 Color : COLOR0;   
    float Depth : DEPTH;   
 };
 
-PS_OUTPUT SimplestPixelShader(PS_INPUT Input)
+PS_OUTPUT_HEAVY p_HeavyRender(PS_INPUT_HEAVY Input)
 {
-	PS_OUTPUT output;
+	PS_OUTPUT_HEAVY output;
 
-	//return tex2D( diffuseMap, Input.Texcoord );
-	
+	/*
 	float4 texelColor = 0;
-	int cant = 0;
-	for(int i = 0; i < 3; i++) {
-		for(int j = 0; j < 3; j++) {
-			texelColor = tex2Dlod(diffuseMap, float4(Input.Texcoord, 0, 0));
-			cant++;
+	float cant = 2;
+	for(int i = 0; i < cant; i++) {
+		for(int j = 0; j < cant; j++) {
+			texelColor += tex2Dlod(diffuseMap, float4(Input.Texcoord + float2(i, j), 0, 0));
 		}
 	}
+	*/
+	
+	float4 texelColor = 0;
+	//texelColor += tex2Dlod(diffuseMap, float4(Input.Texcoord + float2(0, 0.1f), 0, 0));
+	//texelColor += tex2Dlod(diffuseMap, float4(Input.Texcoord + float2(0.1f, 0), 0, 0));
+	//texelColor += tex2Dlod(diffuseMap, float4(Input.Texcoord + float2(1, 0.1f), 0, 0));
+	//texelColor += tex2Dlod(diffuseMap, float4(Input.Texcoord + float2(0.1f, 1), 0, 0));
+	
 	
 	float4 realColor = tex2D( diffuseMap, Input.Texcoord );
-	float4 finalColor = texelColor / (float)cant;
-	output.Color = float4(lerp(finalColor.xyz, realColor.xyz, 0.75f), 1);
+	float4 finalColor = texelColor * 0.0001f;
+	output.Color = realColor + finalColor;
 	output.Depth =  Input.PosZW.x / Input.PosZW.y;
 	
 	return output;
 }
 
 
-technique RenderWithOcclusionEnabled
+technique HeavyRender
 {
     pass p0
     {
-        VertexShader = compile vs_3_0 VertDoOcclusionDiscard();
-        PixelShader = compile ps_3_0 SimplestPixelShader();
+        VertexShader = compile vs_3_0 v_HeavyRender();
+        PixelShader = compile ps_3_0 p_HeavyRender();
     }
 }
