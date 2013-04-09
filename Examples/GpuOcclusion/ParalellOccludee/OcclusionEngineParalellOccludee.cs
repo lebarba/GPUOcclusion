@@ -15,6 +15,10 @@ namespace Examples.GpuOcclusion.ParalellOccludee
     /// </summary>
     public class OcclusionEngineParalellOccludee
     {
+        //Activa cosas de debug (es super lento)
+        const bool DEBUG_MODE = false;
+
+
         //The maximum number of total occludees in scene.
         int occludeesTextureSize;
         int occludeesTextureExpandedSize;
@@ -32,7 +36,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
         const int MAX_OCCLUDEE_BLOQS = 32;
 
         //Por cuanto se divide cada lado del viewport original para definir el tamaño del ZBuffer a utilizar
-        const int VIEWPORT_REDUCTION = 4;
+        const int VIEWPORT_REDUCTION = 2;
 
 
         //Z Buffer
@@ -433,8 +437,8 @@ namespace Examples.GpuOcclusion.ParalellOccludee
             d3dDevice.SetRenderState(RenderStates.ZEnable, false);
             d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, false);
 
-            //Limpiar como todo invisible (1)
-            d3dDevice.Clear(ClearFlags.Target, ONE_COLOR, 1, 0);
+            //Limpiar como todo invisible (0)
+            d3dDevice.Clear(ClearFlags.Target, CERO_COLOR, 1, 0);
 
             //Tamaño del zBuffer en float
             float zBufferWidthF = (float)(zBufferWidth);
@@ -520,8 +524,12 @@ namespace Examples.GpuOcclusion.ParalellOccludee
 
 
                     //DEBUG
-                    //TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "paralellOccludeeOutputTexture.png", ImageFileFormat.Png, paralellOccludeeOutputTexture);
+                    if (DEBUG_MODE)
+                    {
+                        TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "paralellOccludeeOutputTexture.png", ImageFileFormat.Png, paralellOccludeeOutputTexture);
 
+                    }
+                    
 
                 }
             }
@@ -605,8 +613,8 @@ namespace Examples.GpuOcclusion.ParalellOccludee
             d3dDevice.SetRenderState(RenderStates.ZEnable, false);
             d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, false);
 
-            //Clear the result surface with 0 values, which mean they are "visible".
-            d3dDevice.Clear(ClearFlags.Target, CERO_COLOR, 1, 0);
+            //Clear the result surface with 1 values, which mean they are "visible".
+            d3dDevice.Clear(ClearFlags.Target, ONE_COLOR, 1, 0);
             d3dDevice.EndScene();
         }
 
@@ -629,8 +637,8 @@ namespace Examples.GpuOcclusion.ParalellOccludee
             d3dDevice.SetRenderState(RenderStates.ZEnable, false);
             d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, false);
 
-            //Limpiar como todo invisible (1)
-            d3dDevice.Clear(ClearFlags.Target, ONE_COLOR, 1, 0);
+            //Limpiar como todo invisible (0)
+            d3dDevice.Clear(ClearFlags.Target, CERO_COLOR, 1, 0);
 
             //Parametros de shader
             occlusionEffect.Technique = "Reduce1erPass";
@@ -655,8 +663,10 @@ namespace Examples.GpuOcclusion.ParalellOccludee
 
 
             //DEBUG
-            //TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "halfReduceOccludeeTexture.png", ImageFileFormat.Png, halfReduceOccludeeTexture);
-
+            if (DEBUG_MODE)
+            {
+                TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "halfReduceOccludeeTexture.png", ImageFileFormat.Png, halfReduceOccludeeTexture);
+            }
 
             d3dDevice.EndScene();
         }
@@ -679,8 +689,8 @@ namespace Examples.GpuOcclusion.ParalellOccludee
             d3dDevice.SetRenderState(RenderStates.ZEnable, false);
             d3dDevice.SetRenderState(RenderStates.ZBufferWriteEnable, false);
 
-            //Limpiar como todo invisible (1)
-            d3dDevice.Clear(ClearFlags.Target, ONE_COLOR, 1, 0);
+            //Limpiar como todo invisible (0)
+            d3dDevice.Clear(ClearFlags.Target, CERO_COLOR, 1, 0);
 
             //Parametros de shader
             occlusionEffect.Technique = "Reduce2doPass";
@@ -704,7 +714,10 @@ namespace Examples.GpuOcclusion.ParalellOccludee
 
 
             //DEBUG
-            //TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "occlusionResultTex.png", ImageFileFormat.Png, occlusionResultTex);
+            if (DEBUG_MODE)
+            {
+                TextureLoader.Save(GuiController.Instance.ExamplesMediaDir + "occlusionResultTex.png", ImageFileFormat.Png, occlusionResultTex);
+            }
 
 
             d3dDevice.EndScene();
@@ -748,7 +761,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
             bool[] visibilityData = new bool[textureValues.Length];
             for (int i = 0; i < textureValues.Length; i++)
             {
-                visibilityData[i] = textureValues[i] == 0.0f ? true : false;
+                visibilityData[i] = textureValues[i] == 1.0f ? true : false;
             }
 
             return visibilityData;

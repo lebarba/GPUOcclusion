@@ -57,7 +57,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
             occlusionEngine = new OcclusionEngineParalellOccludee();
 
             //Cargar shader para render de meshes (mas info de occlusion)
-            effect = ShaderUtils.loadEffect(GuiController.Instance.ExamplesMediaDir + "Shaders\\OccludeesShader.fx");
+            effect = ShaderUtils.loadEffect(GuiController.Instance.ExamplesMediaDir + "Shaders\\ParalellOccludee\\OccludeesShader.fx");
             effect.Technique = "RenderWithOcclusionEnabled";
 
 

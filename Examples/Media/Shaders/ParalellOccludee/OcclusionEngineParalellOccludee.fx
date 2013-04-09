@@ -126,10 +126,10 @@ float4 p_ParalellOverlapTest( float2 pos: TEXCOORD0 ) : COLOR0
 	float i, j;
 	float2 zBufferUV;
 	float zBufferDepth;
-	float result = 1.0f;
-	for( i = 0 ; i <= maxTexel.x && result == 1.0f; i += 1.0f )
+	float result = 0.0f; //Hidden
+	for( i = 0 ; i <= maxTexel.x && result == 0.0f; i += 1.0f )
 	{
-		for( j = 0 ; j <= maxTexel.y && result == 1.0f; j += 1.0f )
+		for( j = 0 ; j <= maxTexel.y && result == 0.0f; j += 1.0f )
 		{
 			//Texel actual
 			zBufferUV = base + float2(i, j);
@@ -144,7 +144,7 @@ float4 p_ParalellOverlapTest( float2 pos: TEXCOORD0 ) : COLOR0
 			//Check the depth value of the occludee and the one stored in the depth buffer.
 			if( occludeeDepth >= zBufferDepth )
 			{
-				 result = 0.0f; //Visible
+				 result = 1.0f; //Visible
 			}
 				
 			
@@ -169,7 +169,7 @@ technique ParalellOverlapTest
 //Simplemente marcar como visible
 float4 p_MarkAsVisibleOccludee( float2 pos: TEXCOORD0 ) : COLOR0
 {
-	return 0.0f; //Visible
+	return 1.0f; //Visible
 }
 
 technique MarkAsVisibleOccludee
@@ -212,153 +212,12 @@ float4 p_Reduce1erPass( float2 pos: TEXCOORD0 ) : COLOR0
 	float i;
 	float minDepth = tex2Dlod(paralellOccludeeOutputSampler, float4(base, 0.0f, 0 )).r;
 	float delta = 1.0f / resultsTexWidth;
-	for( i = 1.0f ; i <= 32.0f ; i += 1.0f )
+	for( i = 1.0f ; i < 32.0f ; i += 1.0f )
 	{
 		base.x += delta;
-		minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base, 0.0f, 0 )).r);
+		minDepth = max(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base, 0.0f, 0 )).r);
 	}
 
-	
-	
-	/*
-	float delta = 1.0f / resultsTexWidth;
-	float minDepth = tex2Dlod(paralellOccludeeOutputSampler, float4(base.x, base.y, 0.0f, 0 )).r;
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 2, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 3, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 4, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 5, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 6, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 7, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 8, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 9, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 10, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 11, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 12, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 13, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 14, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 15, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 16, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 17, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 18, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 19, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 20, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 21, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 22, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 23, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 24, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 25, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 26, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 27, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 28, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 29, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 30, base.y, 0.0f, 0 )).r);
-	minDepth = min(minDepth, tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 31, base.y, 0.0f, 0 )).r);
-	*/
-	
-	
-	/*
-	float delta = 1.0f / resultsTexWidth;
-	float minDepth = 
-		min(
-			min(
-				min(
-					min(
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta, base.y, 0.0f, 0 )).r
-						),
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 2, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 3, base.y, 0.0f, 0 )).r
-						)
-					),
-					min(
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 4, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 5, base.y, 0.0f, 0 )).r
-						),
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 6, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 7, base.y, 0.0f, 0 )).r
-						)
-					)
-				),
-				min(
-					min(
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 8, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 9, base.y, 0.0f, 0 )).r
-						),
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 10, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 11, base.y, 0.0f, 0 )).r
-						)
-					),
-					min(
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 12, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 13, base.y, 0.0f, 0 )).r
-						),
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 14, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 15, base.y, 0.0f, 0 )).r
-						)
-					)
-				)
-			),
-			min(
-				min(
-					min(
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 16, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 17, base.y, 0.0f, 0 )).r
-						),
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 18, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 19, base.y, 0.0f, 0 )).r
-						)
-					),
-					min(
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 20, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 21, base.y, 0.0f, 0 )).r
-						),
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 22, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 23, base.y, 0.0f, 0 )).r
-						)
-					)
-				),
-				min(
-					min(
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 24, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 25, base.y, 0.0f, 0 )).r
-						),
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 26, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 27, base.y, 0.0f, 0 )).r
-						)
-					),
-					min(
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 28, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 29, base.y, 0.0f, 0 )).r
-						),
-						min(
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 30, base.y, 0.0f, 0 )).r,
-							tex2Dlod(paralellOccludeeOutputSampler, float4(base.x + delta * 31, base.y, 0.0f, 0 )).r
-						)
-					)
-				)
-			)
-		);
-	*/
-
-		
-	
-	
 	return minDepth;
 }
 
@@ -398,10 +257,10 @@ float4 p_Reduce2doPass( float2 pos: TEXCOORD0 ) : COLOR0
 	float i;
 	float minDepth = tex2Dlod(halfReduceOccludeeSampler, float4(base, 0.0f, 0 )).r;
 	float delta = 1.0f / resultsTexHeight;
-	for( i = 1.0f ; i <= 32.0f ; i += 1.0f )
+	for( i = 1.0f ; i < 32.0f ; i += 1.0f )
 	{
 		base.y += delta;
-		minDepth = min(minDepth, tex2Dlod(halfReduceOccludeeSampler, float4(base, 0.0f, 0 )).r);
+		minDepth = max(minDepth, tex2Dlod(halfReduceOccludeeSampler, float4(base, 0.0f, 0 )).r);
 	}
 	
 	return minDepth;

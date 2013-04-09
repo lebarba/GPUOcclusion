@@ -60,7 +60,7 @@ float isVisible()
 }
 
 
-/* ---------------------------------------- TECHNIQUE: RenderWithOcclusionEnabled -------------------------------------------------- */
+// -----------------------------RenderWithOcclusionEnabled--------------------------------- //
 
 
 //Input del Vertex Shader
@@ -110,10 +110,15 @@ VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT Input )
 //Input del Pixel Shader
 struct PS_INPUT 
 {
-   float2 Texcoord : TEXCOORD0;   
+   float2 Texcoord : TEXCOORD0;  
 };
 
-float4 SimplestPixelShader(PS_INPUT Input) : COLOR0
+struct PS_OUTPUT
+{
+   float4 Color : COLOR0;   
+};
+
+float4 SimplestPixelShader(PS_INPUT Input) : COLOR
 {
 	return tex2D( diffuseMap, Input.Texcoord );
 }
@@ -128,25 +133,94 @@ technique RenderWithOcclusionEnabled
     }
 }
 
-/* ---------------------------------------- TECHNIQUE: NormalRender -------------------------------------------------- */
+// -------------------------------HeavyRender------------------------------ //
 
-//Vertex Shader normal
-VS_OUTPUT v_NormalRender( VS_INPUT Input )
+//Output del Vertex Shader
+struct VS_OUTPUT_HEAVY 
 {
-   VS_OUTPUT Output;
+   float4 Position :        POSITION0;
+   float2 Texcoord :        TEXCOORD0;
+   float2 PosZW :        	TEXCOORD1;
+};
 
-   //Project position
-   Output.Position = mul( Input.Position, matWorldViewProj);
-   Output.Texcoord = Input.Texcoord;
 
-   return Output;
+//Vertex Shader for testing occlusion.
+VS_OUTPUT_HEAVY v_HeavyRender( VS_INPUT Input )
+{
+   VS_OUTPUT_HEAVY Output;
+
+   //Ver si es visible (1 = visible, 0 = oculto) 
+   if (isVisible() == 1.0f)
+   {
+		//Caso comun: hacer lo propio del Vertex Shader
+   
+	   //Project position
+	   Output.Position = mul( Input.Position, matWorldViewProj);
+	   Output.Texcoord = Input.Texcoord;
+	   Output.PosZW = Output.Position.zw;
+	   
+	   return( Output );
+    }
+	//Assign negative z so the vertex is discarded later.
+	else 
+	{	
+		//Discard vertex by assigning a z value that will be invisible.
+		Output.Position = float4(0.0f, 0.0f, -1.0f, 1.0f);
+		Output.Texcoord = 0;
+		Output.PosZW = 0;
+		return( Output );
+	}
 }
 
-technique NormalRender
+
+//Input del Pixel Shader
+struct PS_INPUT_HEAVY 
+{
+   float2 Texcoord : TEXCOORD0;  
+   float2 PosZW :        	TEXCOORD1;   
+};
+
+struct PS_OUTPUT_HEAVY
+{
+   float4 Color : COLOR0;   
+   float Depth : DEPTH;   
+};
+
+PS_OUTPUT_HEAVY p_HeavyRender(PS_INPUT_HEAVY Input)
+{
+	PS_OUTPUT_HEAVY output;
+
+	/*
+	float4 texelColor = 0;
+	float cant = 2;
+	for(int i = 0; i < cant; i++) {
+		for(int j = 0; j < cant; j++) {
+			texelColor += tex2Dlod(diffuseMap, float4(Input.Texcoord + float2(i, j), 0, 0));
+		}
+	}
+	*/
+	
+	float4 texelColor = 0;
+	//texelColor += tex2Dlod(diffuseMap, float4(Input.Texcoord + float2(0, 0.1f), 0, 0));
+	//texelColor += tex2Dlod(diffuseMap, float4(Input.Texcoord + float2(0.1f, 0), 0, 0));
+	//texelColor += tex2Dlod(diffuseMap, float4(Input.Texcoord + float2(1, 0.1f), 0, 0));
+	//texelColor += tex2Dlod(diffuseMap, float4(Input.Texcoord + float2(0.1f, 1), 0, 0));
+	
+	
+	float4 realColor = tex2D( diffuseMap, Input.Texcoord );
+	float4 finalColor = texelColor * 0.0001f;
+	output.Color = realColor + finalColor;
+	output.Depth =  Input.PosZW.x / Input.PosZW.y;
+	
+	return output;
+}
+
+
+technique HeavyRender
 {
     pass p0
     {
-        VertexShader = compile vs_3_0 v_NormalRender();
-        PixelShader = compile ps_3_0 SimplestPixelShader();
+        VertexShader = compile vs_3_0 v_HeavyRender();
+        PixelShader = compile ps_3_0 p_HeavyRender();
     }
 }

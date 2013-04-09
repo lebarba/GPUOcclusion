@@ -72,7 +72,7 @@ namespace Examples.GpuOcclusion.ParalellOccludee
 
 
             //Cargar shader para render de meshes (mas info de occlusion)
-            effect = ShaderUtils.loadEffect(GuiController.Instance.ExamplesMediaDir + "Shaders\\OccludeesShader.fx");
+            effect = ShaderUtils.loadEffect(GuiController.Instance.ExamplesMediaDir + "Shaders\\ParalellOccludee\\OccludeesShader.fx");
             effect.Technique = "RenderWithOcclusionEnabled";
 
             //Cargar ciudad
@@ -306,21 +306,11 @@ namespace Examples.GpuOcclusion.ParalellOccludee
                 }
             }
 
-
-            //Dibujar Frustum
-            frustum.updateVolume(fpsView, d3dDevice.Transform.Projection);
-            frustum.render();
-
-
-            //Meshes visibles
-            GuiController.Instance.UserVars["frus"] = occlusionEngine.EnabledOccludees.Count + "/" + occlusionEngine.Occludees.Count;
-
-
             //Debug: contar la cantidad de objetos occluidos (es lento)
             bool countOcclusion = (bool)GuiController.Instance.Modifiers["countOcclusion"];
             if (countOcclusion)
             {
-                d3dDevice.RenderState.ZBufferEnable = false;
+                //d3dDevice.RenderState.ZBufferEnable = false;
                 bool[] data = occlusionEngine.getVisibilityData();
                 int n = 0;
                 for (int i = 0; i < data.Length; i++)
@@ -334,13 +324,24 @@ namespace Examples.GpuOcclusion.ParalellOccludee
                         occlusionEngine.EnabledOccludees[i].BoundingBox.render();
                     }
                 }
-                d3dDevice.RenderState.ZBufferEnable = true;
+                //d3dDevice.RenderState.ZBufferEnable = true;
                 GuiController.Instance.UserVars["occ"] = n + "/" + occlusionEngine.EnabledOccludees.Count;
             }
             else
             {
                 GuiController.Instance.UserVars["occ"] = "-";
             }
+
+            //Dibujar Frustum
+            frustum.updateVolume(fpsView, d3dDevice.Transform.Projection);
+            frustum.render();
+
+
+            //Meshes visibles
+            GuiController.Instance.UserVars["frus"] = occlusionEngine.EnabledOccludees.Count + "/" + occlusionEngine.Occludees.Count;
+
+
+            
 
 
 

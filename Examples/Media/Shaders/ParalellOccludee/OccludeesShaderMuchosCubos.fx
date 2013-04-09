@@ -64,8 +64,8 @@ sampler occlusionResultSampler = sampler_state
     AddressV = CLAMP;
 };
 
-//Chequear si el occludee es visible
-float isOccluded()
+//Chequear si el occludee es visible (1 = visible, 0 = oculto)
+float isVisible()
 {
 	
 	float2 posInTexture;
@@ -107,8 +107,8 @@ VS_OUTPUT VertDoOcclusionDiscard( VS_INPUT input )
 {
    VS_OUTPUT output;
 
-   //If the value is 0 then project the vertex and let it continue through out the pipeline. 
-   if (isOccluded() == 0.0f)
+   //Ver si es visible (1 = visible, 0 = oculto) 
+   if (isVisible() == 1.0f)
    {
 		//Caso comun: hacer lo propio del Vertex Shader
 

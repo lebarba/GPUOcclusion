@@ -1,0 +1,40 @@
+
+Uso de occlusion en Vertex Shader
+---------------------------------
+Require: vp {Vertex 3D Position}
+Require: vMap {Visibility Map}
+Require: i {Occludee index}
+vis <- read visibility info from vMap using i
+if vis = 1 then
+	Continue with normal vertex shader calculations
+else
+	vp.z = -1 {Discard vertex by assigning a negative value to z}
+end if
+
+
+
+
+Formula para obtener la ubicacion de un quad dentro del blockVisibilityMap
+--------------------------------------------------------------------------
+Require: i {Occludee index}
+Require: texSize {Size of the squared texture used by the blockVisibilityMap}
+pos.X <- (i x 32) % texSize
+pos.X <- ((i x 32) / texSize) x 32
+
+
+OverlapTest - Simple
+--------------------
+Require: occludeeSize
+Require: occludeePos {occludee AABB position}
+Require: depthMap
+result <- 0 {not visible}
+for i = 0 to occludeeSize.width do
+	for j = 0 to occludeeSize.height do
+		p <- occludeePos + (i, j)
+		depth <- read p from depthMap
+		if occludeeDepth >= depth then
+			result <- 1 {visible}
+			break
+	end for
+end for
+return result
