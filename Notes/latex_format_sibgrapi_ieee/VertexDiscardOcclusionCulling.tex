@@ -1,0 +1,488 @@
+%==========================================
+%
+% Sibgrapi 2013 paper
+% Leone, Barbagallo, Banquiero
+%
+%==========================================
+
+
+% Note that the a4paper option is mainly intended so that authors in
+% countries using A4 can easily print to A4 and see how their papers will
+% look in print - the typesetting of the document will not typically be
+% affected with changes in paper size (but the bottom and side margins will).
+% Use the testflow package mentioned above to verify correct handling of
+% both paper sizes by the user's LaTeX system.
+%
+% Also note that the "draftcls" or "draftclsnofoot", not "draft", option
+% should be used if it is desired that the figures are to be displayed in
+% draft mode.
+%
+\documentclass[10pt, conference]{IEEEtran}
+
+% *** MISC UTILITY PACKAGES ***
+%
+%\usepackage{ifpdf}
+% Heiko Oberdiek's ifpdf.sty is very useful if you need conditional
+% compilation based on whether the output is pdf or dvi.
+% usage:
+% \ifpdf
+%   % pdf code
+% \else
+%   % dvi code
+% \fi
+% The latest version of ifpdf.sty can be obtained from:
+% http://www.ctan.org/tex-archive/macros/latex/contrib/oberdiek/
+% Also, note that IEEEtran.cls V1.7 and later provides a builtin
+% \ifCLASSINFOpdf conditional that works the same way.
+% When switching from latex to pdflatex and vice-versa, the compiler may
+% have to be run twice to clear warning/error messages.
+
+
+
+
+
+
+% *** CITATION PACKAGES ***
+%
+%\usepackage{cite}
+% cite.sty was written by Donald Arseneau
+% V1.6 and later of IEEEtran pre-defines the format of the cite.sty package
+% \cite{} output to follow that of IEEE. Loading the cite package will
+% result in citation numbers being automatically sorted and properly
+% "compressed/ranged". e.g., [1], [9], [2], [7], [5], [6] without using
+% cite.sty will become [1], [2], [5]--[7], [9] using cite.sty. cite.sty's
+% \cite will automatically add leading space, if needed. Use cite.sty's
+% noadjust option (cite.sty V3.8 and later) if you want to turn this off.
+% cite.sty is already installed on most LaTeX systems. Be sure and use
+% version 4.0 (2003-05-27) and later if using hyperref.sty. cite.sty does
+% not currently provide for hyperlinked citations.
+% The latest version can be obtained at:
+% http://www.ctan.org/tex-archive/macros/latex/contrib/cite/
+% The documentation is contained in the cite.sty file itself.
+
+
+
+
+
+
+% *** GRAPHICS RELATED PACKAGES ***
+%
+\usepackage{subimages}
+\setfigdir{figs}
+
+
+
+
+% *** MATH PACKAGES ***
+%
+\usepackage[cmex10]{amsmath}
+% A popular package from the American Mathematical Society that provides
+% many useful and powerful commands for dealing with mathematics. If using
+% it, be sure to load this package with the cmex10 option to ensure that
+% only type 1 fonts will utilized at all point sizes. Without this option,
+% it is possible that some math symbols, particularly those within
+% footnotes, will be rendered in bitmap form which will result in a
+% document that can not be IEEE Xplore compliant!
+%
+% Also, note that the amsmath package sets \interdisplaylinepenalty to 10000
+% thus preventing page breaks from occurring within multiline equations. Use:
+\interdisplaylinepenalty=2500
+% after loading amsmath to restore such page breaks as IEEEtran.cls normally
+% does. amsmath.sty is already installed on most LaTeX systems. The latest
+% version and documentation can be obtained at:
+% http://www.ctan.org/tex-archive/macros/latex/required/amslatex/math/
+\usepackage{amsthm}
+\newtheorem{definition}{Definition}
+
+
+
+
+
+% *** SPECIALIZED LIST PACKAGES ***
+%
+%\usepackage{algorithmic}
+% algorithmic.sty was written by Peter Williams and Rogerio Brito.
+% This package provides an algorithmic environment fo describing algorithms.
+% You can use the algorithmic environment in-text or within a figure
+% environment to provide for a floating algorithm. Do NOT use the algorithm
+% floating environment provided by algorithm.sty (by the same authors) or
+% algorithm2e.sty (by Christophe Fiorio) as IEEE does not use dedicated
+% algorithm float types and packages that provide these will not provide
+% correct IEEE style captions. The latest version and documentation of
+% algorithmic.sty can be obtained at:
+% http://www.ctan.org/tex-archive/macros/latex/contrib/algorithms/
+% There is also a support site at:
+% http://algorithms.berlios.de/index.html
+% Also of interest may be the (relatively newer and more customizable)
+% algorithmicx.sty package by Szasz Janos:
+% http://www.ctan.org/tex-archive/macros/latex/contrib/algorithmicx/
+
+
+
+
+% *** ALIGNMENT PACKAGES ***
+%
+%\usepackage{array}
+% Frank Mittelbach's and David Carlisle's array.sty patches and improves
+% the standard LaTeX2e array and tabular environments to provide better
+% appearance and additional user controls. As the default LaTeX2e table
+% generation code is lacking to the point of almost being broken with
+% respect to the quality of the end results, all users are strongly
+% advised to use an enhanced (at the very least that provided by array.sty)
+% set of table tools. array.sty is already installed on most systems. The
+% latest version and documentation can be obtained at:
+% http://www.ctan.org/tex-archive/macros/latex/required/tools/
+
+
+%\usepackage{mdwmath}
+%\usepackage{mdwtab}
+% Also highly recommended is Mark Wooding's extremely powerful MDW tools,
+% especially mdwmath.sty and mdwtab.sty which are used to format equations
+% and tables, respectively. The MDWtools set is already installed on most
+% LaTeX systems. The lastest version and documentation is available at:
+% http://www.ctan.org/tex-archive/macros/latex/contrib/mdwtools/
+
+
+% IEEEtran contains the IEEEeqnarray family of commands that can be used to
+% generate multiline equations as well as matrices, tables, etc., of high
+% quality.
+
+
+%\usepackage{eqparbox}
+% Also of notable interest is Scott Pakin's eqparbox package for creating
+% (automatically sized) equal width boxes - aka "natural width parboxes".
+% Available at:
+% http://www.ctan.org/tex-archive/macros/latex/contrib/eqparbox/
+
+
+
+% *** PDF, URL AND HYPERLINK PACKAGES ***
+%
+\usepackage{hyperref}
+
+
+
+
+
+% *** Do not adjust lengths that control margins, column widths, etc. ***
+% *** Do not use packages that alter fonts (such as pslatex).         ***
+% There should be no need to do such things with IEEEtran.cls V1.6 and later.
+% (Unless specifically asked to do so by the journal or conference you plan
+% to submit to, of course. )
+
+
+% correct bad hyphenation here
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+
+\begin{document}
+%
+% paper title
+% can use linebreaks \\ within to get better formatting as desired
+\title{Vertex Discard Occlusion Culling}
+
+%------------------------------------------------------------------------- 
+% change the % on next lines to produce the final camera-ready version 
+\newif\iffinal
+%\finalfalse
+\finaltrue
+\newcommand{\jemsid}{99999}
+%------------------------------------------------------------------------- 
+
+% author names and affiliations
+% use a multiple column layout for up to two different
+% affiliations
+
+
+\iffinal
+  \author{%
+    \IEEEauthorblockN{Matias N. Leone, Leandro R. Barbagallo, Mariano M. Banquiero}
+    \IEEEauthorblockA{%
+      Explotaci{\'o}n de GPUs y Gr{\'a}ficos Por Computadora - GIGC\\
+      Departamento de Ingenier{\'i}a en Sistemas de Informaci{\'o}n, Universidad Tecnol{\'o}gica Nacional\\
+      Buenos Aires, Argentina\\
+      Email: \{mleone, lbarbagallo, mbanquiero\}@frba.utn.edu.ar}
+  
+  }
+\else
+  \author{Sibgrapi paper ID: \jemsid \\ }
+\fi
+
+
+% for over three affiliations, or if they all won't fit within the width
+% of the page, use this alternative format:
+% 
+%\author{\IEEEauthorblockN{Michael Shell\IEEEauthorrefmark{1},
+%Homer Simpson\IEEEauthorrefmark{2},
+%James Kirk\IEEEauthorrefmark{3}, 
+%Montgomery Scott\IEEEauthorrefmark{3} and
+%Eldon Tyrell\IEEEauthorrefmark{4}}
+%\IEEEauthorblockA{\IEEEauthorrefmark{1}School of Electrical and Computer Engineering\\
+%Georgia Institute of Technology,
+%Atlanta, Georgia 30332--0250\\ Email: see http://www.michaelshell.org/contact.html}
+%\IEEEauthorblockA{\IEEEauthorrefmark{2}Twentieth Century Fox, Springfield, USA\\
+%Email: homer@thesimpsons.com}
+%\IEEEauthorblockA{\IEEEauthorrefmark{3}Starfleet Academy, San Francisco, California 96678-2391\\
+%Telephone: (800) 555--1212, Fax: (888) 555--1212}
+%\IEEEauthorblockA{\IEEEauthorrefmark{4}Tyrell Inc., 123 Replicant Street, Los Angeles, California 90210--4321}}
+
+
+%------------------------------------------------------------------------- 
+% Special Sibgrapi teaser
+\teaser{%
+  \oneimage{Teasing result of our method: from this data input (left), the relevant feature are extracted using our technique (middle), producing effective result (right).}{.99}{teaser.png}
+}
+%------------------------------------------------------------------------- 
+
+
+
+% make the title area
+\maketitle
+
+
+\begin{abstract}
+Performing visibility determination in densely occluded environments is essential to avoid rendering unnecessary objects and achieve high frame rates. In this work we present an implementation of the image space Occlusion Culling algorithm done completely in GPU, avoiding the latency introduced by returning the visibility results to the CPU. Our algorithm utilizes the GPU rendering power to construct the Occlusion Map and then performs the image space visibility test by splitting the region of the screen space occludees into parallelizable blocks. Our implementation does not need special hardware extensions and the visibility results are accessible by GPU shaders. It can be applied with excellent results in scenes where pixel shaders alter the depth values of the pixels, without interfering with hardware Early Z culling methods. We demonstrate the benefits and show the results of this method in real-time densely occluded scenes.
+
+% DO NOT USE SPECIAL CHARACTERS, SYMBOLS, OR MATH IN YOUR TITLE OR ABSTRACT.
+%
+\end{abstract}
+
+\begin{IEEEkeywords}
+Occlusion Culling; GPU; Visibility Determination
+
+\end{IEEEkeywords}
+
+
+\IEEEpeerreviewmaketitle
+
+
+% Wherever Times is specified, Times Roman or Times New Roman may be used. If neither is available on your system, please use the font closest in appearance to Times. Avoid using bit-mapped fonts if possible. True-Type 1 or Open Type fonts are preferred. Please embed symbol fonts, as well, for math, etc.
+
+%==========================================
+%==========================================
+
+
+%==========================================
+\section{Introduction}
+%
+In the general context of this field, a certain kind of application has recently aggregated values for the following reasons.
+%
+However, existing approaches to produce good results for this application do not perform optimally yet, being limited to certain aspects and requiring too much resources to be actually used.
+
+
+%------------------------------------------------------------------------- 
+\paragraph*{Contributions}
+%
+This paper proposes a different approach to overcome those difficulties. By introducing and adapting those techniques to this context, we achieve significant improvements on the recent results. In particular, our method can handle this kind of data, and reduces the resource requirements. In our experiments, we evaluate a gain of $xx\%$ and could observe several interesting results that validate and delimit our approach.
+
+
+%------------------------------------------------------------------------- 
+\subsection{Related work}
+%
+We can roughly classify the approaches used for our application in three categories: first category, second category, and last category.\\
+Approaches in the first category were introduced by Pierre~\cite{sibgrapi2013} using this and that techniques.
+
+
+\subimages[htb]{Technique overview}{overview}{%
+  \subimage[First step]{.31}{overviewa}%
+  \subimage[Second step]{.31}{overviewb}%
+  \subimage[Result]{.31}{overviewc}%
+}
+%------------------------------------------------------------------------- 
+\subsection{Technique overview}
+%
+In order to produce this application, we start with this processing, followed by this technique. In order to cope with this challenge, we introduce this formulation to produce this intermediate result. The formulation leads to this type of system, which is efficiently solved by adapting this technique. The final result is produced by this transform. The whole process is schematized in \figref{overview}.
+
+
+
+%==========================================
+\section{Technical background}
+%
+In this section, we detail this classical technique. The reader can find a more complete exposition in the work of Paul~\cite{sibgrapi2013}.
+
+
+%------------------------------------------------------------------------- 
+\subsection{Important concept}
+%
+An \emph{important concept} is a type of object:
+\begin{definition}[Important concept]
+Given this and that, an object $X$ is an important concept if it respects the following properties\ldots{}
+\end{definition}
+
+
+%------------------------------------------------------------------------- 
+\subsection{Usual adaptation}
+%
+This concept has been used for applications similar to ours~\cite{sibgrapi2013}, using the following formulation\ldots{}
+
+
+
+%==========================================
+\section{New technique or technique adaptation}
+\label{sec:technique}
+%
+Our technique aims at obtaining that result. It particularly suits to the problem since it is formulated as\ldots{}
+
+
+%------------------------------------------------------------------------- 
+\subsection{Formulation}
+
+
+%------------------------------------------------------------------------- 
+\subsection{Solution}
+
+
+%------------------------------------------------------------------------- 
+\subsection{Initialization and tuning}
+
+
+
+%==========================================
+\section{Implementation}
+%
+In order to reduce the resources needed for our method, we use the following implementation strategy.
+
+
+%------------------------------------------------------------------------- 
+\subsection{Solver}
+
+
+%------------------------------------------------------------------------- 
+\subsection{Result display}
+
+
+
+%==========================================
+\section{Experiments}
+%
+We validate our technique through a series of experiments.
+
+
+%------------------------------------------------------------------------- 
+\paragraph*{First experiment}
+%
+The first experiment checks this aspect of our method on perfect examples.
+
+
+%------------------------------------------------------------------------- 
+\paragraph*{Second experiment}
+%
+The second experiment checks the speedup obtained by the implementation strategy compared to previous technique~\cite{sibgrapi2013}.
+
+~\cite{Zhang97visibilityculling}
+
+%------------------------------------------------------------------------- 
+\paragraph*{Third experiment}
+%
+The last experiment test our method on real data.
+
+
+
+%==========================================
+\section{Results and Discussion}
+%
+We performed the above-mentioned experiments on the following type of data: \ldots{} For each data, we used the following tuning parameters of our method.
+
+
+\begin{table}
+\caption{Performances results: timings are expressed in milliseconds.}
+\label{tab:perfs}
+\centering
+\begin{tabular}{lr|rr|c}
+\multicolumn{1}{c}{\bf Data} &
+\multicolumn{1}{c|}{\bf Size} &
+\multicolumn{1}{c}{\bf Ours} &
+\multicolumn{1}{c|}{\bf Previous} &
+\multicolumn{1}{c}{\bf Gain} \\ \hline
+Data 1	&        50 	& 0.1 &     1 000	& x$10^3$ \\
+Data 2	&      100 	& 0.2 &     2 000	& x$10^3$ \\
+Data 3	&      500 	& 0.8 &   10 000	& x$10^3$ \\
+Data 4	&   1 000 	& 1.2 &   20 000	& x$10^3$ \\
+Data 5	&   5 000 	& 1.9 & 100 000	& x$10^4$ \\
+Data 6	& 10 000 	& 2.1 & 200 000	& x$10^4$
+\end{tabular}
+\end{table}
+%
+%------------------------------------------------------------------------- 
+\subsection{Performances}
+%
+We report on Table~\ref{tab:perfs} the performances of our technique on a computer at xxGhz with this graphic card.
+We observe that our technique outperforms previous approaches on this kind of data, and an equivalent result on this other kind of data.
+
+\subimages[htb]{Quality assessment}{quality}{
+  \subimage{.48}{qualitya}%
+  \subimage{.48}{qualityb}%
+}
+
+
+%------------------------------------------------------------------------- 
+\subsection{Quality}
+%
+As observed on \figref{quality}, our method achieve good results in this situation. 
+This can be measured by this criterion, and the results are reported on Table~\ref{tab:quality}.
+
+\begin{table}
+\caption{Quality measures: timings are expressed in milliseconds.}
+\label{tab:quality}
+\centering
+\begin{tabular}{l|r|r}
+\multicolumn{1}{c}{\bf Images} &
+\multicolumn{1}{c|}{\bf PSNR} &
+\multicolumn{1}{c}{\bf  MSE} \\ \hline
+Image 1	&  40.2	& 0.02 \\
+Image 2	&  30.9	& 1.02 \\
+Image 3 &  20.1 & 0.18 \\
+\end{tabular}
+\end{table}
+
+
+%------------------------------------------------------------------------- 
+\subsection{Limitation}
+%
+As mentioned in Section~\ref{sec:technique}, we expect our method to suit better this kind of data. On the other kind, this particularity does not fit into our formulation for this and that reason. Indeed, this can be observed in the results of \figref{quality}. 
+We plan to improve for that kind of data in future work. However, our technique performed well on this data, which does not respect our condition, since this other aspect reduced the negative impact of its characteristic.
+
+
+%==========================================
+\section{Conclusion}
+%
+In this paper, we introduced this technique and showed that it is particularly appropriate for that application. We obtained this and that improvements, and plan to extend this application in that direction in future work.
+
+
+
+%==========================================
+\iffinal
+% use section* for acknowledgement
+\section*{Acknowledgment}
+%
+The authors would like to thank this colleague and this financing institute.
+\fi
+
+
+
+%==========================================
+
+% trigger a \newpage just before the given reference
+% number - used to balance the columns on the last page
+% adjust value as needed - may need to be readjusted if
+% the document is modified later
+%\IEEEtriggeratref{8}
+% The "triggered" command can be changed if desired:
+%\IEEEtriggercmd{\enlargethispage{-5in}}
+
+\bibliographystyle{IEEEtran}
+\bibliography{bib_extra/IEEEabrv,example}
+
+%\begin{thebibliography}{1}
+
+%\bibitem{sibgrapi2013}
+%\emph{Sibgrapi 2013, Proceedings of the XXVI Brazilian Symposium on Computer Graphics and Image Processing}.\hskip 1em plus 0.5em minus 0.4em\relax  Arequipa, Per{\'u}: {IEEE}, august 2013.
+
+%\end{thebibliography}
+
+
+
+
+\end{document}
+
+%==========================================
