@@ -1,3 +1,5 @@
+https://www.writelatex.com/145773zcnhdj
+
 
 Uso de occlusion en Vertex Shader
 ---------------------------------
@@ -12,25 +14,37 @@ else
 end if
 
 
+Uso de occlusion en Vertex Shader - LATEX
+------------------------------------------
+\begin{algorithmic}[1]
+\REQUIRE $vp$ \COMMENT{Vertex 3D Position}
+\REQUIRE $vMap$ \COMMENT{Visibility Map}
+\REQUIRE $i$ \COMMENT{Occludee index}
+\STATE $vis \leftarrow$ read visibility info from $vMap$ using $i$
+\IF{$vis$ = 0}
+\STATE \COMMENT{Continue with normal vertex shader calculations}
+\ELSE
+\STATE $vp.z = -1$ \COMMENT{Discard vertex}
+\ENDIF
+\end{algorithmic}
 
 
-Formula para obtener la ubicacion de un quad dentro del blockVisibilityMap
---------------------------------------------------------------------------
-Require: i {Occludee index}
-Require: texSize {Size of the squared texture used by the blockVisibilityMap}
-pos.X <- (i x 32) % texSize
-pos.X <- ((i x 32) / texSize) x 32
 
 
-OverlapTest - Simple
---------------------
+
+OverlapTest - Complejo (8x8)
+---------------------------
 Require: occludeeSize
 Require: occludeePos {occludee AABB position}
 Require: depthMap
+Require: pos {quad texture coordinates}
+Require: quadSize
+
+base <- occludeePos + pos * quadSize * 8
 result <- 0 {not visible}
-for i = 0 to occludeeSize.width do
-	for j = 0 to occludeeSize.height do
-		p <- occludeePos + (i, j)
+for i = 0 to 8 do
+	for j = 0 to 8 do
+		p <- base + (i, j)
 		depth <- read p from depthMap
 		if occludeeDepth >= depth then
 			result <- 1 {visible}
@@ -38,3 +52,30 @@ for i = 0 to occludeeSize.width do
 	end for
 end for
 return result
+
+
+OverlapTest - Complejo (8x8) LATEX
+----------------------------------
+\begin{algorithmic}[1]
+\REQUIRE $occludeeSize$
+\REQUIRE $occludeePos$ \COMMENT{occludee AABB position}
+\REQUIRE $depthMap$
+\REQUIRE $pos$ \COMMENT{quad texture coordinates}
+\REQUIRE $quadSize$
+\STATE $base \leftarrow occludeePos \times pos + quadSize \times 8$
+\STATE $result \leftarrow 0$ \COMMENT{not visible}
+\FOR{$i=0$ to $8$}
+\FOR{$j=0$ to $8$}
+\STATE $p \leftarrow base + (i, j)$
+\STATE $depth \leftarrow$ read p from depthMap
+\IF{$occludeeDepth \geq depth$}
+\STATE $result \leftarrow 1$ \COMMENT{visible}
+\STATE break
+\ENDIF
+\ENDFOR
+\ENDFOR
+\end{algorithmic}
+
+
+
+
