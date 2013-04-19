@@ -100,7 +100,7 @@
 
 % *** SPECIALIZED LIST PACKAGES ***
 %
-%\usepackage{algorithmic}
+\usepackage{algorithmic}
 % algorithmic.sty was written by Peter Williams and Rogerio Brito.
 % This package provides an algorithmic environment fo describing algorithms.
 % You can use the algorithmic environment in-text or within a figure
@@ -209,28 +209,14 @@
 \fi
 
 
-% for over three affiliations, or if they all won't fit within the width
-% of the page, use this alternative format:
-% 
-%\author{\IEEEauthorblockN{Michael Shell\IEEEauthorrefmark{1},
-%Homer Simpson\IEEEauthorrefmark{2},
-%James Kirk\IEEEauthorrefmark{3}, 
-%Montgomery Scott\IEEEauthorrefmark{3} and
-%Eldon Tyrell\IEEEauthorrefmark{4}}
-%\IEEEauthorblockA{\IEEEauthorrefmark{1}School of Electrical and Computer Engineering\\
-%Georgia Institute of Technology,
-%Atlanta, Georgia 30332--0250\\ Email: see http://www.michaelshell.org/contact.html}
-%\IEEEauthorblockA{\IEEEauthorrefmark{2}Twentieth Century Fox, Springfield, USA\\
-%Email: homer@thesimpsons.com}
-%\IEEEauthorblockA{\IEEEauthorrefmark{3}Starfleet Academy, San Francisco, California 96678-2391\\
-%Telephone: (800) 555--1212, Fax: (888) 555--1212}
-%\IEEEauthorblockA{\IEEEauthorrefmark{4}Tyrell Inc., 123 Replicant Street, Los Angeles, California 90210--4321}}
 
 
 %------------------------------------------------------------------------- 
 % Special Sibgrapi teaser
 \teaser{%
-  \oneimage{Teasing result of our method: from this data input (left), the relevant feature are extracted using our technique (middle), producing effective result (right).}{.99}{teaser.png}
+  \oneimage{%
+	Left: The densely occluded scene as viewed from the camera. Middle: The Occlusion Culling algorithm avoids rendering completely occluded objects. Right: The simplified occluder set used for occlusion.}
+	{.99}{teaser.png}
 }
 %------------------------------------------------------------------------- 
 
@@ -241,10 +227,16 @@
 
 
 \begin{abstract}
-Performing visibility determination in densely occluded environments is essential to avoid rendering unnecessary objects and achieve high frame rates. In this work we present an implementation of the image space Occlusion Culling algorithm done completely in GPU, avoiding the latency introduced by returning the visibility results to the CPU. Our algorithm utilizes the GPU rendering power to construct the Occlusion Map and then performs the image space visibility test by splitting the region of the screen space occludees into parallelizable blocks. Our implementation does not need special hardware extensions and the visibility results are accessible by GPU shaders. It can be applied with excellent results in scenes where pixel shaders alter the depth values of the pixels, without interfering with hardware Early Z culling methods. We demonstrate the benefits and show the results of this method in real-time densely occluded scenes.
+Performing visibility determination in densely occluded environments is essential to avoid rendering unnecessary objects and achieve high frame rates. 
+In this work we present an implementation of the image space Occlusion Culling algorithm done completely in GPU, avoiding the latency introduced by returning 
+the visibility results to the CPU. 
+Our algorithm utilizes the GPU rendering power to construct the Occlusion Map and then performs the image space visibility test by splitting the region of 
+the screen space occludees into parallelizable blocks. 
+Our implementation does not need special hardware extensions and the visibility results are accessible by GPU shaders. It can be applied with excellent 
+results in scenes where pixel shaders alter the depth values of the pixels, without interfering with hardware Early Z culling methods. 
+We demonstrate the benefits and show the results of this method in real-time densely occluded scenes.
 
-% DO NOT USE SPECIAL CHARACTERS, SYMBOLS, OR MATH IN YOUR TITLE OR ABSTRACT.
-%
+
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -256,8 +248,6 @@ Occlusion Culling; GPU; Visibility Determination
 \IEEEpeerreviewmaketitle
 
 
-% Wherever Times is specified, Times Roman or Times New Roman may be used. If neither is available on your system, please use the font closest in appearance to Times. Avoid using bit-mapped fonts if possible. True-Type 1 or Open Type fonts are preferred. Please embed symbol fonts, as well, for math, etc.
-
 %==========================================
 %==========================================
 
@@ -265,188 +255,320 @@ Occlusion Culling; GPU; Visibility Determination
 %==========================================
 \section{Introduction}
 %
-In the general context of this field, a certain kind of application has recently aggregated values for the following reasons.
-%
-However, existing approaches to produce good results for this application do not perform optimally yet, being limited to certain aspects and requiring too much resources to be actually used.
+Complex scenes with thousands of meshes and expensive shading computations are increasingly frequent in current real-time graphics applications. 
+Although commodity hardware continues to increase its computational power every day, scenes like this cannot be directly supported at real-time frame rates. 
+Optimization techniques are crucial in order to manage that kind of graphics complexity.\\
+
+Frustum culling is a commonly used technique to avoid rendering meshes that are outside the viewing volume. 
+These invisible models can be discarded at an early stage in the pipeline obviating expensive computation that will not contribute to the final image. 
+Unfortunately it does not consider objects (occludees) that do not contribute to the final image because they are being blocked by others in front of them (occluders).\\
+
+Because of this, several Occlusion Culling techniques were developed to overcome this limitation. 
+Applications with expensive pixel shaders may greatly improve their performance by reducing fragments overdraw.\\
+
+The Early Z Pass \cite{z_pre_pass} technique avoids computing unnecessary pixel shaders following a two step procedure. 
+First it draws the entire scene in order to store in the Z-Buffer all the depth values of the scene visible points. 
+Second the scene is drawn once more, but this time the GPU can early reject the occluded fragments based on already present depth values in the Z-Buffer. 
+This way non visible pixel shaders are not executed.\\
+
+This technique is used by many applications to reduce its pixel overdraw but its main limitation is that GPU cannot take advantage of the Early-Z \cite{early_z} or 
+\cite{HyperZ} optimization when the pixel shader uses a depth writing operation \cite{z_correct_bump_1} \cite{z_correct_bump_2}. 
+Since our method discards occluded objects before they get rasterized, no restrictions related to depth writing are imposed to pixel shaders.\\
+
 
 
 %------------------------------------------------------------------------- 
 \paragraph*{Contributions}
 %
-This paper proposes a different approach to overcome those difficulties. By introducing and adapting those techniques to this context, we achieve significant improvements on the recent results. In particular, our method can handle this kind of data, and reduces the resource requirements. In our experiments, we evaluate a gain of $xx\%$ and could observe several interesting results that validate and delimit our approach.
+In this work we present a technique for solving Occlusion Culling in GPU, without the need for special hardware extensions or CPU read back. 
+It includes a visibility test in the vertex shader of the application in order to discard those vertices that belong to occluded meshes. 
+If the mesh is occluded then all its vertices can be discarded in the vertex shader, avoiding the rasterization step and the pixel computations. 
+A previous step computes the visibility state of each mesh in the GPU and stores its result in an output texture called \emph{Occlusion Map}. 
+This result is acquired after performing a highly parallelized overlap and depth test comparison.
+
+
+%==========================================
+\section{Related work}
+%
+There is a great amount of research conducted on Occlusion Culling. 
+A classification and overview of all these methods is presented by Cohen-Or et al. \cite{survey_visibility}. 
+Among those techniques the ones that work in point-space are Hierarchical Z-Buffer \cite{Hierarchical_zbuffer} and Hierarchical Occlusion Culling \cite{hom}.\\
+
+On modern GPUs hardware occlusion queries \cite{occlusion_queries} provide a built-in way to determine if a draw call contributes to the current frame, 
+but suffer from latency and stalling effects due to the CPU read back. 
+To address this issue temporal coherence techniques are applied \cite{occlusion_queries_2}\cite{occlusion_queries_3}, but they require spatial hierarchies of objects to limit the number 
+of issues queries.\\
+
+Some newer hardware capabilities allow conditional rendering without CPU intervention like OpenGL conditional rendering  which is implemented as 
+GL\_NV\_conditional\_render [CITAR] extension and DirectX 11 predicated rendering implemented as the ID3D11Predicate interface [CITAR]. 
+These methods determine whether geometry should be processed or culled depending on the results of a previous draw call. 
+Current hardware conditional rendering does not allow the GPU shaders to access the occlusion results, but Engelhard et al. \cite{visibility_queries} implement a method that do allow this. 
+Other authors [CITAR 1] [CITAR 2] also implement HZB on GPU using available in the newer compute shaders.\\
+
+More recently Nie{\ss}ner \cite{occlusion_culling_tessellation} proposes a patch primitive based approach to perform occlusion culling applying Hierarchical Z-Buffer and temporal coherence. 
+In recent years, since CPUs increased the number of cores and the set of SIMD instructions were extended, some approaches performed point based Occlusion 
+Culling such as HOM using highly optimized software rasterizers \cite{killzone_3} \cite{frostbite} [CITAR intel] \cite{cacic_occlusion_2}.
+
+
+%==========================================
+\section{Vertex Discard Occlusion Culling}
+%
+
+%------------------------------------------------------------------------- 
+\subsection{Algorithm overview}
+%
+In our proposed method we perform a from point , image precision \cite{survey_visibility} occlusion culling process completely in GPU without the need for the CPU to read back the results. 
+The method consists of a series of steps that must be followed by each frame to generate the \emph{Occlusion Map}, to perform the \emph{Visibility Test} to 
+get the potential Visible Set and finally use those results already present in GPU in order to discard the all vertices of the occluded objects before they reach further stages of the pipeline.\\
+
+The steps are:
+\begin{itemize}
+	\item[1] \emph{Occludee Generation}: Select occluders and generate simplified volumes.
+	\item[2] \emph{Occlusion Map Generation}: Render occluder simplified volumes into the Occlusion Map Texture.
+	\item[3] \emph{Visibility Testing}: Determine which occludees are occluded and stored them in the Visibility Map.
+	\item[4] \emph{Vertex Discard}: Cull all the vertices that belong to invisible occludees.
+\end{itemize}
 
 
 %------------------------------------------------------------------------- 
-\subsection{Related work}
+\subsection{Occlusion Map Generation}
 %
-We can roughly classify the approaches used for our application in three categories: first category, second category, and last category.\\
-Approaches in the first category were introduced by Pierre~\cite{sibgrapi2013} using this and that techniques.
+The method begins Offline by creating a database of selected occluders that meet a predefined criteria \cite{cacic_occlusion_1}, 
+and storing the proxy meshes which are simplified, low-poly and conservative versions of the original occluders. 
+These simplified occluders will be rendered faster than the original meshes at the expense of more conservativeness.\\
+
+In each frame, object-precision culling techniques such as Frustum Culling, PVS and Portal Culling \cite{survey_visibility} are applied 
+to discard as much occluders as possible. 
+With this obtained reduced subset of occluders we perform the first step of the method which is to render the proxy meshes into the \emph{Occlusion Map}. 
+This buffer stores the closest to camera depth values of every rasterized occluder and is implemented as a 32 bit floating point render target texture 
+which is preferably a one fourth downscaled version of the screen framebuffer. \\
+
+Unlike the HOMís Occlusion Map \cite{hom}, our map does not contain opacity information, therefore the buffer is more similar 
+to the Hierarchical Z-Buffer \cite{Hierarchical_zbuffer} which only stores the depth values of the occluders in 
+each point, leaving the highest depth value to indicate no occluder presence.\\
+
+The generation of the Occlusion Map is relatively inexpensive as the GPU massively parallel power is utilized to render the low-poly convex volumes of 
+the proxy meshes and also because the pixel shader applied is extremely straightforward because it only outputs the depth value of each point.
+
+\begin{figure}[!hbp]
+	\oneimage{First step is to obtain the simplified occluders as proxy meshes. Second step is to render all proxy meshes to the \emph{Occlusion Map} texture.}{.99}{occluder_generation.png}
+\end{figure}
 
 
-\subimages[htb]{Technique overview}{overview}{%
-  \subimage[First step]{.31}{overviewa}%
-  \subimage[Second step]{.31}{overviewb}%
-  \subimage[Result]{.31}{overviewc}%
-}
 %------------------------------------------------------------------------- 
-\subsection{Technique overview}
+\subsection{Visibility Test}
 %
-In order to produce this application, we start with this processing, followed by this technique. In order to cope with this challenge, we introduce this formulation to produce this intermediate result. The formulation leads to this type of system, which is efficiently solved by adapting this technique. The final result is produced by this transform. The whole process is schematized in \figref{overview}.
+The core of this image based Occlusion Culling algorithm is to perform the Visibility Test for each selected occludee against the fusion of all the occluders represented by the Occlusion Map. 
+Then it is used to determine whether the occludee geometry will continue along the pipeline or if it will be culled immediately.
+Visibility testing is performed by contrasting the points inside the occludee screen space bounding rectangle against the \emph{Occlusion Map} depth values that contain the aggregated information of the occluders.  
+In each frame, for every occludee in the viewing frustum, the algorithm performs a screen space projection of the occludee bounding box vertices. 
+With those eight screen projected points, it determines the clipped 2D screen space bounding rectangle and finds the furthest from camera depth value of those extreme points. 
+The resulting occludee bounding rectangle is a conservative superset of the actual pixels covered by the occludee. 
+Then actual visibility test tries to determine if the occludee would actually contribute to the final image and starts by comparing all 
+the depth values inside the occludee bounding rectangle against the ones in the \emph{Occlusion Map}; when at least one point of the occludee 
+is closer to the camera than the one stored in the position in the \emph{Occlusion Map}, the algorithm can assume that such point is visible, 
+and that the occludee as a whole can be considered potentially visible. 
+On the other hand, to determine that an occludee is completely culled, all the pixels must be examined exhaustively and proved to be farther than the values stored in the \emph{Occlusion Map}.\\
+ 
+Some methods perform this Overlap and Depth Test in CPU \cite{frostbite} [CITAR Intel] \cite{lazy_occlusion_grid} \cite{cacic_occlusion_2},  
+and others use special GPU hardware capabilities such as hardware occlusion queries [CITAR Nvidia], \cite{occlusion_queries} or the more modern 
+predicate/conditional rendering [CITAR]. 
+Our method manually computes the visibility result pixel by pixel utilizing HLSL pixel shaders.\\
+
+However as explained before, to actually conclude that a occludee is culled, we have to exhaustively test all the pixels inside the occludee bounding 
+rectangle, resulting in $N \times M$ texture fetches to the \emph{Occlusion Map}. 
+As the screen space regions covered by the occludees get larger, the number of texels to fetch and test can reach very high numbers.\\
+
+To accelerate this, some methods build a pyramid of downsized versions of the \emph{Occlusion Map} where each increasing level is half the size of the previous one. 
+There are two approaches to utilize the pyramid, one is like the method used in HOM \cite{hom} and HZB \cite{Hierarchical_zbuffer} which they begin at 
+some level of the pyramid depending on the occludee bounding rectangle size and have to go to the finest level to assure that the occludee is completely 
+culled by the occluders.
+The other approach [CITAR Darnell] [CITAR R·kos] only sticks to a selected level of the pyramid, limiting the possible number of texture samples to a given 
+constant to avoid the worst case scenario where they have to move to levels with greater detail. 
+After implementing this last variation we found that the level of conservativeness was higher than expected for medium to large screen space occludees.\\
+
+In this work we found that using a single level \emph{Occlusion Map} of a fourth of the original screen buffer was a good tradeoff between number of texture samples 
+and level of conservativeness. In the next section we discuss the methods used to leverage the GPU hardware to perform this visibility test.
+
+\begin{figure}[!hbp]
+	\oneimage{The occludees in the scene are projected in 2D and the Bounding Rectangle is calculated. 
+	For each rectangle the algorithm performs the visibility test in GPU accessing the \emph{Occlusion Map}, 
+	storing visibility result in the visibility map.}
+	{.99}{visibility_test.png}
+	\label{img_visibility_test}
+\end{figure}
+
+
+%------------------------------------------------------------------------- 
+\subsection{Block subdivision}
+%
+Despite having a downsized version of the \emph{Occlusion Map}, performing all the $N \times M$ texture samples in a single Pixel Shader execution 
+does not perform as expected, because of the serial nature of the algorithm presented in figure \ref{img_visibility_test}. 
+In the best cases this inner loop could take only a few cycles whereas in other cases the same execution could take hundreds of thousands of cycles before it is finished.\\
+
+For this reason, in our method the visibility test is parallelized, taking advantage of the parallel execution of the pixel shaders, 
+splitting the total region covered by each occludee bounding rectangle into a series of fixed size blocks, where each one only performs 
+a maximum of $8 \times 8$ texture lookups to the \emph{Occlusion Map}. 
+This way each occludee bounding rectangle is split up in  blocks that concurrently perform the visibility test by executing pixel shaders that 
+output a $0$ color value meaning the block itself is completely occluded or $1$ if the block is potentially visible. 
+The output of each visibility test block goes to a rendering target texture called \emph{Unreduced Visibility Map (UVM)} that holds 
+the block visibility results one next to the other as seen in figure \ref{img_visibility_test}. 
+Thus every occludee tested in the scene has an reserved region inside this map to hold the results of each of its tested blocks.\\
+
+In order to simplify the way each region is assigned, every occludee is assumed to have a fixed number of blocks, no matter its screen space size. 
+In our study we determined that every occludee would have a preset number of $32 \times 32$ blocks assigned, resulting in a total of $1024$ blocks. 
+This gives us a maximum occludee screen size of $256 \times 256$ pixels and if the dimensions are larger than those, the occludee is simply considered potentially visible.\\
+
+To implement this algorithm using shader model 3 (without compute shaders), we carefully position a $32 \times 32$ pixel quad (GPGPU quad) and render it using a pixel 
+shader that executes the visibility test code. 
+Each pixel of this quad represents a block visibility test of the occluder. 
+The shader gets the occludee bounding rectangle coordinates, depth value and the block number as parameters, and then executes the $8 \times 8$ pixels 
+overlap and depth test.\\
+
+\begin{figure}[!hbp]
+	\begin{algorithmic}[1]
+		\REQUIRE $occludeeSize$
+		\REQUIRE $occludeePos$ \COMMENT{occludee AABB position}
+		\REQUIRE $depthMap$
+		\REQUIRE $pos$ \COMMENT{quad texture coordinates}
+		\REQUIRE $quadSize$
+		\STATE $base \leftarrow occludeePos \times pos + quadSize \times 8$
+		\STATE $result \leftarrow 0$ \COMMENT{not visible}
+		\FOR{$i=0$ to $8$}
+			\FOR{$j=0$ to $8$}
+				\STATE $p \leftarrow base + (i, j)$
+				\STATE $depth \leftarrow$ read p from depthMap
+				\IF{$occludeeDepth \geq depth$}
+					\STATE $result \leftarrow 1$ \COMMENT{visible}
+					\STATE break
+				\ENDIF
+			\ENDFOR
+		\ENDFOR
+	\end{algorithmic}
+	\caption{Visibility test algorithm performed in a Pixel Shader}
+\end{figure}
+
+Using this block subdivision strategy, the visibility test is split into smaller task units and performed in parallel making use of the available GPU shader execution cores. 
+If all the blocks comprising the occludee rectangle output $0$ values, then the whole occludee is considered culled, conversely when at 
+least one of the blocks results visible the whole occludee is considered potentially visible.\\
+
+Nevertheless the visibility result of each occludee is not consolidated into a single value, but spread into a series of $32 \times 32$ matrices inside some region of the \emph{UVM}. 
+The next step of our method reduces each $32 \times 32$ occludee visibility result matrix into a consolidated \emph{Visibility Map} that will hold the results of each visibility test one next to the other.\\
+
+%------------------------------------------------------------------------- 
+\subsection{Visibility Map Reduction}
+%
+In order to reduce the \emph{UVM} and consolidate each $32 \times 32$ region into a single value, we need to determine if there is at least a non-zero value inside that matrix. 
+To achieve this, we search for the maximum value of the matrix to see if there is any value other than zero. 
+The search is done utilizing a parallel reduction approach with two rendering passes to limit the total number of operations. 
+In the first pass we search the maximum value in each matrix column of $32$ pixels and store it in an intermediate texture. 
+In the second pass, we obtain the final \emph{Visibility Map} looking for the maximum value in each row. 
+Finally we end up with the \emph{Visibility Map} containing the results of the occlusion culling process for each occludee tested in the current frame, which will be heavily accessed in the next step of our method. 
+
+
+%------------------------------------------------------------------------- 
+\subsection{Vertex Discard}
+%
+This \emph{Visibility Map} texture could be sent back to the CPU and processed there to avoid having to execute the draw calls to occluded objects; 
+however this would produce a stalling effect on the GPU while sending the results back. 
+To address this issue, we propose an asynchronous mechanism where the CPU does not need the results of the visibility test.\\
+
+In our method the CPU always performs the draw calls for all the geometry that is potentially visible 
+(the subset that passes frustum culling, portal culling, PVS, etc), and the GPU is responsible for discarding the occluded geometry based 
+on the \emph{Visibility Map} content.\\
+
+In our implementation we slightly modify the vertex shader that performs the \emph{World-View-Projection} transformation. 
+Before drawing an occludee, we send a parameter to the pixel shader indicating the \emph{ID} of occludee that is about to be rendered. 
+Based on that value, the vertex shader will perform a texture lookup in the \emph{Visibility Map} to find the occlusion status for that particular occludee. 
+If it is potentially visible, then the vertex shader does its usual computation letting the vertex continue throughout the pipeline. 
+On the other hand, if the occludee is invisible we assign a negative Z value to the output vertex to let the GPU know that it has to be culled. 
+This process is performed for every vertex that constitutes the occludee geometry.
+
+\begin{figure}[!hbp]
+	\begin{algorithmic}[1]
+		\REQUIRE $vp$ \COMMENT{Vertex 3D Position}
+		\REQUIRE $vMap$ \COMMENT{Visibility Map}
+		\REQUIRE $i$ \COMMENT{Occludee index}
+		\STATE $vis \leftarrow$ read visibility info from $vMap$ using $i$
+		\IF{$vis$ = 0}
+			\STATE \COMMENT{Continue with normal vertex shader calculations}
+		\ELSE
+			\STATE $vp.z = -1$ \COMMENT{Discard vertex}
+		\ENDIF
+	\end{algorithmic}
+	\caption{Visibility discard algorithm performed in a Vertex Shader}
+\end{figure}
+
+
 
 
 
 %==========================================
-\section{Technical background}
+\section{Implementation and Results}
 %
-In this section, we detail this classical technique. The reader can find a more complete exposition in the work of Paul~\cite{sibgrapi2013}.
+Our method was implemented using C\# 4.0 with DirectX 9 and Shader Model 3. 
+We decided not to use newer shader models (with Compute Shader capabilities) so we could test in the current commodity hardware. 
+The implementation of our occlusion culling module was designed in such way to be easily adapted to other graphics frameworks, where only certain parts have to be added or modified.\\
 
+We tested our method in a densely occluded 3D city scene, composed of 210 meshes, adding up a total of 379.664 triangles. 
+For this scene 258 occluder proxies were generated in Offline time based on the ideas presented by \cite{cacic_occlusion_1}. 
 
-%------------------------------------------------------------------------- 
-\subsection{Important concept}
-%
-An \emph{important concept} is a type of object:
-\begin{definition}[Important concept]
-Given this and that, an object $X$ is an important concept if it respects the following properties\ldots{}
-\end{definition}
+\begin{figure}[!hbp]
+	\oneimage{Top: The 3D city scene used to test the algorithm. Bottom: The simplified occluder set used for Occlusion Culling}
+	{.99}{city_images.png}
+\end{figure}
 
+In order to analyze the algorithm performance, 15 representative scene View Points were taken, where in each position we compute the following 
+occlusion metric:
+\[
+	Value = (\frac{t - v}{t}) \times 100
+\]
+Where $t$ is the total scene meshes and $v$ is the total visible meshes. \\
+With this metric we can determine the percentage of discarded meshes that were not sent to the GPU in each frame due to occlusion culling.\\
 
-%------------------------------------------------------------------------- 
-\subsection{Usual adaptation}
-%
-This concept has been used for applications similar to ours~\cite{sibgrapi2013}, using the following formulation\ldots{}
+These values are computed with Occlusion Culling deactivated and then with it activated. 
+We also include the frames per second that resulted from rendering the scene with and without Occlusion Culling. 
+The results were computed using a PC with Intel Core i3 2.40GHz processor with 2GB RAM and Intel HD Graphics 3000 GPU.
+
+\begin{figure}[!hbp]
+	\oneimage{FPS rendering performance only with Frustum Culling and then with Occlusion Culling activated, at the fifteen different selected View Points.}
+	{.99}{discarded_objects_percent.png}
+\end{figure}
+
+\begin{figure}[!hbp]
+	\oneimage{Discarded mesh percent, first with only Frustum Culling and then activating Occlusion Culling, at the fifteen different selected View Points.}
+	{.99}{discarded_objects_fps.png}
+\end{figure}
+
 
 
 
 %==========================================
-\section{New technique or technique adaptation}
-\label{sec:technique}
+\section{Conclusions and Future Work}
 %
-Our technique aims at obtaining that result. It particularly suits to the problem since it is formulated as\ldots{}
+We have implemented a method that performs image space occlusion culling completely in GPU, taking advantage of its rendering power to 
+build the \emph{Occlusion Map} and leveraging its parallel architecture to perform the visibility test.\\
 
+According to our results, this occlusion culling method is applicable in densely occluded scenes where pixel shaders are computationally 
+expensive and specifically if they alter the default depth value of the fragments, like in \cite{z_correct_bump_1} and \cite{z_correct_bump_2}. 
+Conversely we found that for scenes with lightweight pixel shaders and no depth overrides, our method performs similar to the GPU built-in Early Z 
+culling, making it suitable for mixed case scenarios.\\
 
-%------------------------------------------------------------------------- 
-\subsection{Formulation}
+As our implementation is based on Shader Model 3, it does not require special hardware requirements, beyond the vertex shader texture lookup 
+capabilities present in most commodity hardware GPUs. 
+For some older hardware, particularly those without Unified Shader architecture, the vertex texture lookup may downgrade the performance 
+significantly [CITAR].\\
 
+It is also important to have some considerations before applying this technique. 
+As all the occludees are sent to the GPU, no matter if they are occluded or not, there is a CPU-GPU bus bandwidth required to transfer the primitives to the graphic adapter.
+Moreover, as many other similar occlusion culling algorithms, the occluders have to be preprocessed in order to simplify the geometry into simpler conservative volumes.\\
+ 
+Among the numerous enhancements to be made to our method, we would like to modify it to overcome the limitaton of the 
+$256 \times 256$ pixel size occludees and to explore built in hardware options to reduce the \emph{UVM}, avoiding the current two rendering pass method.\\
 
-%------------------------------------------------------------------------- 
-\subsection{Solution}
-
-
-%------------------------------------------------------------------------- 
-\subsection{Initialization and tuning}
-
-
-
-%==========================================
-\section{Implementation}
-%
-In order to reduce the resources needed for our method, we use the following implementation strategy.
-
-
-%------------------------------------------------------------------------- 
-\subsection{Solver}
-
-
-%------------------------------------------------------------------------- 
-\subsection{Result display}
-
-
-
-%==========================================
-\section{Experiments}
-%
-We validate our technique through a series of experiments.
-
-
-%------------------------------------------------------------------------- 
-\paragraph*{First experiment}
-%
-The first experiment checks this aspect of our method on perfect examples.
-
-
-%------------------------------------------------------------------------- 
-\paragraph*{Second experiment}
-%
-The second experiment checks the speedup obtained by the implementation strategy compared to previous technique~\cite{sibgrapi2013}.
-
-~\cite{Zhang97visibilityculling}
-
-%------------------------------------------------------------------------- 
-\paragraph*{Third experiment}
-%
-The last experiment test our method on real data.
-
-
-
-%==========================================
-\section{Results and Discussion}
-%
-We performed the above-mentioned experiments on the following type of data: \ldots{} For each data, we used the following tuning parameters of our method.
-
-
-\begin{table}
-\caption{Performances results: timings are expressed in milliseconds.}
-\label{tab:perfs}
-\centering
-\begin{tabular}{lr|rr|c}
-\multicolumn{1}{c}{\bf Data} &
-\multicolumn{1}{c|}{\bf Size} &
-\multicolumn{1}{c}{\bf Ours} &
-\multicolumn{1}{c|}{\bf Previous} &
-\multicolumn{1}{c}{\bf Gain} \\ \hline
-Data 1	&        50 	& 0.1 &     1 000	& x$10^3$ \\
-Data 2	&      100 	& 0.2 &     2 000	& x$10^3$ \\
-Data 3	&      500 	& 0.8 &   10 000	& x$10^3$ \\
-Data 4	&   1 000 	& 1.2 &   20 000	& x$10^3$ \\
-Data 5	&   5 000 	& 1.9 & 100 000	& x$10^4$ \\
-Data 6	& 10 000 	& 2.1 & 200 000	& x$10^4$
-\end{tabular}
-\end{table}
-%
-%------------------------------------------------------------------------- 
-\subsection{Performances}
-%
-We report on Table~\ref{tab:perfs} the performances of our technique on a computer at xxGhz with this graphic card.
-We observe that our technique outperforms previous approaches on this kind of data, and an equivalent result on this other kind of data.
-
-\subimages[htb]{Quality assessment}{quality}{
-  \subimage{.48}{qualitya}%
-  \subimage{.48}{qualityb}%
-}
-
-
-%------------------------------------------------------------------------- 
-\subsection{Quality}
-%
-As observed on \figref{quality}, our method achieve good results in this situation. 
-This can be measured by this criterion, and the results are reported on Table~\ref{tab:quality}.
-
-\begin{table}
-\caption{Quality measures: timings are expressed in milliseconds.}
-\label{tab:quality}
-\centering
-\begin{tabular}{l|r|r}
-\multicolumn{1}{c}{\bf Images} &
-\multicolumn{1}{c|}{\bf PSNR} &
-\multicolumn{1}{c}{\bf  MSE} \\ \hline
-Image 1	&  40.2	& 0.02 \\
-Image 2	&  30.9	& 1.02 \\
-Image 3 &  20.1 & 0.18 \\
-\end{tabular}
-\end{table}
-
-
-%------------------------------------------------------------------------- 
-\subsection{Limitation}
-%
-As mentioned in Section~\ref{sec:technique}, we expect our method to suit better this kind of data. On the other kind, this particularity does not fit into our formulation for this and that reason. Indeed, this can be observed in the results of \figref{quality}. 
-We plan to improve for that kind of data in future work. However, our technique performed well on this data, which does not respect our condition, since this other aspect reduced the negative impact of its characteristic.
-
-
-%==========================================
-\section{Conclusion}
-%
-In this paper, we introduced this technique and showed that it is particularly appropriate for that application. We obtained this and that improvements, and plan to extend this application in that direction in future work.
+Finally as newer versions of DirectX and OpenGL become available we could explore the option of implementing this method using compute shaders, 
+orienting it  to the work presented by Nieﬂner et al \cite{occlusion_culling_tessellation} and [CITAR R·kos]. 
+We could also count the number of visible blocks in each occludee and utilize the results to determine some level of detail in Geometry and Pixel Shaders.
 
 
 
@@ -455,7 +577,9 @@ In this paper, we introduced this technique and showed that it is particularly a
 % use section* for acknowledgement
 \section*{Acknowledgment}
 %
-The authors would like to thank this colleague and this financing institute.
+The authors would like to thank the GIGC Computer Graphics Research Group for supporting this research, and the Department of Information Systems 
+Engineering for providing the support and funding. We also thank Retrovia Project Marta Garcen, Eva Ferrari (English node) for reviewing our work 
+and to the Algebra and Analytic Geometry node to make this contact possible.
 \fi
 
 
@@ -479,6 +603,15 @@ The authors would like to thank this colleague and this financing institute.
 %\emph{Sibgrapi 2013, Proceedings of the XXVI Brazilian Symposium on Computer Graphics and Image Processing}.\hskip 1em plus 0.5em minus 0.4em\relax  Arequipa, Per{\'u}: {IEEE}, august 2013.
 
 %\end{thebibliography}
+
+
+
+
+\begin{figure}[!hbp]
+	\oneimage{Top: The original city scene without Occlusion Culling. Middle: The scene with Occlusion Culling. Bottom: The yellow box shows the occluded meshes of the scene.}
+	{.99}{final_images.png}
+\end{figure}
+
 
 
 
