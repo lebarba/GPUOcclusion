@@ -39,7 +39,7 @@
 
 
 
-
+\usepackage{epstopdf}
 
 
 % *** CITATION PACKAGES ***
@@ -343,16 +343,18 @@ With this obtained reduced subset of occluders we perform the first step of the 
 This buffer stores the closest to camera depth values of every rasterized occluder and is implemented as a 32 bit floating point render target texture 
 which is preferably a one fourth downscaled version of the screen framebuffer. \\
 
-Unlike the HOM’s Occlusion Map \cite{hom}, our map does not contain opacity information, therefore the buffer is more similar 
+Unlike the HOMï¿½s Occlusion Map \cite{hom}, our map does not contain opacity information, therefore the buffer is more similar 
 to the Hierarchical Z-Buffer \cite{Hierarchical_zbuffer} which only stores the depth values of the occluders in 
 each point, leaving the highest depth value to indicate no occluder presence.\\
 
 The generation of the Occlusion Map is relatively inexpensive as the GPU massively parallel power is utilized to render the low-poly convex volumes of 
 the proxy meshes and also because the pixel shader applied is extremely straightforward because it only outputs the depth value of each point.
 
-\begin{figure}[!hbp]
-	\oneimage{First step is to obtain the simplified occluders as proxy meshes. Second step is to render all proxy meshes to the \emph{Occlusion Map} texture.}{.99}{occluder_generation.png}
-\end{figure}
+\subimages[!hbp]
+{First step is to obtain the simplified occluders as proxy meshes. Second step is to render all proxy meshes to the \emph{Occlusion Map} texture.}
+{occluder_generation}{
+\subimage[]{}{occluder_generation.png}%
+}
 
 
 %------------------------------------------------------------------------- 
@@ -383,20 +385,22 @@ To accelerate this, some methods build a pyramid of downsized versions of the \e
 There are two approaches to utilize the pyramid, one is like the method used in HOM \cite{hom} and HZB \cite{Hierarchical_zbuffer} which they begin at 
 some level of the pyramid depending on the occludee bounding rectangle size and have to go to the finest level to assure that the occludee is completely 
 culled by the occluders.
-The other approach [CITAR Darnell] [CITAR Rákos] only sticks to a selected level of the pyramid, limiting the possible number of texture samples to a given 
+The other approach [CITAR Darnell] [CITAR Rï¿½kos] only sticks to a selected level of the pyramid, limiting the possible number of texture samples to a given 
 constant to avoid the worst case scenario where they have to move to levels with greater detail. 
 After implementing this last variation we found that the level of conservativeness was higher than expected for medium to large screen space occludees.\\
 
 In this work we found that using a single level \emph{Occlusion Map} of a fourth of the original screen buffer was a good tradeoff between number of texture samples 
 and level of conservativeness. In the next section we discuss the methods used to leverage the GPU hardware to perform this visibility test.
 
-\begin{figure}[!hbp]
-	\oneimage{The occludees in the scene are projected in 2D and the Bounding Rectangle is calculated. 
+
+\subimages[!hbp]
+{The occludees in the scene are projected in 2D and the Bounding Rectangle is calculated. 
 	For each rectangle the algorithm performs the visibility test in GPU accessing the \emph{Occlusion Map}, 
 	storing visibility result in the visibility map.}
-	{.99}{visibility_test.png}
-	\label{img_visibility_test}
-\end{figure}
+{visibility_test}{
+\subimage[]{}{visibility_test.png}%
+}
+
 
 
 %------------------------------------------------------------------------- 
@@ -451,6 +455,11 @@ overlap and depth test.\\
 Using this block subdivision strategy, the visibility test is split into smaller task units and performed in parallel making use of the available GPU shader execution cores. 
 If all the blocks comprising the occludee rectangle output $0$ values, then the whole occludee is considered culled, conversely when at 
 least one of the blocks results visible the whole occludee is considered potentially visible.\\
+
+\begin{figure}[!hbp]
+	\oneimage{The occludee is split into 8x8 blocks, then each block performs the visibility test and stores the result into the \emph{Unreduced Visibility Map}. Each occludee has an pre-assigned region of 32x32 blocks inside this Map.  \emph{Occlusion Map} texture.}{.99}{visibility_blocks.png}
+\end{figure}
+
 
 Nevertheless the visibility result of each occludee is not consolidated into a single value, but spread into a series of $32 \times 32$ matrices inside some region of the \emph{UVM}. 
 The next step of our method reduces each $32 \times 32$ occludee visibility result matrix into a consolidated \emph{Visibility Map} that will hold the results of each visibility test one next to the other.\\
@@ -567,7 +576,7 @@ Among the numerous enhancements to be made to our method, we would like to modif
 $256 \times 256$ pixel size occludees and to explore built in hardware options to reduce the \emph{UVM}, avoiding the current two rendering pass method.\\
 
 Finally as newer versions of DirectX and OpenGL become available we could explore the option of implementing this method using compute shaders, 
-orienting it  to the work presented by Nießner et al \cite{occlusion_culling_tessellation} and [CITAR Rákos]. 
+orienting it  to the work presented by Nieï¿½ner et al \cite{occlusion_culling_tessellation} and [CITAR Rï¿½kos]. 
 We could also count the number of visible blocks in each occludee and utilize the results to determine some level of detail in Geometry and Pixel Shaders.
 
 
