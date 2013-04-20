@@ -287,22 +287,22 @@ This result is acquired after performing a highly parallelized overlap and depth
 %
 There is a great amount of research conducted on Occlusion Culling. 
 A classification and overview of all these methods is presented by Cohen-Or et al. \cite{survey_visibility}. 
-Among those techniques the ones that work in point-space are Hierarchical Z-Buffer \cite{Hierarchical_zbuffer} and Hierarchical Occlusion Culling \cite{hom}.\\
+Among those techniques the ones that work in point-space are Hierarchical Z-Buffer \cite{Hierarchical_zbuffer} and Hierarchical Occlusion Culling \cite{hom}.\
 
 On modern GPUs hardware occlusion queries \cite{nv_occlusion_queries} provide a built-in way to determine if a draw call contributes to the current frame, 
 but suffer from latency and stalling effects due to the CPU read back. 
-To address this issue temporal coherence techniques are applied \cite{occlusion_queries_2}\cite{occlusion_queries_3}, but they require spatial hierarchies of objects to limit the number 
+To address this issue temporal coherence techniques are applied \cite{occlusion_queries_2, occlusion_queries_3}, but they require spatial hierarchies of objects to limit the number 
 of issues queries.\
 
 Some newer hardware capabilities allow conditional rendering without CPU intervention like OpenGL conditional rendering  which is implemented as 
-GL\_NV\_conditional\_render \cite{nv_conditional_render} extension and DirectX 11 predicated rendering implemented as the ID3D11Predicate interface [CITAR]. 
+GL\_NV\_conditional\_render \cite{nv_conditional_render} extension and DirectX 11 predicated rendering implemented as the ID3D11Predicate interface \cite{dx_predicate_rendering}. 
 These methods determine whether geometry should be processed or culled depending on the results of a previous draw call. 
 Current hardware conditional rendering does not allow the GPU shaders to access the occlusion results, but Engelhard et al. \cite{visibility_queries} implement a method that do allow this. 
-Other authors [CITAR 1] [CITAR 2] also implement HZB on GPU using available in the newer compute shaders.\
+Other authors \cite{rakos,darnell} also implement HZB on GPU using available in the newer compute shaders.\
 
 More recently Nie{\ss}ner \cite{occlusion_culling_tessellation} proposes a patch primitive based approach to perform occlusion culling applying Hierarchical Z-Buffer and temporal coherence. 
 In recent years, since CPUs increased the number of cores and the set of SIMD instructions were extended, some approaches performed point based Occlusion 
-Culling such as HOM using highly optimized software rasterizers \cite{killzone_3} \cite{frostbite} [CITAR intel] \cite{cacic_occlusion_2}.
+Culling such as HOM using highly optimized software rasterizers \cite{killzone_3, frostbite, intel_sw_occ_cull, cacic_occlusion_2}.
 
 
 %==========================================
@@ -367,9 +367,9 @@ is closer to the camera than the one stored in the position in the \emph{Occlusi
 and that the occludee as a whole can be considered potentially visible. 
 On the other hand, to determine that an occludee is completely culled, all the pixels must be examined exhaustively and proved to be farther than the values stored in the \emph{Occlusion Map}.\
  
-Some methods perform this Overlap and Depth Test in CPU \cite{frostbite} [CITAR Intel] \cite{lazy_occlusion_grid} \cite{cacic_occlusion_2},  
-and others use special GPU hardware capabilities such as hardware occlusion queries [CITAR Nvidia], \cite{occlusion_queries} or the more modern 
-predicate/conditional rendering [CITAR]. 
+Some methods perform this Overlap and Depth Test in CPU \cite{frostbite, intel_sw_occ_cull,  lazy_occlusion_grid, cacic_occlusion_2},  
+and others use special GPU hardware capabilities such as hardware occlusion queries \cite{nv_occlusion_queries} or the more modern 
+predicate/conditional rendering \cite{dx_predicate_rendering, nv_conditional_render}. 
 Our method manually computes the visibility result pixel by pixel utilizing pixel shaders.\
 
 However as explained before, to actually conclude that a occludee is culled, we have to exhaustively test all the pixels inside the occludee bounding 
@@ -572,8 +572,7 @@ culling, making it suitable for mixed case scenarios.\
 
 As our implementation is based on Shader Model 3, it does not require special hardware requirements, beyond the vertex shader texture lookup 
 capabilities present in most commodity hardware GPUs. 
-For some older hardware, particularly those without Unified Shader architecture, the vertex texture lookup may downgrade the performance 
-significantly [CITAR].\
+For some older hardware, particularly those without Unified Shader architecture, the vertex texture lookup may downgrade the performance significantly \cite{nv_programming_guide}.\
 
 It is also important to have some considerations before applying this technique. 
 As all the occludees are sent to the GPU, no matter if they are occluded or not, there is a CPU-GPU bus bandwidth required to transfer the primitives to the graphic adapter.
@@ -583,7 +582,7 @@ Among the numerous enhancements to be made to our method, we would like to modif
 $256 \times 256$ pixel size occludees and to explore built in hardware options to reduce the \emph{UVM}, avoiding the current two rendering pass method.\
 
 Finally as newer versions of DirectX and OpenGL become available we could explore the option of implementing this method using compute shaders, 
-orienting it  to the work presented by Nie�ner et al \cite{occlusion_culling_tessellation} and [CITAR R�kos]. 
+orienting it  to the work presented by Nie{\ss}ner \cite{occlusion_culling_tessellation} and R\'{a}kos\cite{rakos}. 
 We could also count the number of visible blocks in each occludee and utilize the results to determine some level of detail in Geometry and Pixel Shaders.
 
 
