@@ -632,16 +632,20 @@ The original scene data can directly be used by the algorithm.
 %
 The technique is in its early stages. Further studies for optimization are required in order to achieve the performance and scalability of professional rendering solutions.\\
 
-Its main problems are produced by the limited angle of fov used by the sensor, which avoids the algorithm to capture the illumination from certain angles. 
-The problem could be solved by using ray tracing directed to the light sources so as to estimate a statistical value of visibility degree for that light source in the problematic angles. 
-Few rays should be needed so the performance of the solution should not be overly affected.\\
-
 Its main problems are produced by the limited fov used by the sensor, which avoids the algorithm to capture the illumination from certain angles.
 Also, point light sources may be difficult to compute since they have to be modeled as a very small surface with a high energy level, making them hard to capture by the sensor.
 Both problem could be solved by using ray tracing directed to the light sources so as to estimate a statistical value of visibility degree for that light source in the problematic angles. 
 Few rays should be needed so the performance of the solution should not be overly affected.\\
 
-Some others forms of BRDF could be easily incorporated in the solution replacing the constant factor by a mixed equation. This equation may contemplate diffuse surfaces and some partially glossy mirrors surface. Perfect mirrors would be problematic because the variance of the solution would produce too much noise in the image. Others techniques suit better for this kind of surfaces.\\
+Some objects of the scene are not good candidate to shade with a global ilumination technique, like the one presented in this work. 
+For example very irregular surfaces, a human face, highly specular surfaces.
+This type of objects could be excluded of the algorithm and computed with a better suitable technique, substantially reducing the amount of sensors required.
+Our ilumitation technique allows this kind of flexibility beacause each pixel is totally independent of the rest of the scene.\\
+
+Some others forms of BRDF could be easily incorporated in the solution replacing the constant factor by a mixed equation. 
+This equation may contemplate diffuse surfaces and some partially glossy mirrors surface. 
+Perfect mirrors would be problematic because the variance of the solution would produce too much noise in the image. 
+Others techniques suit better for this kind of surfaces.\\
 
 
 
