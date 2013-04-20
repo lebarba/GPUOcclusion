@@ -260,7 +260,7 @@ These arbitrary-form light sources behave in a very different way of commonly us
 for example when generating soft shadows with complex penumbra area.\\
 
 Furthermore, in a closed room, the light coming from different light sources will bounce against many surfaces before finally reaching the eye. 
-En each of this bounces part of the energy is absorbed and another part is reflected in certain wave length, 
+In each of this bounces part of the energy is absorbed and another part is reflected in certain wave length, 
 according to the BRDF \cite{brdf} distribution. The human eye is particularly sensitive to this kind of indirect illumination. 
 This way, a red wall may transfer some of its color to a white ceiling, producing a reddish look, known a color bleeding.\\
 
@@ -282,18 +282,18 @@ estimate a solution that converge to a physical correct result. But they tend to
 achieved good results, which makes them computationally expensive.\\
 
 Radiosity \cite{radiosity}, a finite based element solution, also converges to a physically correct solution with an iterative procedure. 
-It is also a computationally expensive and it requires the scene to be fairly tessellated.\\ 
+It is also computationally expensive and it requires the scene to be fairly tessellated.\\ 
 
 All techniques mentioned below has the objective to produce a physically correct image regardless of the time required to be computed.
 On the other side, there are algorithms acutely fast to be used in real-time applications. 
 They can compute direct shadows (shadow map \cite{shadow_map}, volume shadows \cite{real_time_shadows}) and ambient light (ambient occlusion \cite{ambient_occlusion}) 
-in a very simplified form. These techniques are usually known as to be perceptually correct but physically incorrect. 
+in a very simplified form. These techniques are usually known as to be perceptually correct.
 This means that although they are not accurate in physics terms they can be visually attractive to the human eye.\\
 
 Many methods exist to also produce soft shadows perceptually correct, like Variance Shadow Maps \cite{shadow_map} and Cascaded Shadow Maps \cite{real_time_shadows}.
 Recently Radiosity and others global ilumination algorithms have been adapted to execute in GPU, some of them even at real-time frame rates.
 The technique Instant Radiosity \cite{instant_radiosity} constructs random paths from the light sources and creates new virtual point lights \emph{(VPLs)} where these paths encounter a surface.
-The work described in \cite{gpu_gems_2} uses an hemispherical proyection to capture radiance in an path texture.
+The work described in \cite{gpu_gems_2} uses an hemispherical proyection to capture radiance in a path texture.
 
 
 
@@ -309,7 +309,8 @@ The work described in \cite{gpu_gems_2} uses an hemispherical proyection to capt
 The technique presented in this work consists in positioning virtual cameras in many visible points of the scene, \figref{algorithm_overview}.
 These cameras act like sensors that measure the amount of incoming light from all directions. 
 In order to achieve that, each camera draws the complete scene in an auxiliary texture. 
-The texture's size is big enough to get every illumination details, and then is reduced to unique average value which represents the light received from the entire scene. 
+The texture's size is big enough to get every illumination details, and then is reduced to a unique average value which represents the light received 
+from the entire scene. 
 This value is stored in an output texture used later to draw the final scene. 
 
 \subimages
@@ -324,7 +325,7 @@ This value is stored in an output texture used later to draw the final scene.
 %
 The rendering equation \cite{The_rendering_equation} describes the transport of light from one surface point to another as the sum of emitted radiance and reflected radiance. Because light transport is usually perceived in equilibrium, the equation describes the steady-state radiance function for the given scene \cite{The_rendering_equation}.
 \[
-	\underbrace{Lo(p,w)}_\text{Outgoing radiance} = \underbrace{Le(p,w)}_\text{Emitted Radiance} + \underbrace{Ls(p,w)}_\text{Scattered Radiance}
+	\underbrace{Lo(p,w_o)}_\text{Outgoing radiance} = \underbrace{Le(p,w_o)}_\text{Emitted Radiance} + \underbrace{Ls(p,w_o)}_\text{Scattered Radiance}
 \]
 The term $Le$ forms part of the scene description and correspond to the light sources, which are the only objects that emit light. The second term, the scattering equation, is of more significant for this work: 
 \[
@@ -332,7 +333,7 @@ The term $Le$ forms part of the scene description and correspond to the light so
 \]
 Where $wo$ is the view direction, $wi$ the incoming direction, $d\omega^\perp$ is the differential projected solid angle and the integral is made all over the positive hemisphere above the surface.  The $fs$ term is the BRDF \cite{brdf} and represents the amount of radiance coming from the $wi$ direction that reflects towards the $wo$ direction. 
 In the simplest case the function can be constant (perfect diffuse surfaces) and the $fs$ becomes a $\frac{c}{\pi}$ factor out of the integral \cite{perfect_diffuse_surfaces}.
-$c$ is constant $\leq 1$. This reflects the fact that the radiance reflected out of the surface can not be greater than the inconming radiance.\\
+$c$ is a constant $\leq 1$ and shows the fact that the radiance reflected out of the surface can not be greater than the inconming radiance.\\
 
 The ingoing radiance can be expressed in terms of outgoing radiance using a ray casting function \cite{ray_casting_function}, and the simplified scattering equation is:
 \[
@@ -343,7 +344,7 @@ Our work applies this principle to adapt the equation to a GPU suitable computat
 
 \subimages
 	{Ligth Transport. Ingoing Radiance $(Li)$ can be expressed in term of Outgoing Radiance $(Lo)$.
-		The radiance coming to $p$ from a direction $wi$ is the radiance exiting from $q$ trhough the direction $-wi$. 
+		The radiance coming to $p$ from a direction $wi$ is the radiance leaving from $q$ through the direction $-wi$. 
 		The point $q$ is the first intersection between the ray from $q$ towards $wi$ direction and the rest of scene.}
 	{view_dir}{
 	\subimage[]{}{view_dir.png}%
@@ -356,7 +357,7 @@ $Lo$ appears in both sides of the rendering equation, forming a recursive expres
 Considering a fixed direction $wi$ and the point $q = ray(p, wi)$ then two situations must be studied:
 
 \begin{itemize}
-	\item[A] If $q$ is over the surface of a light source $Le$ (emitted radiance) it will have a value corresponding to the color emitted by that light, an information that forms part of the scene. We can assume that this value is highly to $Ls$ for a light source. So then we can express:
+	\item[A] If $q$ is over the surface of a light source $Le$ (emitted radiance) will have a value corresponding to the color emitted by that light, an information that forms part of the scene. We can assume that this value is highly to $Ls$ for a light source. So then we can express:
 		\begin{equation}
 			\label{eq_radiance_case_A}
 			Lo = Le 
@@ -368,12 +369,18 @@ Considering a fixed direction $wi$ and the point $q = ray(p, wi)$ then two situa
 		\end{equation}
 \end{itemize}
 
-The epsilon term is a small number that allow setting the importance of the ambient light related to the direct light. And it represents the fact that the incident light is usually reflected in many directions, so the amount of light reflected in one particular direction is very small \cite{brdf}.\\
+The epsilon term is a small number that allow setting the importance of the ambient light related to the direct light. 
+And it represents the fact that the incident light is usually reflected in many directions, so the amount of light reflected in one particular direction is very small \cite{brdf}.\\
 So the $Lo$ estimator is expresses as:
 \[
 	L^*_o = Color(q)K(q)
 \]
-The estimator groups together \ref{eq_radiance_case_A} and \ref{eq_radiance_case_B} in the same equation. From a computing point of view the difference between \ref{eq_radiance_case_A} and \ref{eq_radiance_case_B} is just the specific value of $K(p)$. In one case is the light associated energy and in the other is a small epsilon. But from physical point of view the two cases correspond to totally different processes. It is important to note that the calculated values may take a wide range of results. So the precision of a high dynamic range \cite{high_dynamic_range} is required. The term $Color(q)K(q)$ will be shortened as $Ck(q)$.
+The estimator groups together \ref{eq_radiance_case_A} and \ref{eq_radiance_case_B} in the same equation. 
+From a computing point of view the difference between \ref{eq_radiance_case_A} and \ref{eq_radiance_case_B} is just the specific value of $K(p)$. 
+In one case is the light associated energy and in the other is a small epsilon. 
+But from a physical point of view the two cases correspond to totally different processes. 
+It is important to note that the calculated values may take a wide range of results. 
+So the precision of a high dynamic range \cite{high_dynamic_range} is required. The term $Color(q)K(q)$ will be shortened as $Ck(q)$.
 
 
 
@@ -390,7 +397,7 @@ Replacing the $Lo$ estimator in the scattering equation and approximating the in
 \subsection{Sensor}
 
 In this algorithm a sensor represents a virtual camera that allows us to capture the incoming light from all directions of the scene. 
-This light is then stored in texture named \emph{sensor map}, that represent the sensor area. 
+This light is then stored in a texture named \emph{sensor map}, that represent the sensor area. 
 The camera is located at the required point $p$ in the direction normal to the surface of the scene, \figref{sensor_image}.
 
 \subimages
@@ -399,7 +406,7 @@ The camera is located at the required point $p$ in the direction normal to the s
 	\subimage[]{}{sensor_image.png}%
 }
 
-The \emph{sensor map} size is $rd_x \times rd_y$ and each texel represent a sample of the $Ck$ term for given direction in space. So the sensor is applied to compute the $Ck$ term for a large quantity of samples and then to use them in the equation \ref{eq_scattered_radiance_est}.\\
+The \emph{sensor map} size is $rd_x \times rd_y$ and each texel represents a sample of the $Ck$ term for given direction in space. So the sensor is applied to compute the $Ck$ term for a large quantity of samples and then to use them in the equation \ref{eq_scattered_radiance_est}.\\
 In order to be able to capture the scene illumination from most possible angles, the camera field of view $(fov)$ is of 135 degrees (which amplitude is higher than the 45 degrees commonly used). This brings out two main problems. Firstly, such a high value in $fov$ amplitude tends to loose precision at the center of the image, just where the samples have more incidence. Secondly, we can never take a sample of 180 degrees of amplitude using a perspective or orthogonal projection. This means the sensor is incapable of capturing the light coming from angles out of the $fov$.\\
 The $Ck$ term for a giving pixel, drawn from the sensor point of view, can be computed using a Pixel Shader in GPU because both $Color$ and $K$ are part of the scene description. The original summation over the amount of samples is replaced by a double summation to iterate over the values of the \emph{sensor map} in width and height.\\
 
@@ -421,7 +428,7 @@ As we can see in image \figref{projected_solid_angle}:
 \[ y = 2S(\frac{i}{rd_y} - 0.5) \]
 
 An arbitrary point $v = (x,y,1)$ in the \emph{sensor map} is first normalized to proyect it in the unit sphere, and then is proyected again in tangent space by simply setting $z = 0$.\\ 
-We denote this with the v'' operator:\\
+We denote this with the $''$ operator:\\
 \[ 
 	V'' = \frac{(x, y, 0)} { \left\| (x,y,1) \right\| } 
 \]
