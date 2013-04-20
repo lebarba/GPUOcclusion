@@ -281,19 +281,22 @@ Path tracing \cite{The_rendering_equation}, Monte Carlo ray-tracing \cite{Montec
 estimate a solution that converge to a physical correct result. But they tend to required thousands of samples per pixel in order to 
 achieved good results, which makes them computationally expensive.\\
 
-Radiosity, a finite based element solution, also converges to a physically correct solution with an iterative procedure. 
+Radiosity \cite{radiosity}, a finite based element solution, also converges to a physically correct solution with an iterative procedure. 
 It is also a computationally expensive and it requires the scene to be fairly tessellated.\\ 
 
-All techniques mentioned below has the objective to produce a physically correct image regardless of the time required to be computed.\\
-
+All techniques mentioned below has the objective to produce a physically correct image regardless of the time required to be computed.
 On the other side, there are algorithms acutely fast to be used in real-time applications. 
 They can compute direct shadows (shadow map \cite{shadow_map}, volume shadows \cite{real_time_shadows}) and ambient light (ambient occlusion \cite{ambient_occlusion}) 
 in a very simplified form. These techniques are usually known as to be perceptually correct but physically incorrect. 
 This means that although they are not accurate in physics terms they can be visually attractive to the human eye.\\
 
-Many methods exist to also produce soft shadows perceptually correct, like Variance Shadow Maps \cite{shadow_map} and Cascaded Shadow Maps \cite{real_time_shadows}.\\
+Many methods exist to also produce soft shadows perceptually correct, like Variance Shadow Maps \cite{shadow_map} and Cascaded Shadow Maps \cite{real_time_shadows}.
+Recently Radiosity and others global ilumination algorithms have been adapted to execute in GPU, some of them even at real-time frame rates.
+The technique Instant Radiosity \cite{instant_radiosity} constructs random paths from the light sources and creates new virtual point lights \emph{(VPLs)} where these paths encounter a surface.
+The work described in \cite{gpu_gems_2} uses an hemispherical proyection to capture radiance in an path texture.
 
-In many situations such physical precision is not required and some error degree can be tolerated in order to speed up the computation. 
+
+
 
 
 %==========================================
@@ -558,7 +561,7 @@ The conclusion is that time spent for each sensor is constant for a fixed \emph{
 	\begin{tabular}{c|c|c}
 		\multicolumn{1}{c}{\bf Screen resolution} &
 		\multicolumn{1}{c|}{\bf Sensors count} &
-		\multicolumn{1}{c}{\bf  Time/sensor (secs)} \\
+		\multicolumn{1}{c}{\bf  Time/sensor (ms)} \\
 		\hline
 		200x200	&  15240 & 4,455 \\
 		200x200 & 15240 & 4,455 \\
@@ -579,7 +582,7 @@ The conclusion is that time spent for each sensor is constant for a fixed \emph{
 
 The second metric, \figref{img_metric_2}, measures the sensor time as the \emph{sensor map} size is increased. 
 Three different screen resolutions are taken as reference.
-The conclusion is that the sensor map size influeces directly over the total processing time of the algorithm, almost in a linear fashion.
+The conclusion is that the \emph{sensor map} size influeces directly over the total processing time of the algorithm, almost in a quadratic fashion.
 And it does not depends on the screen resolution.
 
 \subimages
@@ -588,12 +591,12 @@ And it does not depends on the screen resolution.
 	\subimage[]{}{img_metric_2.png}%
 }
 
-The third metric, \figref{img_metric_3}, measures the amount of sensors required for the scene as the \emph{sensor map} size is increased.
+The third metric, \figref{img_metric_3}, measures the amount of sensors required by the scene as the \emph{sensor map} size is increased.
 The same three screen resolutions as metric two are taken.
 The amount of sensors is high when the sensor map is small, because each sensor has not enough resolution to capture the scene details, so more sensors are required.
 But after increasing the size to $128 \times 128$, the sensors count begins to stabilize.
 In our tests, we achieved a good comprimise beetween quality and performance with a \emph{sensor map} of $256 \times 256$, \figref{sensor_area}.
-The tests performed also show u that the total time required by the algorithm is much more sensible to the amount of sensors than to the geometry complexity of the scene.\\
+The tests performed also show us that the total time required by the algorithm is much more sensible to the amount of sensors than to the geometry complexity of the scene.\\
 
 \subimages
 	{Third metric: sensors count related to \emph{sensor map} size.}
@@ -620,7 +623,7 @@ Only one pass is required and it does not need to store any intermediate value, 
 Only a minimal synchronization is required at the end of each tile pass in order to interpolate the values.\\
 
 The final image obtained by the method has a very realistic looking and it requires relative less processing time than many Ray-Tracing based solutions \cite{ray_tracing} solutions.
-Unlike Radiosity \cite{radiosity} it is not required to heavily tessellate the scene, which represents one of the drawbacks of that technique. 
+Unlike Radiosity it is not required to heavily tessellate the scene, which represents one of the drawbacks of that technique. 
 The original scene data can directly be used by the algorithm.
 
 
@@ -681,17 +684,15 @@ and to the Algebra and Analytic Geometry node to make this contact possible.
 
 %------------------- IMAGENES FINALES-------------------
 \subimages
-	{Screenshots taken by the Sensor based Lighting technique - part 1.}
+	{Screenshot taken by the Sensor based Lighting technique}
 	{final_screenshots}{
 	\subimage[]{}{final_screenshots.png}%
 }
-
 \subimages
-	{Screenshots taken by the Sensor based Lighting technique - part 2.}
-	{final_screenshots_2}{
+	{Screenshots taken by the Sensor based Lighting technique}
+	{final_screenshots}{
 	\subimage[]{}{final_screenshots_2.png}%
 }
-
 
 \end{document}
 
