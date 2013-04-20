@@ -1,0 +1,698 @@
+%==========================================
+%
+% Sibgrapi 2013 paper
+% Mariano Banquiero
+%
+%==========================================
+
+
+% Note that the a4paper option is mainly intended so that authors in
+% countries using A4 can easily print to A4 and see how their papers will
+% look in print - the typesetting of the document will not typically be
+% affected with changes in paper size (but the bottom and side margins will).
+% Use the testflow package mentioned above to verify correct handling of
+% both paper sizes by the user's LaTeX system.
+%
+% Also note that the "draftcls" or "draftclsnofoot", not "draft", option
+% should be used if it is desired that the figures are to be displayed in
+% draft mode.
+%
+\documentclass[10pt, conference]{IEEEtran}
+
+% *** MISC UTILITY PACKAGES ***
+%
+%\usepackage{ifpdf}
+% Heiko Oberdiek's ifpdf.sty is very useful if you need conditional
+% compilation based on whether the output is pdf or dvi.
+% usage:
+% \ifpdf
+%   % pdf code
+% \else
+%   % dvi code
+% \fi
+% The latest version of ifpdf.sty can be obtained from:
+% http://www.ctan.org/tex-archive/macros/latex/contrib/oberdiek/
+% Also, note that IEEEtran.cls V1.7 and later provides a builtin
+% \ifCLASSINFOpdf conditional that works the same way.
+% When switching from latex to pdflatex and vice-versa, the compiler may
+% have to be run twice to clear warning/error messages.
+
+
+
+
+
+
+% *** CITATION PACKAGES ***
+%
+%\usepackage{cite}
+% cite.sty was written by Donald Arseneau
+% V1.6 and later of IEEEtran pre-defines the format of the cite.sty package
+% \cite{} output to follow that of IEEE. Loading the cite package will
+% result in citation numbers being automatically sorted and properly
+% "compressed/ranged". e.g., [1], [9], [2], [7], [5], [6] without using
+% cite.sty will become [1], [2], [5]--[7], [9] using cite.sty. cite.sty's
+% \cite will automatically add leading space, if needed. Use cite.sty's
+% noadjust option (cite.sty V3.8 and later) if you want to turn this off.
+% cite.sty is already installed on most LaTeX systems. Be sure and use
+% version 4.0 (2003-05-27) and later if using hyperref.sty. cite.sty does
+% not currently provide for hyperlinked citations.
+% The latest version can be obtained at:
+% http://www.ctan.org/tex-archive/macros/latex/contrib/cite/
+% The documentation is contained in the cite.sty file itself.
+
+
+
+
+
+
+% *** GRAPHICS RELATED PACKAGES ***
+%
+\usepackage{subimages}
+\setfigdir{figs}
+
+
+
+
+% *** MATH PACKAGES ***
+%
+\usepackage[cmex10]{amsmath}
+% A popular package from the American Mathematical Society that provides
+% many useful and powerful commands for dealing with mathematics. If using
+% it, be sure to load this package with the cmex10 option to ensure that
+% only type 1 fonts will utilized at all point sizes. Without this option,
+% it is possible that some math symbols, particularly those within
+% footnotes, will be rendered in bitmap form which will result in a
+% document that can not be IEEE Xplore compliant!
+%
+% Also, note that the amsmath package sets \interdisplaylinepenalty to 10000
+% thus preventing page breaks from occurring within multiline equations. Use:
+\interdisplaylinepenalty=2500
+% after loading amsmath to restore such page breaks as IEEEtran.cls normally
+% does. amsmath.sty is already installed on most LaTeX systems. The latest
+% version and documentation can be obtained at:
+% http://www.ctan.org/tex-archive/macros/latex/required/amslatex/math/
+\usepackage{amsthm}
+\newtheorem{definition}{Definition}
+
+
+
+
+
+% *** SPECIALIZED LIST PACKAGES ***
+%
+\usepackage{algorithmic}
+% algorithmic.sty was written by Peter Williams and Rogerio Brito.
+% This package provides an algorithmic environment fo describing algorithms.
+% You can use the algorithmic environment in-text or within a figure
+% environment to provide for a floating algorithm. Do NOT use the algorithm
+% floating environment provided by algorithm.sty (by the same authors) or
+% algorithm2e.sty (by Christophe Fiorio) as IEEE does not use dedicated
+% algorithm float types and packages that provide these will not provide
+% correct IEEE style captions. The latest version and documentation of
+% algorithmic.sty can be obtained at:
+% http://www.ctan.org/tex-archive/macros/latex/contrib/algorithms/
+% There is also a support site at:
+% http://algorithms.berlios.de/index.html
+% Also of interest may be the (relatively newer and more customizable)
+% algorithmicx.sty package by Szasz Janos:
+% http://www.ctan.org/tex-archive/macros/latex/contrib/algorithmicx/
+
+
+
+
+% *** ALIGNMENT PACKAGES ***
+%
+%\usepackage{array}
+% Frank Mittelbach's and David Carlisle's array.sty patches and improves
+% the standard LaTeX2e array and tabular environments to provide better
+% appearance and additional user controls. As the default LaTeX2e table
+% generation code is lacking to the point of almost being broken with
+% respect to the quality of the end results, all users are strongly
+% advised to use an enhanced (at the very least that provided by array.sty)
+% set of table tools. array.sty is already installed on most systems. The
+% latest version and documentation can be obtained at:
+% http://www.ctan.org/tex-archive/macros/latex/required/tools/
+
+
+%\usepackage{mdwmath}
+%\usepackage{mdwtab}
+% Also highly recommended is Mark Wooding's extremely powerful MDW tools,
+% especially mdwmath.sty and mdwtab.sty which are used to format equations
+% and tables, respectively. The MDWtools set is already installed on most
+% LaTeX systems. The lastest version and documentation is available at:
+% http://www.ctan.org/tex-archive/macros/latex/contrib/mdwtools/
+
+
+% IEEEtran contains the IEEEeqnarray family of commands that can be used to
+% generate multiline equations as well as matrices, tables, etc., of high
+% quality.
+
+
+%\usepackage{eqparbox}
+% Also of notable interest is Scott Pakin's eqparbox package for creating
+% (automatically sized) equal width boxes - aka "natural width parboxes".
+% Available at:
+% http://www.ctan.org/tex-archive/macros/latex/contrib/eqparbox/
+
+
+
+% *** PDF, URL AND HYPERLINK PACKAGES ***
+%
+\usepackage{hyperref}
+
+
+
+
+
+% *** Do not adjust lengths that control margins, column widths, etc. ***
+% *** Do not use packages that alter fonts (such as pslatex).         ***
+% There should be no need to do such things with IEEEtran.cls V1.6 and later.
+% (Unless specifically asked to do so by the journal or conference you plan
+% to submit to, of course. )
+
+
+% correct bad hyphenation here
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+
+\begin{document}
+%
+% paper title
+% can use linebreaks \\ within to get better formatting as desired
+\title{Sensor based Lighting}
+
+%------------------------------------------------------------------------- 
+% change the % on next lines to produce the final camera-ready version 
+\newif\iffinal
+%\finalfalse
+\finaltrue
+\newcommand{\jemsid}{99999}
+%------------------------------------------------------------------------- 
+
+% author names and affiliations
+% use a multiple column layout for up to two different
+% affiliations
+
+\iffinal
+  \author{%
+    \IEEEauthorblockN{Mariano M. Banquiero, Matias N. Leone,}
+    \IEEEauthorblockA{%
+      Explotaci{\'o}n de GPUs y Gr{\'a}ficos Por Computadora - GIGC\\
+      Departamento de Ingenier{\'i}a en Sistemas de Informaci{\'o}n, Universidad Tecnol{\'o}gica Nacional\\
+      Buenos Aires, Argentina\\
+      Email: \{mbanquiero, mleone\}@frba.utn.edu.ar}
+  
+  }
+\else
+  \author{Sibgrapi paper ID: \jemsid \\ }
+\fi
+
+
+
+
+%------------------------------------------------------------------------- 
+% Special Sibgrapi teaser
+\teaser{%
+  \oneimage{Three indoor-scene renders computed by the Sensor based lighting technique}{.99}{teaser.png}
+}
+%------------------------------------------------------------------------- 
+
+
+
+% make the title area
+\maketitle
+
+
+\begin{abstract}
+Commonly used global illumination techniques have good quality but are computationally expensive and difficult to parallelize in GPU.
+We propose a novel global illumination algorithm that locates virtual cameras called sensors in a carefully selected set of visible pixels of the scene. 
+Each sensor captures the incoming light from every direction of the scene and produces an estimation value that is later compose with the original image. 
+The algorithm is an offline solution implemented in GPU in a very parallelizable way, supports arbitrary-form light sources, and produces soft shadows, ambient occlusion and color bleeding effects.
+
+
+%
+\end{abstract}
+
+\begin{IEEEkeywords}
+Radiance estimation; GPU; Global illumination;
+\end{IEEEkeywords}
+
+
+\IEEEpeerreviewmaketitle
+
+
+
+%==========================================
+%==========================================
+
+
+%==========================================
+\section{Introduction}
+%
+Many techniques used in computer graphics to simulate lighting effects are based on source lights called point-lights. 
+They are fast to compute and easy to integrate in a real-time graphics pipeline.\\
+
+But real life lighting appliances are normally design to avoid direct lighting because it’s uncomfortable for the human eye. 
+For example, a table lamp came usually covered by a surface that produces a glimmering light in the room. 
+Sun light entering a building through a window with curtains behaves like a large superficial light source.\\
+
+These arbitrary-form light sources behave in a very different way of commonly used point lights, 
+for example when generating soft shadows with complex penumbra area.\\
+
+Furthermore, in a closed room, the light coming from different light sources will bounce against many surfaces before finally reaching the eye. 
+En each of this bounces part of the energy is absorbed and another part is reflected in certain wave length, 
+according to the BRDF \cite{brdf} distribution. The human eye is particularly sensitive to this kind of indirect illumination. 
+This way, a red wall may transfer some of its color to a white ceiling, producing a reddish look, known a color bleeding.\\
+
+
+%------------------------------------------------------------------------- 
+\paragraph*{Contributions}
+%
+The aim of this paper is to present an offline algorithm implemented in GPU that supports all this subtle effects, 
+from a physically based perspective: an algorithm capable of modeling a large amount of arbitrary-form source lights, 
+and capable of producing physically correct soft shadows,  besides able to approximate another aspects of global illumination, 
+like color bleeding and ambient occlusion. 
+
+%==========================================
+\section{Related work}
+%
+Many algorithms have been developed to generate realistic images based on global illumination models. 
+Path tracing \cite{The_rendering_equation}, Monte Carlo ray-tracing \cite{Montecarlo_Ray_tracing} and Metropolis Light Transport \cite{Metropolis_light_transport} are examples that used random sampling to 
+estimate a solution that converge to a physical correct result. But they tend to required thousands of samples per pixel in order to 
+achieved good results, which makes them computationally expensive.\\
+
+Radiosity, a finite based element solution, also converges to a physically correct solution with an iterative procedure. 
+It is also a computationally expensive and it requires the scene to be fairly tessellated.\\ 
+
+All techniques mentioned below has the objective to produce a physically correct image regardless of the time required to be computed.\\
+
+On the other side, there are algorithms acutely fast to be used in real-time applications. 
+They can compute direct shadows (shadow map \cite{shadow_map}, volume shadows \cite{real_time_shadows}) and ambient light (ambient occlusion \cite{ambient_occlusion}) 
+in a very simplified form. These techniques are usually known as to be perceptually correct but physically incorrect. 
+This means that although they are not accurate in physics terms they can be visually attractive to the human eye.\\
+
+Many methods exist to also produce soft shadows perceptually correct, like Variance Shadow Maps \cite{shadow_map} and Cascaded Shadow Maps \cite{real_time_shadows}.\\
+
+In many situations such physical precision is not required and some error degree can be tolerated in order to speed up the computation. 
+
+
+%==========================================
+\section{Sensor based Lighting}
+%
+
+%------------------------------------------------------------------------- 
+\subsection{Algorithm overview}
+%
+The technique presented in this work consists in positioning virtual cameras in many visible points of the scene, \figref{algorithm_overview}.
+These cameras act like sensors that measure the amount of incoming light from all directions. 
+In order to achieve that, each camera draws the complete scene in an auxiliary texture. 
+The texture's size is big enough to get every illumination details, and then is reduced to unique average value which represents the light received from the entire scene. 
+This value is stored in an output texture used later to draw the final scene. 
+
+\subimages
+	{Census function. The light coming from the scene is captured by the top right sensor in the first image. 
+	The sensor's image is then weighted by its incident angle, and the last step is to average the final color.}
+	{algorithm_overview}{
+	\subimage[]{}{algorithm_overview.png}%
+}
+
+%------------------------------------------------------------------------- 
+\subsection{Radiometry equations}
+%
+The rendering equation \cite{The_rendering_equation} describes the transport of light from one surface point to another as the sum of emitted radiance and reflected radiance. Because light transport is usually perceived in equilibrium, the equation describes the steady-state radiance function for the given scene \cite{The_rendering_equation}.
+\[
+	\underbrace{Lo(p,w)}_\text{Outgoing radiance} = \underbrace{Le(p,w)}_\text{Emitted Radiance} + \underbrace{Ls(p,w)}_\text{Scattered Radiance}
+\]
+The term $Le$ forms part of the scene description and correspond to the light sources, which are the only objects that emit light. The second term, the scattering equation, is of more significant for this work: 
+\[
+	L_s(p,w_o) = \int_ \Omega L_i(p,w_i)f_s(p,w_i\rightarrow w_o)d\omega^\perp
+\]
+Where $wo$ is the view direction, $wi$ the incoming direction, $d\omega^\perp$ is the differential projected solid angle and the integral is made all over the positive hemisphere above the surface.  The $fs$ term is the BRDF \cite{brdf} and represents the amount of radiance coming from the $wi$ direction that reflects towards the $wo$ direction. 
+In the simplest case the function can be constant (perfect diffuse surfaces) and the $fs$ becomes a $\frac{c}{\pi}$ factor out of the integral \cite{perfect_diffuse_surfaces}.
+$c$ is constant $\leq 1$. This reflects the fact that the radiance reflected out of the surface can not be greater than the inconming radiance.\\
+
+The ingoing radiance can be expressed in terms of outgoing radiance using a ray casting function \cite{ray_casting_function}, and the simplified scattering equation is:
+\[
+	L_s(p,w_o) = \frac{c}{\pi }\int_ \Omega L_o(ray(p,w), -w)d\omega^\perp
+\]
+The scattering equation can be used to predict the surface color from the incident light \cite{scattering_equation}. 
+Our work applies this principle to adapt the equation to a GPU suitable computation, \figref{view_dir}.
+
+\subimages
+	{Ligth Transport. Ingoing Radiance $(Li)$ can be expressed in term of Outgoing Radiance $(Lo)$.
+		The radiance coming to $p$ from a direction $wi$ is the radiance exiting from $q$ trhough the direction $-wi$. 
+		The point $q$ is the first intersection between the ray from $q$ towards $wi$ direction and the rest of scene.}
+	{view_dir}{
+	\subimage[]{}{view_dir.png}%
+}
+
+%------------------------------------------------------------------------- 
+\subsection{Outgoing radiance estimation}
+%
+$Lo$ appears in both sides of the rendering equation, forming a recursive expression. The strategy of this work is to replace $Lo$ by an estimator to avoid the recursive form. 
+Considering a fixed direction $wi$ and the point $q = ray(p, wi)$ then two situations must be studied:
+
+\begin{itemize}
+	\item[A] If $q$ is over the surface of a light source $Le$ (emitted radiance) it will have a value corresponding to the color emitted by that light, an information that forms part of the scene. We can assume that this value is highly to $Ls$ for a light source. So then we can express:
+		\begin{equation}
+			\label{eq_radiance_case_A}
+			Lo = Le 
+		\end{equation}
+	\item[B] If $q$ is over a surface that reflects light, $Lo$ is described by the scattering equation, then its value depends on the light coming from all directions of the hemisphere. In this case the surface diffuse color (also part of the scene description) is taken as an estimation of the value, multiplied by an epsilon $e$:
+		\begin{equation}
+			\label{eq_radiance_case_B}
+			Lo = D.e 
+		\end{equation}
+\end{itemize}
+
+The epsilon term is a small number that allow setting the importance of the ambient light related to the direct light. And it represents the fact that the incident light is usually reflected in many directions, so the amount of light reflected in one particular direction is very small \cite{brdf}.\\
+So the $Lo$ estimator is expresses as:
+\[
+	L^*_o = Color(q)K(q)
+\]
+The estimator groups together \ref{eq_radiance_case_A} and \ref{eq_radiance_case_B} in the same equation. From a computing point of view the difference between \ref{eq_radiance_case_A} and \ref{eq_radiance_case_B} is just the specific value of $K(p)$. In one case is the light associated energy and in the other is a small epsilon. But from physical point of view the two cases correspond to totally different processes. It is important to note that the calculated values may take a wide range of results. So the precision of a high dynamic range \cite{high_dynamic_range} is required. The term $Color(q)K(q)$ will be shortened as $Ck(q)$.
+
+
+
+%------------------------------------------------------------------------- 
+\subsection{Scattered radiance estimation}
+
+Replacing the $Lo$ estimator in the scattering equation and approximating the integral with a summation we get \ref{eq_scattered_radiance_est}:
+\begin{equation}
+	\label{eq_scattered_radiance_est}
+	L_s(p, w_0)=\frac{c}{\pi}\int_\Omega Ck(q)d\omega^\perp \sim \frac{c}{\pi}\sum_{t=1}^n{Ck(q_t)}d\omega^\perp
+\end{equation}		
+
+%------------------------------------------------------------------------- 
+\subsection{Sensor}
+
+In this algorithm a sensor represents a virtual camera that allows us to capture the incoming light from all directions of the scene. 
+This light is then stored in texture named \emph{sensor map}, that represent the sensor area. 
+The camera is located at the required point $p$ in the direction normal to the surface of the scene, \figref{sensor_image}.
+
+\subimages
+	{Sensor setup. The virtual camera is located at the required point $p$ in the direction normal to the scene surface.}
+	{sensor_image}{
+	\subimage[]{}{sensor_image.png}%
+}
+
+The \emph{sensor map} size is $rd_x \times rd_y$ and each texel represent a sample of the $Ck$ term for given direction in space. So the sensor is applied to compute the $Ck$ term for a large quantity of samples and then to use them in the equation \ref{eq_scattered_radiance_est}.\\
+In order to be able to capture the scene illumination from most possible angles, the camera field of view $(fov)$ is of 135 degrees (which amplitude is higher than the 45 degrees commonly used). This brings out two main problems. Firstly, such a high value in $fov$ amplitude tends to loose precision at the center of the image, just where the samples have more incidence. Secondly, we can never take a sample of 180 degrees of amplitude using a perspective or orthogonal projection. This means the sensor is incapable of capturing the light coming from angles out of the $fov$.\\
+The $Ck$ term for a giving pixel, drawn from the sensor point of view, can be computed using a Pixel Shader in GPU because both $Color$ and $K$ are part of the scene description. The original summation over the amount of samples is replaced by a double summation to iterate over the values of the \emph{sensor map} in width and height.\\
+
+The remaining part of the equation, $dw^\perp$ (differential projected solid angle), can be obtained by simply projecting the area of the unit sphere 
+cover by the $dw$ (differential solid angle) orthogonally onto the tangent space, and then finding the area of the resulting planar region.
+
+\subimages
+	{Solid angle measures and projected pixel area. 
+	A texel area in the \emph{sensor map} is first projected in the unit sphere and then projected again in tangent space. 
+	This projected area is used to measures the contribution of the sample.}
+	{projected_solid_angle}{
+	\subimage[]{}{projected_solid_angle.png}%
+}
+
+As we can see in image \figref{projected_solid_angle}:
+
+\[ S = tan(\frac{fov}{2}) \]
+\[ x = 2S(\frac{j}{rd_x} - 0.5) \]
+\[ y = 2S(\frac{i}{rd_y} - 0.5) \]
+
+An arbitrary point $v = (x,y,1)$ in the \emph{sensor map} is first normalized to proyect it in the unit sphere, and then is proyected again in tangent space by simply setting $z = 0$.\\ 
+We denote this with the v'' operator:\\
+\[ 
+	V'' = \frac{(x, y, 0)} { \left\| (x,y,1) \right\| } 
+\]
+Given a sample (i,j) in the sensor area, we call v0,v1 and v2 to the vertex:\\
+\[ 
+	V_0 = (x_j, y_i, 1), V_1 = (x_{j+1}, y_i, 1), V_2 = (x_j, y_{i+1}, 1) 
+\]
+The projected pixel area in tangent space can be approximated using de cross product:\\
+\begin{equation}
+	\label{eq_d}
+	d = ||(V_1'' - V_0'') \times (V_2'' - V_0'')||
+\end{equation}
+
+The value \ref{eq_d} represents the pixel projection over the tangent space in arbitrary pixel units. The sum of the area of all possible angles is equal to the whole disc surface hemisphere, which equals $\pi$. So the relative value of each sample (without units) is:\\
+\[ 
+	\frac{ \left\|{ (V_1'' - V_0'') \times (V_2'' - V_0'') }\right\| }{\pi}
+\]
+
+The total area of the samples can be calculated as $rd_x . rd_y$, which allows us to approximate the term (4) with:\\
+\[ 
+	F_{ij} =  \frac{ \left\|{ (V_1'' - V_0'') \times (V_2'' - V_0'') }\right\| }{\pi} . (rd_x . rd_y)
+\]
+With this formulation, the energy values associated with each source light must be set in [radiance units] $\times$ pixel.\\
+
+As can be seen the $F_{ij}$ values only depend on $i$ and $j$, so they can be pre-computed. The physical interpretation means that the light 
+coming from similar directions to the normal has the max incidence over the sensed value, while the peripheral directions decreased rapidly.\\
+
+The estimated scattering equation becomes:\\
+\[
+	L_s(p, w_o) \sim \sum_{j=1}^{rd_x} \sum_{i=1}^{rd_y} c_{ij} F_{ij}
+\]
+This value is the one obtained as a result in each sensor and then stored in the output texture called \emph{radiance map}.
+
+%------------------------------------------------------------------------- 
+\subsection{Visible points determination}
+The first step consists of creating a geometry buffer to store some useful information of the visible points of the scene: position, normal and polygon or mesh id.\\
+Different packing strategies derived from the deferred rendering techniques \cite{deferred_rendering} can be used to create this \emph{G-buffer}. 
+
+%------------------------------------------------------------------------- 
+\subsection{Sensor quantity and distribution}
+In many parts of the domain the value of $Ls$ changes in a soft way. 
+Except when there is a change of surfaces, it is very likely that $Ls$ will be continuous in the point neighborhood. 
+This suggests that it is not necessary to compute $Ls$ in all the image points. 
+The algorithm can being sensing at regular intervals from a given tile of $dt \times dt$. 
+Each tile will have a sample to which $Ls$ is estimated. Then for each sample it computes the variation with the four closer samples, \figref{red_samples}. 
+If this variation is less than a given threshold, called $dradiance$, the whole set can be estimated with interpolation between the four neighbors. 
+By the contrary if the variation is greater than $dradiance$ then more samples may be located in tiles of half the size of the initial interval $(\frac{dt}{2})$. 
+The process is repeated until only final pixels are left, where $Ls$ is computed specifically to complete the scene, \figref{tiles}.
+In this way the algorithm converge to the solution in a progressive way, using more sensors where the image needs them most.\\
+
+\subimages
+	{The red samples have little variation between them and can be interpolated to drastically reduce the amount of sensing operations. 
+	The white samples however have an abrupt change and require more samples.}
+	{red_samples}{
+	\subimage[]{}{red_samples.png}%
+}
+
+\subimages
+	{Tiles progressive computation. The first image shows tiles of $16 \times 16$ pixels. 
+	Only one sample per tiles is computed which value is interpolated between the neighborhood samples. 
+	In the next steps the tile size is reduced. At the end only the edge pixels remain to be sensed, where Ls is discontinuous.}
+	{tiles}{
+	\subimage[]{}{tiles.png}%
+}
+
+
+%------------------------------------------------------------------------- 
+\subsection{Final image composition}
+So far we have generated a map of values for $Ls$ for each visible point of the scene, which are stored in the \emph{radiance map}. 
+Each value is called $R(x, y)$. Next, the texture is combined with the original image in order to produce the final image. 
+For a given point $(x,y)$ of the original image, the same point of the \emph{radiance map} contains the value of $Ls$. Both values are multiplied:
+\[
+	final(x,y) = color(x,y)R(x, y)
+\]
+The tile optimization of the algorithm tends to produce small discrete blocks in the final image, an aliasing normally seen in most sampling techniques that use regular intervals. 
+Replacing the regular sampling by a random one (for example with jittering techniques) will transform those aliasing in noise, and the visible artifacts will be appreciable. 
+A better solution is to apply a Gaussian filter \cite{gauss_filter} to image composition. \figref{filter}. 
+A certain radius of samples of the \emph{radiance map} is taken, provided that they belong to the same surface. 
+This restriction is vital in order to avoid summing values of $Ls$ coming from different regions of space, which will produce hard artifacts in the solution. 
+That’s why the \emph{G-Buffer} stored the polygon $id$.
+\[
+	final(x,y) = color(x,y)[ \sum_{i=-r}^r{ \sum_{j=-r}^r{k_{ij}Ls(x+i,y+j)}}]
+\]
+$kij$ is the relative weight of each sample and is computed considering the total amount of samples that satisfied the surface $id$ condition (that is they belong to the same polygon as the point $(x, y)$).
+\[
+	k_{ij}=
+		\begin{Bmatrix}
+			\gamma_{ij} & \mbox{si}& id(x+i,y+i) = id(x,y)\\
+			0 & \mbox{si} & id(x+i,y+i) \neq id(x,y)
+		\end{Bmatrix}
+\]
+\[
+	\sum_{i,j=-r}^r \gamma_{ij} = 1
+\]
+
+\subimages
+	{Gaussian filter application in image composition. Note that the red surface edge (wall) and the gray one (floor) continue to be sharp. 
+	The filter is specifically design to preserve the $id$ sudden changes.}
+	{filter}{
+	\subimage[]{}{filter.png}%
+}
+
+%------------------------------------------------------------------------- 
+\subsection{Shadow computing}
+The size of the \emph{sensor map} ($rd_x \times rd_y$) must be large enough to capture all the details from the light sources. 
+An area too small may generate discontinuities in the estimation of $Ls$ which will be perceived as noise in the image.\\
+
+For superficial light sources, or for large enough arbitrary forms, this estimation can be extremely accurate when the proper texture size is given. 
+This is due to the fact that the projection of the light source over the sensor area occupies a large amount of samples. 
+So the sensor is very sensitive to obstacles that may block part of it, producing physically correct shadow penumbras, \figref{shadow_computing}.
+
+\subimages
+	{Shadow computing. The red rectangle represents sensed area. 
+	The first screenshot shows the light source totally visible. 
+	Then, the visible area of the same gradually decreases as the shadow becomes more evident in the final image. 
+	In the fourth screenshot the light source is no longer visible and the area is completely in shadows.}
+	{shadow_computing}{
+	\subimage[]{}{shadow_computing.png}%
+}
+
+
+%==========================================
+\section{Implementation and Results}
+%
+The algorithm was implemented using C++ with DirectX 9 and Shader Model 3. 
+Three different metrics were taken in order to understand the behavior of the technique.
+The total time spent by the algorithm depends on many factors (screen resolution, \emph{sensor map} size, geometry complexity of the scene)
+So a better indicator for the metrics is what we called the sensor time, which is defined as the total time divided by the amount of sensors required for that scene.\\
+
+The first metric, Table~\ref{tab:metric_1}, measures the sensor time as the screen resolution is increased. The \emph{sensor map} size is fixed for this test.
+The conclusion is that time spent for each sensor is constant for a fixed \emph{sensor map} size, and it does not depends on the screen resolution.\\
+
+\begin{table}
+	\caption{First metric: sensor time related to screen resolution.}
+	\label{tab:metric_1}
+	\centering
+	\begin{tabular}{c|c|c}
+		\multicolumn{1}{c}{\bf Screen resolution} &
+		\multicolumn{1}{c|}{\bf Sensors count} &
+		\multicolumn{1}{c}{\bf  Time/sensor (secs)} \\
+		\hline
+		200x200	&  15240 & 4,455 \\
+		200x200 & 15240 & 4,455 \\
+		300x200 & 23762 & 4,439\\
+		400x300 & 40271 & 4,499 \\
+		500x300 & 44300 & 4,496 \\
+		500x400 & 55904 & 4,541 \\
+		600x400 & 63074 & 4,581 \\
+		600x500 & 68276 & 4,531 \\
+		700x500 & 79158 & 4,587 \\
+		700x600 & 83423 & 4,588 \\
+		800x600 & 96266 & 4,588 \\
+		900x600 & 108239 & 4,578 \\
+		900x700 & 112436 & 4,581 \\
+		1024x768 & 133822 & 4,569\\
+	\end{tabular}
+\end{table}
+
+The second metric, \figref{img_metric_2}, measures the sensor time as the \emph{sensor map} size is increased. 
+Three different screen resolutions are taken as reference.
+The conclusion is that the sensor map size influeces directly over the total processing time of the algorithm, almost in a linear fashion.
+And it does not depends on the screen resolution.
+
+\subimages
+	{Second metric: sensor time related to the \emph{sensor map} size}
+	{img_metric_2}{
+	\subimage[]{}{img_metric_2.png}%
+}
+
+The third metric, \figref{img_metric_3}, measures the amount of sensors required for the scene as the \emph{sensor map} size is increased.
+The same three screen resolutions as metric two are taken.
+The amount of sensors is high when the sensor map is small, because each sensor has not enough resolution to capture the scene details, so more sensors are required.
+But after increasing the size to $128 \times 128$, the sensors count begins to stabilize.
+In our tests, we achieved a good comprimise beetween quality and performance with a \emph{sensor map} of $256 \times 256$, \figref{sensor_area}.
+The tests performed also show u that the total time required by the algorithm is much more sensible to the amount of sensors than to the geometry complexity of the scene.\\
+
+\subimages
+	{Third metric: sensors count related to \emph{sensor map} size.}
+	{img_metric_3}{
+	\subimage[]{}{img_metric_3.png}%
+}
+
+
+\subimages
+	{The sensor area. Left: a $32 \times 32$ pixel sensor. Note the noise on the floor and the left wall.}
+	{sensor_area}{
+	\subimage[]{}{sensor_area.png}%
+}
+
+The results were computed using a PC with Intel Core i7 3.50GHz processor with 16GB RAM and NVIDIA GIFORCE GTX 660 GPU, in Windows 7 64 bits.
+
+
+%==========================================
+\section{Conclusions}
+%
+The algorithm presented provides an alternate method to solve the global illumination of scene, with support for complex effects like arbitrary-form of light sources, soft shadows, ambient occlusion and color bleeding. 
+The solution is designed to be computed in GPU, taking advantage of many hardware accelerated features. 
+Only one pass is required and it does not need to store any intermediate value, which makes it a highly parallelizable solution. 
+Only a minimal synchronization is required at the end of each tile pass in order to interpolate the values.\\
+
+The final image obtained by the method has a very realistic looking and it requires relative less processing time than many Ray-Tracing based solutions \cite{ray_tracing} solutions.
+Unlike Radiosity \cite{radiosity} it is not required to heavily tessellate the scene, which represents one of the drawbacks of that technique. 
+The original scene data can directly be used by the algorithm.
+
+
+%==========================================
+\section{Future work}
+%
+The technique is in its early stages. Further studies for optimization are required in order to achieve the performance and scalability of professional rendering solutions.\\
+
+Its main problems are produced by the limited angle of fov used by the sensor, which avoids the algorithm to capture the illumination from certain angles. 
+The problem could be solved by using ray tracing directed to the light sources so as to estimate a statistical value of visibility degree for that light source in the problematic angles. 
+Few rays should be needed so the performance of the solution should not be overly affected.\\
+
+Its main problems are produced by the limited fov used by the sensor, which avoids the algorithm to capture the illumination from certain angles.
+Also, point light sources may be difficult to compute since they have to be modeled as a very small surface with a high energy level, making them hard to capture by the sensor.
+Both problem could be solved by using ray tracing directed to the light sources so as to estimate a statistical value of visibility degree for that light source in the problematic angles. 
+Few rays should be needed so the performance of the solution should not be overly affected.\\
+
+Some others forms of BRDF could be easily incorporated in the solution replacing the constant factor by a mixed equation. This equation may contemplate diffuse surfaces and some partially glossy mirrors surface. Perfect mirrors would be problematic because the variance of the solution would produce too much noise in the image. Others techniques suit better for this kind of surfaces.\\
+
+
+
+
+
+
+%==========================================
+\iffinal
+% use section* for acknowledgement
+\section*{Acknowledgment}
+%
+The authors would like to thank the GIGC Computer Graphics Research Group for supporting this research, and the Department of Information Systems 
+Engineering for providing the support and funding. We also thank Retrovia Project Marta Garcen, Eva Ferrari (English node) for reviewing our work 
+and to the Algebra and Analytic Geometry node to make this contact possible.
+\fi
+
+
+
+%==========================================
+
+% trigger a \newpage just before the given reference
+% number - used to balance the columns on the last page
+% adjust value as needed - may need to be readjusted if
+% the document is modified later
+%\IEEEtriggeratref{8}
+% The "triggered" command can be changed if desired:
+%\IEEEtriggercmd{\enlargethispage{-5in}}
+
+\bibliographystyle{IEEEtran}
+\bibliography{bib_extra/IEEEabrv,sensor_based_lighting}
+
+%\begin{thebibliography}{1}
+
+%\bibitem{sibgrapi2013}
+%\emph{Sibgrapi 2013, Proceedings of the XXVI Brazilian Symposium on Computer Graphics and Image Processing}.\hskip 1em plus 0.5em minus 0.4em\relax  Arequipa, Per{\'u}: {IEEE}, august 2013.
+
+%\end{thebibliography}
+
+
+
+%------------------- IMAGENES FINALES-------------------
+\subimages
+	{Screenshots taken by the Sensor based Lighting technique - part 1.}
+	{final_screenshots}{
+	\subimage[]{}{final_screenshots.png}%
+}
+
+\subimages
+	{Screenshots taken by the Sensor based Lighting technique - part 2.}
+	{final_screenshots_2}{
+	\subimage[]{}{final_screenshots_2.png}%
+}
+
+
+\end{document}
+
+%==========================================
