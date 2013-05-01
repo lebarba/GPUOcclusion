@@ -184,9 +184,9 @@
 %------------------------------------------------------------------------- 
 % change the % on next lines to produce the final camera-ready version 
 \newif\iffinal
-%\finalfalse
-\finaltrue
-\newcommand{\jemsid}{99999}
+\finalfalse
+%\finaltrue
+\newcommand{\jemsid}{114583}
 %------------------------------------------------------------------------- 
 
 % author names and affiliations
@@ -334,14 +334,14 @@ The term $L_e$ belongs to the scene description and corresponds to the light sou
 Where $w_o$ is the view direction, $w_i$ the incoming direction, $d\omega^\perp$ is the differential projected solid angle and
 $\Omega$ represents the positive hemisphere. 
 The $f_s$ term is the BRDF \cite{brdf} and represents the amount of radiance coming from the $w_i$ direction that reflects towards the $w_o$ direction. 
-In its simplest case the function can be constant (perfect diffuse surfaces) and the $f_s$ becomes a $\frac{c}{\pi}$ factor out of the integral \cite{perfect_diffuse_surfaces}.
+In its simplest case the function can be constant (perfect diffuse surfaces) and the $f_s$ becomes a $\frac{c}{\pi}$ factor out of the integral \cite[p.~78]{monte_carlo_light_transport}.
 $c$ is a constant $\leq 1$ and shows the fact that the radiance reflected out of the surface can not be greater than the inconming radiance.\
 
-The ingoing radiance can be expressed in terms of outgoing radiance using a ray casting function \cite{ray_casting_function}, so the scattering equation becomes:
+The ingoing radiance can be expressed in terms of outgoing radiance using a ray casting function \cite[p.~90]{monte_carlo_light_transport}, so the scattering equation becomes:
 \[
 	L_s(p,w_o) = \frac{c}{\pi }\int_ \Omega L_o(ray(p,w), -w)d\omega^\perp
 \]
-This equation can be used to predict the surface color from the incident light \cite{scattering_equation}. 
+This equation can be used to predict the surface color from the incident light \cite[p.~86]{monte_carlo_light_transport}. 
 Our work applies this principle to adapt the equation to a GPU suitable computation, \figref{view_dir}.
 
 \subimages
@@ -412,7 +412,7 @@ In order to be able to capture the scene illumination from as many  directions a
 The $Ck$ term for a giving pixel, drawn from the sensor point of view, can be computed using a Pixel Shader in GPU because both $Color$ and $K$ are part of the scene description. The original summation over the amount of samples is replaced by a double summation to iterate over the values of the \emph{sensor map} in width and height.\
 
 The remaining part of the equation, $dw^\perp$ (differential projected solid angle), can be obtained by simply projecting the area of the unit sphere 
-covered by the $dw$ (differential solid angle) orthogonally onto the tangent space, and then finding the area of the resulting planar region (Nusselt's Analog \cite{perfect_diffuse_surfaces}).
+covered by the $dw$ (differential solid angle) orthogonally onto the tangent space, and then finding the area of the resulting planar region (Nusselt's Analog \cite[p.~78]{monte_carlo_light_transport}).
 
 \subimages
 	{Solid angle Solid angle measure and projected pixel area. 
@@ -450,7 +450,7 @@ Equation \ref{eq_d} represents the pixel projection over the tangent space in ar
 
 The total area of the samples can be calculated as $rd_x . rd_y$, which allows us to approximate the term (4) with:\
 \[ 
-	F_{ij} =  \frac{ \left\|{ (V_1'' - V_0'') \times (V_2'' - V_0'') }\right\| }{\pi} . (rd_x . rd_y)
+	F_{ij} =  \frac{ \left\|{ (V_1'' - V_0'') \times (V_2'' - V_0'') }\right\| }{\pi} \cdotp (rd_x . rd_y)
 \]
 With this formulation, the energy values associated with each source light must be set in [radiance units] $\times$ pixel.\
 
